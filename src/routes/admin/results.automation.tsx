@@ -57,7 +57,10 @@ function AutomationPage() {
     };
   }, [qc]);
 
-  async function update(market_id: string, patch: Partial<Row>) {
+  async function update(
+    market_id: string,
+    patch: { open_enabled?: boolean; close_enabled?: boolean; grace_minutes?: number },
+  ) {
     const { error } = await supabase.from("market_automation").update(patch).eq("market_id", market_id);
     if (error) toast.error(error.message);
     else qc.invalidateQueries({ queryKey: ["admin-automation"] });
