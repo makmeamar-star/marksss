@@ -19,6 +19,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminWithdrawalsRouteImport } from './routes/admin/withdrawals'
+import { Route as AdminMarketsRouteImport } from './routes/admin/markets'
 import { Route as AdminDepositsRouteImport } from './routes/admin/deposits'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -80,6 +81,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminWithdrawalsRoute = AdminWithdrawalsRouteImport.update({
   id: '/withdrawals',
   path: '/withdrawals',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMarketsRoute = AdminMarketsRouteImport.update({
+  id: '/markets',
+  path: '/markets',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDepositsRoute = AdminDepositsRouteImport.update({
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/markets': typeof AdminMarketsRoute
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin/': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/markets': typeof AdminMarketsRoute
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/markets': typeof AdminMarketsRoute
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin/': typeof AdminIndexRoute
   '/_authenticated/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/wallet'
     | '/admin/deposits'
+    | '/admin/markets'
     | '/admin/withdrawals'
     | '/admin/'
     | '/bet/$marketId'
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/wallet'
     | '/admin/deposits'
+    | '/admin/markets'
     | '/admin/withdrawals'
     | '/admin'
     | '/bet/$marketId'
@@ -290,6 +301,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/wallet'
     | '/admin/deposits'
+    | '/admin/markets'
     | '/admin/withdrawals'
     | '/admin/'
     | '/_authenticated/bet/$marketId'
@@ -383,6 +395,13 @@ declare module '@tanstack/react-router' {
       path: '/withdrawals'
       fullPath: '/admin/withdrawals'
       preLoaderRoute: typeof AdminWithdrawalsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/markets': {
+      id: '/admin/markets'
+      path: '/markets'
+      fullPath: '/admin/markets'
+      preLoaderRoute: typeof AdminMarketsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/deposits': {
@@ -503,6 +522,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminDepositsRoute: typeof AdminDepositsRoute
+  AdminMarketsRoute: typeof AdminMarketsRoute
   AdminWithdrawalsRoute: typeof AdminWithdrawalsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminResultsAutomationRoute: typeof AdminResultsAutomationRoute
@@ -514,6 +534,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminDepositsRoute: AdminDepositsRoute,
+  AdminMarketsRoute: AdminMarketsRoute,
   AdminWithdrawalsRoute: AdminWithdrawalsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminResultsAutomationRoute: AdminResultsAutomationRoute,

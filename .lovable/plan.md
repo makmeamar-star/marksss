@@ -1,72 +1,51 @@
-## Diagnosis
+## Goal
 
-End-to-end check turned up **one real bug** plus a couple of false alarms:
+1. Backfill historical market results so the public Results / Charts pages show real history for Kalyan and every other market.
+2. Add an admin Markets page to create, edit, and remove markets (games) from the admin dashboard.
 
-### Real bug: realtime subscription crash on homepage
+## 1. Backfill historical results
 
-Console (from the user's preview) shows:
+Seed ~90 days of past `market_results` for all 8 existing markets (Kalyan, Madhur Day, Main Mumbai, Milan Day, Milan Night, Rajdhani Day, Rajdhani Night, Time Bazar).
 
-```
-Error: cannot add `postgres_changes` callbacks for realtime:results:2026-05-09 after `subscribe()`.
-  at useGameData.ts (useResultsForDate effect)
-```
+- For each market × each past day (skipping days not in the market's `days` array): pick a random valid `open_pana` and `close_pana` from `pana_chart`, derive `open_digit`, `close_digit`, `jodi`.
+- Insert rows with `status = 'DECLARED'`, `declared_at = session_date + close_time`, `declared_by = NULL` (system seed).
+- Idempotent: skip dates that already exist.
+- Done via a one-off SQL `INSERT ... SELECT` using `ON CONFLICT DO NOTHING` (after confirming a unique index on `(market_id, session_date)`; add it if missing).
 
-Cause: `useResultsForDate` and `useMyBets` build the channel with a fixed topic (`results:${date}`, `bets:${userId}`). In React Strict Mode (dev) and on fast remounts, `useEffect` mounts → cleans up → mounts again. supabase-js v2 keeps channels keyed by topic; the second mount gets back the *already-subscribed* channel and `.on(...)` throws because callbacks can't be added after `subscribe()`.
+This only affects historical display data. No bets, wallets, or audit settling logic runs.
 
-It doesn't blank the page (data still loads — `markets` and `market_results` requests are 200), but it spams the error log and breaks realtime invalidation for that date/user until the next full reload.
+## 2. Admin "Manage Markets" feature
 
-### Verified working
-- `GET /markets` → 200 with all 8 markets
-- `GET /market_results?session_date=eq.2026-05-09` → 200 (empty, expected)
-- Routes resolve, `__root` renders, no SSR 500, no runtime error boundary tripped
-- Previous-results fallback hook (`useLatestResultsPerMarket`) executes without error
+### Database
+Markets table already has full CRUD-friendly columns and admin-only RLS (`Admins write markets`). No schema change needed beyond optionally adding a soft-delete safety: we'll keep hard delete but block it server-side if any `bets` or `market_results` reference the market — instead set `status = 'INACTIVE'`.
 
-### False alarms
-- `postMessage` warnings from `cdn.gpteng.co` — Lovable editor bridge, not your app
-- The remote-browser test session showed a 502 from vite for `useCanGoBack.js` — that's the headless test sandbox, not the user's actual preview (their network log shows the page loading data fine)
+Add a SECURITY DEFINER function `admin_delete_market(_market_id text)` that:
+- Requires admin role.
+- If referenced by bets/results → updates `status='INACTIVE'` and returns `{ soft: true }`.
+- Else deletes the row and its `market_automation` entry, returns `{ soft: false }`.
 
----
+### UI
+New route `src/routes/admin/markets.tsx`:
+- Table of all markets with: display name, id, open/close, days, min/max bet, status.
+- "Add Market" button → dialog with form (id, display_name, name, open_time, close_time, result_time, days multi-select Mon–Sun, min_bet, max_bet, payouts JSON with sane defaults pulled from an existing market as template).
+- Row actions: Edit (same dialog prefilled), Activate/Suspend toggle (flips `status`), Delete (calls `admin_delete_market` RPC, shows toast indicating hard vs soft delete).
+- Also auto-creates a `market_automation` row (disabled) when a market is added.
 
-## Fix
+Add a new tile on `src/routes/admin/index.tsx` linking to `/admin/markets`.
 
-### 1. `src/hooks/useGameData.ts` — make channel topics unique per mount
+### Validation
+- `id`: lowercase, kebab-case, unique.
+- `open_time` < `close_time`, both `HH:MM`.
+- `payouts` defaulted from Kalyan's payouts so admin doesn't need to type JSON for normal use; advanced JSON editor available.
 
-Both `useResultsForDate` and `useMyBets` use a fixed topic. Change to a unique-per-mount topic so Strict Mode double-mount and route remounts can't collide.
+## Technical notes
+- Migrations:
+  1. Add unique index `market_results_market_session_uniq` on `(market_id, session_date)` if missing.
+  2. Create `admin_delete_market` function.
+  3. Seed historical results (90 days, all markets).
+- Frontend uses `supabase` client directly (admin RLS already enforced).
+- No changes to bet settlement, automation, or public pages required — Results/Charts pages will simply start showing data.
 
-```ts
-// useResultsForDate
-useEffect(() => {
-  const topic = `results:${date}:${crypto.randomUUID()}`;
-  const ch = supabase
-    .channel(topic)
-    .on("postgres_changes",
-      { event: "*", schema: "public", table: "market_results",
-        filter: `session_date=eq.${date}` },
-      () => qc.invalidateQueries({ queryKey: ["results", date] }),
-    )
-    .subscribe();
-  return () => { supabase.removeChannel(ch); };
-}, [date, qc]);
-
-// useMyBets — same pattern with `bets:${userId}:${crypto.randomUUID()}`
-```
-
-This is the standard supabase-js v2 fix for the "callbacks after subscribe" error in React Strict Mode.
-
-### 2. Verification (no code changes)
-
-After the patch:
-- Reload `/` and `/results` → confirm the realtime error is gone from the console
-- Confirm `markets` and `market_results` still fetch
-- Confirm the previous-results fallback skeleton/retry behavior from the last task still works
-- Spot-check `/admin/results/automation-runs` (uses `useMyBets` indirectly via authed routes) for the same error class
-
-### Out of scope
-- The hero section appearing dim on a 430px viewport is intentional gradient styling, not a bug
-- No DB / RLS / migration changes
-- No changes to admin auto-declare flow, settlement logic, or auth
-
----
-
-## Files touched
-- `src/hooks/useGameData.ts` — two effect topics get a uuid suffix (~4 lines changed total)
+## Out of scope
+- Editing past results (already covered by `correct_result` within 10-min window for current day).
+- Bulk import from external sources.

@@ -1,11 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Trophy, ArrowRight, Zap, Wallet, ArrowDownToLine, History, FileSearch } from "lucide-react";
+import { Trophy, ArrowRight, Zap, Wallet, ArrowDownToLine, History, FileSearch, Store } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminHome,
 });
 
 const tiles = [
+  {
+    to: "/admin/markets" as const,
+    icon: Store,
+    title: "Manage Markets",
+    desc: "Add, edit, suspend, or remove games (markets) from the platform.",
+  },
   {
     to: "/admin/results/declare" as const,
     icon: Trophy,
