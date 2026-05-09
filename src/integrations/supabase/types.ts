@@ -547,6 +547,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_market: { Args: { _market_id: string }; Returns: Json }
       approve_deposit: {
         Args: { _note?: string; _request_id: string }
         Returns: Json
