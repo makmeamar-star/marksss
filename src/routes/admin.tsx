@@ -52,7 +52,11 @@ function AdminLayout() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [hydrated, setHydrated] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const path = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => setHydrated(true), []);
+  // Close mobile drawer whenever the route changes
+  useEffect(() => { setMobileOpen(false); }, [path]);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -64,7 +68,7 @@ function AdminLayout() {
 
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border/60 bg-background/85 backdrop-blur px-4 h-14">
-          <Sheet>
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
             </SheetTrigger>
