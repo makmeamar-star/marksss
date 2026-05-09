@@ -1,66 +1,52 @@
-## Root cause recap
+## Goal
+Expand the platform from 8 markets to **100+ active Matka markets**, each fully wired into the existing scraper, automation, and admin systems.
 
-1. **Uniform 599/900 everywhere** — the prior fill SQL used a non-correlated `(SELECT pana FROM pana_chart ORDER BY random() LIMIT 1)`, which Postgres evaluates once for the whole INSERT, so every row got the same value.
-2. **Scraper logs `NOT_YET` for every market** — the app's IST clock is on **2026‑05‑09**, but dpboss only has real published numbers for actual past dates (≤ 2025). Today's row never exists in the dpboss panel.
-3. **Admin pages "broken"** — files render fine, no console/network errors. Perceived breakage is downstream of #1 and #2 (everything shows the same pana, scrape page shows 0 OK / 16 NOT_YET).
+## Approach
+Seed a curated list of well-known dpboss markets (Kalyan family, Mumbai family, Milan, Rajdhani, Sridevi, Madhuri, Supreme, Time variants, Padmavati, Mahalaxmi, Navratan, Balaji, Rajshree, Karnataka, Goa, Worli, etc.) — covering morning, day, evening, night sessions across the full 24h schedule. Each market gets:
 
-## Fix plan
+1. A row in `markets` (id slug, display name, open/close/result times, days, default min/max bet, default payouts, ACTIVE).
+2. A `market_source_map` row pointing at its dpboss panel-chart slug (so the existing scraper picks it up).
+3. A `market_automation` row (RANDOM mode, both sessions disabled by default — admin can flip on per market).
+4. A 90-day backfill via the existing backfill hook (real dpboss data where available, per-row randomized fillers elsewhere — same logic as the recent fix).
 
-### Step 1 — Add a date-mapping helper to the scraper
-Update `src/lib/scraper/index.server.ts` (and the two hook routes that consume it):
+Total target: **~110 markets** to comfortably exceed 100 active.
 
-- New helper `mapToRealDpbossDate(istDate)` that returns the most recent real-calendar date with the **same weekday** that is **≤ today (UTC real-world)**. Example: IST today 2026‑05‑09 (Sat) → 2025‑05‑10 (Sat) — most recent Saturday on the real calendar.
-- `scrape-results` hook: still writes the row keyed by IST `today` in `market_results`, but looks up the dpboss panel entry using the mapped real date. Logs include both dates for transparency.
-- `backfill-results` hook: same mapping applied per requested IST date.
-- Cache key in `fetchAllForMarket` already uses slug only; no change needed.
+## Plan
 
-### Step 2 — Wipe the bad seeded history
-Single `DELETE` via the insert tool:
+### Step 1 — Seed markets (single migration / data insert)
+Insert ~110 rows into `markets`, `market_source_map`, `market_automation` in one transaction. IDs use kebab-case slugs that match dpboss URLs (e.g. `sridevi`, `sridevi-night`, `madhur-night`, `kalyan-morning`, `supreme-day`, `mumbai-morning`, `padmavati-day`, `mahalaxmi-night`, `karnataka-day`, etc.).
 
-```sql
-DELETE FROM public.market_results
-WHERE session_date >= current_date - 90
-  AND declared_by IS NULL;
-```
-Preserves any admin-declared rows (none currently exist for that range).
+Time bands (so the homepage stays readable):
+- **05:00–09:00** Morning markets (Kalyan Morning, Mumbai Morning, Sridevi Morning, Padmavati Morning…)
+- **10:00–13:00** Late-morning (Time Bazar, Madhur Morning, Milan Morning…)
+- **13:00–17:00** Day (Kalyan, Rajdhani Day, Milan Day, Sridevi Day…)
+- **17:00–21:00** Evening (Main Bazar Day, Mumbai Main Day, Supreme Day…)
+- **21:00–00:30** Night (Main Mumbai, Rajdhani Night, Milan Night, Sridevi Night…)
 
-### Step 3 — Refill 90 days with **per-row varied** random panas
-One CTE-based INSERT that generates a row per (market × running day) and picks a **fresh random pana per row** using a lateral subquery so Postgres re-evaluates per row:
+Days: most run MON–SAT, a handful run all 7 days (Main Mumbai-style).
 
-```sql
-INSERT INTO market_results (market_id, session_date, open_pana, open_digit, close_pana, close_digit, jodi, status, declared_at)
-SELECT m.id, d::date,
-       op.pana, op.digit,
-       cp.pana, cp.digit,
-       (op.digit::text || cp.digit::text),
-       'DECLARED', (d::date + time '17:30') AT TIME ZONE 'Asia/Kolkata'
-FROM markets m
-CROSS JOIN generate_series(current_date - 89, current_date, '1 day') d
-JOIN LATERAL (SELECT pana, digit FROM pana_chart ORDER BY random() LIMIT 1) op ON true
-JOIN LATERAL (SELECT pana, digit FROM pana_chart ORDER BY random() LIMIT 1) cp ON true
-WHERE m.status = 'ACTIVE'
-  AND upper(to_char(d, 'DY')) = ANY(m.days)
-ON CONFLICT (market_id, session_date) DO NOTHING;
-```
+### Step 2 — Verify scraper picks them up
+Trigger the existing `/api/public/hooks/backfill-results` endpoint once. It iterates `market_source_map`, fetches dpboss panel charts for each slug, and fills 90 days of real history where the slug resolves. Slugs that 404 on dpboss simply log NOT_FOUND and fall back to per-row randomized fillers (already-built path).
 
-Today's row is left to the (now-working) scraper.
+### Step 3 — Verify admin pages
+- `/admin/markets` lists all 110 with edit/toggle/delete controls (already supports this).
+- `/admin/results/declare`, `/results/automation`, `/results/scrape`, `/results/history` all read from the same `markets` table and will surface every market automatically.
+- Public `/markets` and homepage cards render the new set.
 
-### Step 4 — Trigger one live scrape
-Call `POST /api/public/hooks/scrape-results` once. With the date mapping, dpboss will return real published panas for today's mapped date, and any declared sessions get written to today's IST row.
+### Step 4 — Sanity SQL check
+Confirm `SELECT count(*) FROM markets WHERE status='ACTIVE'` ≥ 100 and `SELECT count(*) FROM market_results WHERE session_date >= current_date - 90` shows full population.
 
-### Step 5 — Verify
-- `SELECT market_id, open_pana, close_pana FROM market_results WHERE session_date = current_date ORDER BY market_id;` → varied panas, not 599/900.
-- Reload `/results` and `/admin/results/scrape` → real numbers, scrape log shows `OK` rows.
-- Admin Result Automation, History pages load with varied data.
+## Technical Notes
+- One `supabase--migration` only adds nothing schema-wise (tables exist). The bulk insert is data, but since it touches three related tables atomically and conditionally upserts (`ON CONFLICT DO NOTHING`), a single migration is the safest container — no app code changes required.
+- No edits to scraper, automation cron, RPCs, or UI — they're already market-agnostic.
+- dpboss slugs that don't exist will silently no-op; no crash. Markets with no dpboss source can still be declared manually by admins.
+- Default payouts copied from existing markets (single 9, jodi 90, sp 150, dp 300, tp 600, half-sangam 1000, full-sangam 10000).
 
-## Files touched
+## Files Touched
+- One new migration file (data insert only, no schema)
+- No `src/` code changes
 
-- `src/lib/scraper/index.server.ts` — add `mapToRealDpbossDate` + use it in `fetchOneDay`.
-- `src/routes/api/public/hooks/scrape-results.ts` — apply mapping when looking up today's row.
-- `src/routes/api/public/hooks/backfill-results.ts` — apply mapping when iterating range.
-- Data ops only for steps 2–4 (no schema changes).
-
-## Notes
-
-- Cron jobs from the previous loop remain registered (`*/5 * * * *` scrape, `* * * * *` auto-declare). After Step 1 deploys, scrape will start producing real OK rows automatically.
-- Auto-declare fallback (random pana) still runs after grace_minutes for any session dpboss hasn't published — this is the existing safety net and stays untouched.
+## Out of Scope
+- Custom payouts per market (admin can edit later in `/admin/markets`)
+- Enabling auto-declare for every market (kept off — admin opts in)
+- Adding non-dpboss sources (worldsatta, etc.) — can be a follow-up
