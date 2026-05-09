@@ -62,7 +62,7 @@ function WalletPage() {
 
         <TabsContent value="deposit"><DepositForm /></TabsContent>
         <TabsContent value="withdraw"><WithdrawForm /></TabsContent>
-        <TabsContent value="transactions"><TransactionsTable /></TabsContent>
+        <TabsContent value="transactions" className="mt-4"><TransactionsLedger /></TabsContent>
         <TabsContent value="methods"><PaymentMethods /></TabsContent>
       </Tabs>
     </div>
