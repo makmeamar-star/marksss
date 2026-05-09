@@ -532,6 +532,42 @@ export type Database = {
         }
         Relationships: []
       }
+      system_alerts: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          message: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source: string
+          title: string
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          source: string
+          title: string
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string
+          title?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
