@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Power } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, Pencil, Trash2, Power, RefreshCw, Settings2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -29,46 +30,92 @@ type Market = {
 };
 
 const ALL_DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-const DEFAULT_PAYOUTS = {
+const FALLBACK_PAYOUTS = {
   single: 9, jodi: 90, singlePana: 150, doublePana: 300,
   triplePana: 600, halfSangam: 1000, fullSangam: 10000,
 };
 
-function emptyForm(): Market {
+function emptyForm(defaults: Record<string, number>): Market {
   return {
     id: "", name: "", display_name: "",
     open_time: "10:00", close_time: "12:00", result_time: "12:15",
     days: [...ALL_DAYS], min_bet: 10, max_bet: 10000,
-    status: "ACTIVE", payouts: { ...DEFAULT_PAYOUTS },
+    status: "ACTIVE", payouts: { ...defaults },
   };
 }
 
 function MarketsAdmin() {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const [defaultPayouts, setDefaultPayouts] = useState<Record<string, number>>(FALLBACK_PAYOUTS);
+  const [defaultsOpen, setDefaultsOpen] = useState(false);
+  const [defaultsForm, setDefaultsForm] = useState<Record<string, number>>(FALLBACK_PAYOUTS);
+  const [applyToAll, setApplyToAll] = useState(false);
+  const [savingDefaults, setSavingDefaults] = useState(false);
+
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Market | null>(null);
-  const [form, setForm] = useState<Market>(emptyForm());
+  const [form, setForm] = useState<Market>(emptyForm(FALLBACK_PAYOUTS));
   const [saving, setSaving] = useState(false);
+
+  const [backfilling, setBackfilling] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   async function load() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("markets").select("*").order("display_name");
-    if (error) toast.error(error.message);
-    else setMarkets((data ?? []) as Market[]);
+    const [{ data: ms, error: e1 }, { data: settings }] = await Promise.all([
+      supabase.from("markets").select("*").order("display_name"),
+      supabase.from("app_settings").select("value").eq("key", "default_payouts").maybeSingle(),
+    ]);
+    if (e1) toast.error(e1.message);
+    else setMarkets((ms ?? []) as Market[]);
+    if (settings?.value) {
+      const v = settings.value as Record<string, number>;
+      setDefaultPayouts({ ...FALLBACK_PAYOUTS, ...v });
+      setDefaultsForm({ ...FALLBACK_PAYOUTS, ...v });
+    }
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
 
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return markets;
+    return markets.filter((m) =>
+      m.display_name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q),
+    );
+  }, [markets, search]);
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((m) => selected.has(m.id));
+
+  function toggleSelect(id: string) {
+    const next = new Set(selected);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelected(next);
+  }
+  function toggleSelectAll() {
+    if (allFilteredSelected) {
+      const next = new Set(selected);
+      filtered.forEach((m) => next.delete(m.id));
+      setSelected(next);
+    } else {
+      const next = new Set(selected);
+      filtered.forEach((m) => next.add(m.id));
+      setSelected(next);
+    }
+  }
+
   function openAdd() {
     setEditing(null);
-    setForm(emptyForm());
+    setForm(emptyForm(defaultPayouts));
     setOpen(true);
   }
   function openEdit(m: Market) {
     setEditing(m);
-    setForm({ ...m, payouts: { ...DEFAULT_PAYOUTS, ...m.payouts } });
+    setForm({ ...m, payouts: { ...defaultPayouts, ...m.payouts } });
     setOpen(true);
   }
 
@@ -124,6 +171,17 @@ function MarketsAdmin() {
     else { toast.success(`${m.display_name} → ${next}`); load(); }
   }
 
+  async function bulkSetStatus(status: "ACTIVE" | "INACTIVE") {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (!confirm(`Set ${ids.length} market(s) to ${status}?`)) return;
+    setBulkBusy(true);
+    const { error } = await supabase.from("markets").update({ status }).in("id", ids);
+    setBulkBusy(false);
+    if (error) toast.error(error.message);
+    else { toast.success(`${ids.length} market(s) → ${status}`); setSelected(new Set()); load(); }
+  }
+
   async function remove(m: Market) {
     if (!confirm(`Delete "${m.display_name}"? If it has bets or results it will be deactivated instead.`)) return;
     const { data, error } = await supabase.rpc("admin_delete_market", { _market_id: m.id });
@@ -133,23 +191,93 @@ function MarketsAdmin() {
     load();
   }
 
+  async function backfillOne(m: Market) {
+    setBackfilling(m.id);
+    try {
+      const res = await fetch("/api/public/hooks/backfill-results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ marketIds: [m.id] }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || "backfill failed");
+      toast.success(`Backfilled ${m.display_name} — ${json.written} rows`);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBackfilling(null);
+    }
+  }
+
+  async function saveDefaults() {
+    setSavingDefaults(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert({ key: "default_payouts", value: defaultsForm, updated_at: new Date().toISOString() });
+    if (error) { setSavingDefaults(false); toast.error(error.message); return; }
+    setDefaultPayouts({ ...defaultsForm });
+
+    if (applyToAll) {
+      const { error: e2 } = await supabase
+        .from("markets")
+        .update({ payouts: defaultsForm })
+        .neq("id", "");
+      if (e2) { setSavingDefaults(false); toast.error(e2.message); return; }
+      toast.success("Defaults saved and applied to all markets");
+    } else {
+      toast.success("Default payouts saved");
+    }
+    setSavingDefaults(false);
+    setDefaultsOpen(false);
+    load();
+  }
+
   return (
     <div className="container mx-auto px-6 py-10 max-w-6xl">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="font-display text-3xl font-bold">Manage Markets</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Add, edit, suspend, or remove games.
+            Add, edit, suspend, or remove games. {markets.length} total · {markets.filter((m) => m.status === "ACTIVE").length} active.
           </p>
         </div>
-        <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />Add Market</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => { setDefaultsForm(defaultPayouts); setApplyToAll(false); setDefaultsOpen(true); }}>
+            <Settings2 className="h-4 w-4 mr-2" />Default Payouts
+          </Button>
+          <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />Add Market</Button>
+        </div>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-border/60 overflow-hidden">
+      <div className="mt-6 flex items-center gap-2 flex-wrap">
+        <Input
+          placeholder="Search markets…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-xs"
+        />
+        {selected.size > 0 && (
+          <>
+            <span className="text-sm text-muted-foreground ml-2">{selected.size} selected</span>
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkSetStatus("ACTIVE")}>
+              Activate
+            </Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkSetStatus("INACTIVE")}>
+              Deactivate
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Clear</Button>
+          </>
+        )}
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-border/60 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
+                <th className="px-3 py-3 w-10">
+                  <Checkbox checked={allFilteredSelected} onCheckedChange={toggleSelectAll} />
+                </th>
                 <th className="text-left px-4 py-3">Market</th>
                 <th className="text-left px-4 py-3">Time</th>
                 <th className="text-left px-4 py-3">Days</th>
@@ -160,13 +288,16 @@ function MarketsAdmin() {
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">Loading…</td></tr>
+                <tr><td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">Loading…</td></tr>
               )}
-              {!loading && markets.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">No markets yet.</td></tr>
+              {!loading && filtered.length === 0 && (
+                <tr><td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">No markets match.</td></tr>
               )}
-              {markets.map((m) => (
+              {filtered.map((m) => (
                 <tr key={m.id} className="border-t border-border/60">
+                  <td className="px-3 py-3">
+                    <Checkbox checked={selected.has(m.id)} onCheckedChange={() => toggleSelect(m.id)} />
+                  </td>
                   <td className="px-4 py-3">
                     <div className="font-semibold">{m.display_name}</div>
                     <div className="text-xs text-muted-foreground">{m.id}</div>
@@ -183,6 +314,9 @@ function MarketsAdmin() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
+                      <Button size="icon" variant="ghost" disabled={backfilling === m.id} onClick={() => backfillOne(m)} title="Backfill from source">
+                        {backfilling === m.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                      </Button>
                       <Button size="icon" variant="ghost" onClick={() => toggleStatus(m)} title="Toggle status">
                         <Power className="h-4 w-4" />
                       </Button>
@@ -201,6 +335,7 @@ function MarketsAdmin() {
         </div>
       </div>
 
+      {/* Add/Edit market dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -279,7 +414,7 @@ function MarketsAdmin() {
           <div className="mt-2">
             <Label className="mb-2 block">Payouts</Label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {Object.keys(DEFAULT_PAYOUTS).map((k) => (
+              {Object.keys(FALLBACK_PAYOUTS).map((k) => (
                 <div key={k}>
                   <Label className="text-xs text-muted-foreground">{k}</Label>
                   <Input type="number" value={form.payouts[k] ?? 0}
@@ -296,6 +431,39 @@ function MarketsAdmin() {
             <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
             <Button onClick={save} disabled={saving}>
               {saving ? "Saving…" : editing ? "Save Changes" : "Create Market"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Default payouts dialog */}
+      <Dialog open={defaultsOpen} onOpenChange={setDefaultsOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Default Payouts</DialogTitle>
+            <DialogDescription>
+              Used for new markets by default. Optionally apply to every existing market.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            {Object.keys(FALLBACK_PAYOUTS).map((k) => (
+              <div key={k}>
+                <Label className="text-xs text-muted-foreground">{k}</Label>
+                <Input type="number" value={defaultsForm[k] ?? 0}
+                  onChange={(e) => setDefaultsForm({ ...defaultsForm, [k]: Number(e.target.value) })} />
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <Checkbox id="apply-all" checked={applyToAll} onCheckedChange={(v) => setApplyToAll(!!v)} />
+            <label htmlFor="apply-all" className="text-sm cursor-pointer">
+              Also apply to all {markets.length} existing markets
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDefaultsOpen(false)}>Cancel</Button>
+            <Button onClick={saveDefaults} disabled={savingDefaults}>
+              {savingDefaults ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
