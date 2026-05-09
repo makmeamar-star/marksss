@@ -437,6 +437,7 @@ export type Database = {
           email: string | null
           kyc_status: string
           phone: string | null
+          status: string
           total_bet: number
           total_deposit: number
           total_win: number
@@ -451,6 +452,7 @@ export type Database = {
           email?: string | null
           kyc_status?: string
           phone?: string | null
+          status?: string
           total_bet?: number
           total_deposit?: number
           total_win?: number
@@ -465,6 +467,7 @@ export type Database = {
           email?: string | null
           kyc_status?: string
           phone?: string | null
+          status?: string
           total_bet?: number
           total_deposit?: number
           total_win?: number
@@ -627,7 +630,15 @@ export type Database = {
       }
     }
     Functions: {
+      admin_adjust_balance: {
+        Args: { _delta: number; _reason: string; _user_id: string }
+        Returns: Json
+      }
       admin_delete_market: { Args: { _market_id: string }; Returns: Json }
+      admin_set_user_status: {
+        Args: { _reason: string; _status: string; _user_id: string }
+        Returns: Json
+      }
       approve_deposit: {
         Args: { _note?: string; _request_id: string }
         Returns: Json
