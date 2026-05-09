@@ -127,7 +127,7 @@ function AdminHome() {
                     </td>
                   </tr>
                 ))}
-                {(!data || data.markets.length === 0) && (
+                {(!data?.markets || data.markets.length === 0) && (
                   <tr><td colSpan={6} className="px-2 py-6 text-center text-muted-foreground">No active markets.</td></tr>
                 )}
               </tbody>
