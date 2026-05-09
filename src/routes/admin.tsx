@@ -6,8 +6,8 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Trophy, Users, Wallet, Megaphone, BarChart3, Crown, LogOut, Menu,
-  ListChecks, Store, ArrowLeftRight, History,
+  LayoutDashboard, Trophy, Wallet, Crown, LogOut, Menu,
+  Store, ArrowLeftRight, History, Zap, Globe, FileSearch,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
