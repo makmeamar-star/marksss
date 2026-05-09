@@ -203,3 +203,37 @@ function ScrapePage() {
     </div>
   );
 }
+
+function StatTile({ label, value, tone = "default" }: { label: string; value: any; tone?: "default" | "success" | "error" | "muted" }) {
+  const toneCls =
+    tone === "success" ? "text-emerald-500" :
+    tone === "error" ? "text-destructive" :
+    tone === "muted" ? "text-muted-foreground" : "text-foreground";
+  return (
+    <div className="rounded-xl glass-gold p-4">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className={`mt-1 font-display text-xl font-bold ${toneCls}`}>{value}</div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    OK: "bg-emerald-500/15 text-emerald-500",
+    SKIPPED_DECLARED: "bg-muted text-muted-foreground",
+    NOT_YET: "bg-amber-500/15 text-amber-500",
+    RPC_ERROR: "bg-destructive/15 text-destructive",
+    FETCH_ERROR: "bg-destructive/15 text-destructive",
+    INVALID_PANA: "bg-destructive/15 text-destructive",
+  };
+  const cls = map[status] ?? "bg-muted text-muted-foreground";
+  return <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${cls}`}>{status}</span>;
+}
+
+function timeAgo(iso: string): string {
+  const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+  return `${Math.floor(sec / 86400)}d ago`;
+}
