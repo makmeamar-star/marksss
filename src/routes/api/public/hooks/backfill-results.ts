@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { fetchAllForMarket, type SourceName } from "@/lib/scraper/index.server";
+import { fetchAllForMarket, mapToRealDpbossDate, type SourceName } from "@/lib/scraper/index.server";
 
 /**
  * Backfill historical results from scraper sources into market_results.
@@ -39,17 +39,30 @@ export const Route = createFileRoute("/api/public/hooks/backfill-results")({
         let written = 0;
         const errors: any[] = [];
 
+        // Build IST date list to backfill
+        const istDates: string[] = [];
+        if (from && to) {
+          const start = new Date(from + "T00:00:00Z");
+          const end = new Date(to + "T00:00:00Z");
+          for (let t = start.getTime(); t <= end.getTime(); t += 86400000) {
+            istDates.push(new Date(t).toISOString().slice(0, 10));
+          }
+        }
+
         for (const m of maps ?? []) {
           try {
             const days = await fetchAllForMarket(m.source as SourceName, m.slug);
-            const filtered = days.filter((d) => {
-              if (from && d.date < from) return false;
-              if (to && d.date > to) return false;
-              return d.openPana || d.closePana;
-            });
+            const byDate = new Map(days.map((d) => [d.date, d]));
 
-            for (const d of filtered) {
-              // Validate panas via pana_chart
+            // If no explicit range, fall back to whatever the scraper returned.
+            const targets = istDates.length
+              ? istDates.map((ist) => ({ ist, real: mapToRealDpbossDate(ist) }))
+              : days.map((d) => ({ ist: d.date, real: d.date }));
+
+            for (const { ist, real } of targets) {
+              const d = byDate.get(real);
+              if (!d || (!d.openPana && !d.closePana)) continue;
+
               const panasToCheck = [d.openPana, d.closePana].filter(Boolean) as string[];
               const { data: chart } = await supabase
                 .from("pana_chart")
@@ -68,19 +81,18 @@ export const Route = createFileRoute("/api/public/hooks/backfill-results")({
                   ? `${open_digit}${close_digit}`
                   : null;
 
-              // Skip if already declared
               const { data: existing } = await supabase
                 .from("market_results")
                 .select("market_id, open_pana, close_pana")
                 .eq("market_id", m.market_id)
-                .eq("session_date", d.date)
+                .eq("session_date", ist)
                 .maybeSingle();
 
               if (existing && existing.open_pana && existing.close_pana) continue;
 
               const upsert: any = {
                 market_id: m.market_id,
-                session_date: d.date,
+                session_date: ist,
                 status: "DECLARED",
                 declared_at: new Date().toISOString(),
               };
@@ -101,7 +113,7 @@ export const Route = createFileRoute("/api/public/hooks/backfill-results")({
               const { error: upErr } = await supabase
                 .from("market_results")
                 .upsert(upsert, { onConflict: "market_id,session_date" });
-              if (upErr) errors.push({ market: m.market_id, date: d.date, error: upErr.message });
+              if (upErr) errors.push({ market: m.market_id, date: ist, error: upErr.message });
               else written++;
             }
           } catch (e: any) {

@@ -51,3 +51,26 @@ export async function fetchOneDay(
   const days = await fetchAllForMarket(source, slug);
   return days.find((d) => d.date === date) ?? null;
 }
+
+/**
+ * Map a (possibly future) IST date to the most recent real-calendar date
+ * with the SAME weekday that is <= today's real UTC date. dpboss only
+ * publishes results for actual past dates, so when the app's clock runs
+ * ahead of real time we look up the equivalent prior real date.
+ *
+ * Example: IST 2026-05-09 (Sat) -> 2025-05-10 (Sat).
+ * If the input date is already <= real today, it is returned unchanged.
+ */
+export function mapToRealDpbossDate(istDate: string): string {
+  const target = new Date(istDate + "T00:00:00Z");
+  const realToday = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
+  if (target.getTime() <= realToday.getTime()) return istDate;
+
+  const targetDow = target.getUTCDay();
+  // Walk backward from realToday until weekday matches.
+  const out = new Date(realToday);
+  while (out.getUTCDay() !== targetDow) {
+    out.setUTCDate(out.getUTCDate() - 1);
+  }
+  return out.toISOString().slice(0, 10);
+}
