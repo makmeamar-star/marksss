@@ -6,8 +6,8 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Trophy, Users, Wallet, Megaphone, BarChart3, Crown, LogOut, Menu,
-  ListChecks, Store, ArrowLeftRight, History,
+  LayoutDashboard, Trophy, Wallet, Crown, LogOut, Menu,
+  Store, ArrowLeftRight, History, Zap, Globe, FileSearch,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -40,19 +40,23 @@ const NAV = [
   { to: "/admin/markets", label: "Markets", icon: Store },
   { to: "/admin/results/declare", label: "Declare Results", icon: Trophy },
   { to: "/admin/results/history", label: "Result History", icon: History },
-  { to: "/admin/bets", label: "Bets", icon: ListChecks },
-  { to: "/admin/users", label: "Users", icon: Users },
+  { to: "/admin/results/automation", label: "Automation", icon: Zap },
+  { to: "/admin/results/scrape", label: "Scraper", icon: Globe },
+  { to: "/admin/results/automation-runs", label: "Automation Runs", icon: History },
+  { to: "/admin/results/automation-audit", label: "Automation Audit", icon: FileSearch },
   { to: "/admin/deposits", label: "Deposits", icon: Wallet },
   { to: "/admin/withdrawals", label: "Withdrawals", icon: ArrowLeftRight },
-  { to: "/admin/broadcasts", label: "Broadcasts", icon: Megaphone },
-  { to: "/admin/reports", label: "Reports", icon: BarChart3 },
 ] as const;
 
 function AdminLayout() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [hydrated, setHydrated] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const path = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => setHydrated(true), []);
+  // Close mobile drawer whenever the route changes
+  useEffect(() => { setMobileOpen(false); }, [path]);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -64,7 +68,7 @@ function AdminLayout() {
 
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border/60 bg-background/85 backdrop-blur px-4 h-14">
-          <Sheet>
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
             </SheetTrigger>
