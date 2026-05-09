@@ -155,11 +155,11 @@ function LoginPage() {
               type="button"
               className="text-primary hover:underline"
               onClick={async () => {
-                if (!username || !username.includes("@")) {
+                if (!identifier || !identifier.includes("@")) {
                   toast.error("Enter your account email above first");
                   return;
                 }
-                const { error } = await supabase.auth.resetPasswordForEmail(username, {
+                const { error } = await supabase.auth.resetPasswordForEmail(identifier, {
                   redirectTo: `${window.location.origin}/reset-password`,
                 });
                 if (error) toast.error(error.message);
