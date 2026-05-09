@@ -11,15 +11,14 @@ export const Route = createFileRoute("/_authenticated/my-bets")({
 });
 
 function MyBetsPage() {
-  const user = useAuthStore((s) => s.user);
-  const bets = useBetStore((s) => s.bets);
-  const markets = useMarketStore((s) => s.markets);
+  const { data: bets = [] } = useMyBets();
+  const { data: markets = [] } = useMarkets();
 
   const [status, setStatus] = useState<string>("ALL");
   const [marketId, setMarketId] = useState<string>("ALL");
   const [date, setDate] = useState<string>("");
 
-  const mine = useMemo(() => bets.filter((b) => b.userId === user?.id), [bets, user]);
+  const mine = useMemo(() => bets, [bets]);
 
   const filtered = mine.filter((b) =>
     (status === "ALL" || b.status === status) &&
