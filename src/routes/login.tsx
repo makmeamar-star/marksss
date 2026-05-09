@@ -154,25 +154,36 @@ function LoginPage() {
             <button type="button" className="text-primary hover:underline">Forgot password?</button>
           </div>
 
-          <Button type="submit" disabled={busy || demoBusy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
+          <Button type="submit" disabled={anyBusy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
             {busy ? "Signing in…" : "Sign In"}
           </Button>
 
           <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground/70">
             <span className="h-px flex-1 bg-border/60" />
-            or
+            or try a demo
             <span className="h-px flex-1 bg-border/60" />
           </div>
 
-          <Button
-            type="button"
-            onClick={demoLogin}
-            disabled={busy || demoBusy}
-            variant="outline"
-            className="w-full border-primary/40 text-primary hover:bg-primary/10"
-          >
-            {demoBusy ? "Loading demo…" : "Try Demo Account"}
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              onClick={demoLogin}
+              disabled={anyBusy}
+              variant="outline"
+              className="border-primary/40 text-primary hover:bg-primary/10"
+            >
+              {demoBusy ? "Loading…" : "Demo User"}
+            </Button>
+            <Button
+              type="button"
+              onClick={demoAdminLogin}
+              disabled={anyBusy}
+              variant="outline"
+              className="border-primary/40 text-primary hover:bg-primary/10"
+            >
+              {adminBusy ? "Loading…" : "Demo Admin"}
+            </Button>
+          </div>
 
           <p className="text-xs text-center text-muted-foreground">
             First account created automatically becomes the admin.
