@@ -33,11 +33,13 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
 
         const summary: any[] = [];
 
+        const lookupDate = mapToRealDpbossDate(today);
+
         for (const m of maps ?? []) {
           for (const session of ["OPEN", "CLOSE"] as const) {
             try {
               const days = await fetchAllForMarket(m.source as SourceName, m.slug);
-              const todayRow = days.find((d) => d.date === today);
+              const todayRow = days.find((d) => d.date === lookupDate);
               const pana = session === "OPEN" ? todayRow?.openPana : todayRow?.closePana;
 
               if (!pana) {
