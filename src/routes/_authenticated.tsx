@@ -136,7 +136,7 @@ function SidebarNav({ unread }: { unread: number }) {
   );
 }
 
-function SidebarFooter({ user, onLogout, hydrated }: { user: ReturnType<typeof useAuthStore.getState>["user"]; onLogout: () => void; hydrated: boolean }) {
+function SidebarFooter({ user, onLogout, hydrated }: { user: ReturnType<typeof useAuthStore.getState>["user"]; onLogout: () => void | Promise<void>; hydrated: boolean }) {
   if (!hydrated) return null;
   return (
     <div className="border-t border-border/60 p-3 space-y-2">
