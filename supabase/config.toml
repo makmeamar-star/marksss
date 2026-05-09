@@ -1,1 +1,4 @@
 project_id = "kpahmkjutkfyhydfgffh"
+
+[functions.ensure-demo-admin]
+verify_jwt = true
