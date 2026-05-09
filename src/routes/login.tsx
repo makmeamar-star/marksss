@@ -73,8 +73,8 @@ function LoginPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="id">Username / Email / Phone</Label>
-            <Input id="id" value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="player1" autoComplete="username" />
+            <Label htmlFor="id">Email</Label>
+            <Input id="id" type="email" value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="you@example.com" autoComplete="email" />
           </div>
 
           <div className="space-y-2">
