@@ -36,9 +36,10 @@ const NAV = [
 
 function AuthLayout() {
   const user = useAuthStore((s) => s.user);
+  const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const logout = useAuthStore((s) => s.logout);
-  const lastWin = useBetStore((s) => s.lastWin);
-  const clearLastWin = useBetStore((s) => s.clearLastWin);
+  const qc = useQueryClient();
+  const [lastWin, setLastWin] = useState<number | null>(null);
   const unread = useNotificationStore((s) =>
     user ? s.notifications.filter((n) => n.userId === user.id && !n.read).length : 0
   );
@@ -46,6 +47,29 @@ function AuthLayout() {
   // hydration-safe re-render after persist mounts
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
+
+  // Realtime: listen for win notifications
+  useEffect(() => {
+    if (!user?.id) return;
+    const ch = supabase
+      .channel(`win:${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const n: any = payload.new;
+          if (n?.type === "bet_won") {
+            const amt = Number(n.metadata?.win_amount ?? 0);
+            if (amt > 0) setLastWin(amt);
+          }
+          if (n?.type === "deposit_approved" || n?.type === "withdraw_approved") {
+            refreshProfile();
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id, refreshProfile, qc]);
 
   return (
     <div className="min-h-screen bg-background flex">
