@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/stores/authStore";
 
+const DEMO_EMAIL = "demo@sattaking.test";
+const DEMO_PASSWORD = "demo-player-2026";
+const DEMO_USERNAME = "demo_player";
+
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Login — SattaKing Pro" }] }),
   component: LoginPage,
