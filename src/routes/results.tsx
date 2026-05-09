@@ -5,7 +5,7 @@ import { ResultCard } from "@/components/ResultCard";
 import { ResultsTicker } from "@/components/ResultsTicker";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { useMarkets, useResultsForDate, useResultsRange } from "@/hooks/useGameData";
+import { useMarkets, useResultsForDate, useResultsRange, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { todayIST } from "@/lib/marketTime";
 
 export const Route = createFileRoute("/results")({
@@ -26,6 +26,8 @@ function ResultsPage() {
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(date);
   const { data: history = [] } = useResultsRange(14);
+  const { data: latestPerMarket = {} } = useLatestResultsPerMarket();
+  const isToday = date === today;
 
   return (
     <div className="min-h-screen">
@@ -51,7 +53,13 @@ function ResultsPage() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {markets.map((m) => (
-            <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === date)} />
+            <ResultCard
+              key={m.id}
+              market={m}
+              result={results.find((r) => r.marketId === m.id && r.sessionDate === date)}
+              previousResult={latestPerMarket[m.id]}
+              showPreviousFallback={isToday}
+            />
           ))}
         </div>
 

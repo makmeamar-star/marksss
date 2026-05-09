@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultsTicker } from "@/components/ResultsTicker";
 import { ResultCard } from "@/components/ResultCard";
-import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
+import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { todayIST } from "@/lib/marketTime";
 
 export const Route = createFileRoute("/")({
@@ -25,6 +25,7 @@ function HomePage() {
   const today = todayIST();
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
+  const { data: latestPerMarket = {} } = useLatestResultsPerMarket();
 
   const declaredToday = results.filter((r) => r.status === "DECLARED").length;
   const openNow = markets.filter((m) => m.isOpen).length;
@@ -89,7 +90,7 @@ function HomePage() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {markets.map((m) => (
-            <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} />
+            <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback />
           ))}
         </div>
       </section>

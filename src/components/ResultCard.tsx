@@ -7,15 +7,26 @@ import type { Market, MarketResult } from "@/lib/types";
 interface Props {
   market: Market;
   result?: MarketResult;
+  previousResult?: MarketResult;
+  showPreviousFallback?: boolean;
 }
 
-export function ResultCard({ market, result }: Props) {
+export function ResultCard({ market, result, previousResult, showPreviousFallback }: Props) {
   const declared = result?.status === "DECLARED";
   const openText = result?.openPana && result?.openDigit !== undefined
     ? `${result.openPana}-${result.openDigit}`
     : undefined;
   const closeText = result?.closePana && result?.closeDigit !== undefined
     ? `${result.closeDigit}-${result.closePana}`
+    : undefined;
+
+  const usePrev = !declared && showPreviousFallback && previousResult?.status === "DECLARED";
+  const prevOpen = usePrev && previousResult?.openPana && previousResult?.openDigit !== undefined
+    ? `${previousResult.openPana}-${previousResult.openDigit}` : undefined;
+  const prevClose = usePrev && previousResult?.closePana && previousResult?.closeDigit !== undefined
+    ? `${previousResult.closeDigit}-${previousResult.closePana}` : undefined;
+  const prevDateLabel = usePrev && previousResult
+    ? new Date(previousResult.sessionDate).toLocaleDateString(undefined, { day: "2-digit", month: "short" })
     : undefined;
 
   return (
@@ -39,18 +50,31 @@ export function ResultCard({ market, result }: Props) {
         )}
       </div>
 
-      <div className="flex items-center justify-center my-4">
+      <div className="flex flex-col items-center justify-center my-4 gap-1">
         <div className="flex items-center gap-2 text-center">
-          <span className="font-mono text-primary text-xl md:text-2xl text-glow-gold">
-            {openText ?? "***"}
-          </span>
-          <span className="text-muted-foreground mx-1">·</span>
-          <NumberReveal value={result?.jodi} size="lg" />
-          <span className="text-muted-foreground mx-1">·</span>
-          <span className="font-mono text-primary text-xl md:text-2xl text-glow-gold">
-            {closeText ?? "***"}
-          </span>
+          {usePrev ? (
+            <>
+              <span className="font-mono text-muted-foreground/80 text-xl md:text-2xl">{prevOpen ?? "***"}</span>
+              <span className="text-muted-foreground mx-1">·</span>
+              <span className="font-mono text-muted-foreground/80 text-xl md:text-2xl">{previousResult?.jodi ?? "**"}</span>
+              <span className="text-muted-foreground mx-1">·</span>
+              <span className="font-mono text-muted-foreground/80 text-xl md:text-2xl">{prevClose ?? "***"}</span>
+            </>
+          ) : (
+            <>
+              <span className="font-mono text-primary text-xl md:text-2xl text-glow-gold">{openText ?? "***"}</span>
+              <span className="text-muted-foreground mx-1">·</span>
+              <NumberReveal value={result?.jodi} size="lg" />
+              <span className="text-muted-foreground mx-1">·</span>
+              <span className="font-mono text-primary text-xl md:text-2xl text-glow-gold">{closeText ?? "***"}</span>
+            </>
+          )}
         </div>
+        {usePrev && (
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/80">
+            Prev · {prevDateLabel}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/60">
