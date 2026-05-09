@@ -6,10 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/stores/authStore";
+import { supabase } from "@/integrations/supabase/client";
 
 const DEMO_EMAIL = "demo@sattaking.test";
 const DEMO_PASSWORD = "demo-player-2026";
 const DEMO_USERNAME = "demo_player";
+
+const DEMO_ADMIN_EMAIL = "admin@sattaking.test";
+const DEMO_ADMIN_PASSWORD = "demo-admin-2026";
+const DEMO_ADMIN_USERNAME = "demo_admin";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Login — SattaKing Pro" }] }),
