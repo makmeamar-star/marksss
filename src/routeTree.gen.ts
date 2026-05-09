@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminWithdrawalsRouteImport } from './routes/admin/withdrawals'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminMonitoringRouteImport } from './routes/admin/monitoring'
 import { Route as AdminMarketsRouteImport } from './routes/admin/markets'
 import { Route as AdminDepositsRouteImport } from './routes/admin/deposits'
 import { Route as AdminBroadcastsRouteImport } from './routes/admin/broadcasts'
@@ -38,6 +39,7 @@ import { Route as AdminResultsAutomationAuditRouteImport } from './routes/admin/
 import { Route as AdminResultsAutomationRouteImport } from './routes/admin/results.automation'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
 import { Route as ApiPublicHooksScrapeResultsRouteImport } from './routes/api/public/hooks/scrape-results'
+import { Route as ApiPublicHooksHealthCheckRouteImport } from './routes/api/public/hooks/health-check'
 import { Route as ApiPublicHooksBackfillResultsRouteImport } from './routes/api/public/hooks/backfill-results'
 import { Route as ApiPublicHooksAutoDeclareResultsRouteImport } from './routes/api/public/hooks/auto-declare-results'
 
@@ -98,6 +100,11 @@ const AdminWithdrawalsRoute = AdminWithdrawalsRouteImport.update({
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
+  id: '/monitoring',
+  path: '/monitoring',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminMarketsRoute = AdminMarketsRouteImport.update({
@@ -190,6 +197,12 @@ const ApiPublicHooksScrapeResultsRoute =
     path: '/api/public/hooks/scrape-results',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksHealthCheckRoute =
+  ApiPublicHooksHealthCheckRouteImport.update({
+    id: '/api/public/hooks/health-check',
+    path: '/api/public/hooks/health-check',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksBackfillResultsRoute =
   ApiPublicHooksBackfillResultsRouteImport.update({
     id: '/api/public/hooks/backfill-results',
@@ -221,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin/': typeof AdminIndexRoute
@@ -233,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
 }
 export interface FileRoutesByTo {
@@ -252,6 +267,7 @@ export interface FileRoutesByTo {
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin': typeof AdminIndexRoute
@@ -264,6 +280,7 @@ export interface FileRoutesByTo {
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
 }
 export interface FileRoutesById {
@@ -286,6 +303,7 @@ export interface FileRoutesById {
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin/': typeof AdminIndexRoute
@@ -298,6 +316,7 @@ export interface FileRoutesById {
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
 }
 export interface FileRouteTypes {
@@ -320,6 +339,7 @@ export interface FileRouteTypes {
     | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/markets'
+    | '/admin/monitoring'
     | '/admin/users'
     | '/admin/withdrawals'
     | '/admin/'
@@ -332,6 +352,7 @@ export interface FileRouteTypes {
     | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -351,6 +372,7 @@ export interface FileRouteTypes {
     | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/markets'
+    | '/admin/monitoring'
     | '/admin/users'
     | '/admin/withdrawals'
     | '/admin'
@@ -363,6 +385,7 @@ export interface FileRouteTypes {
     | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
   id:
     | '__root__'
@@ -384,6 +407,7 @@ export interface FileRouteTypes {
     | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/markets'
+    | '/admin/monitoring'
     | '/admin/users'
     | '/admin/withdrawals'
     | '/admin/'
@@ -396,6 +420,7 @@ export interface FileRouteTypes {
     | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
   fileRoutesById: FileRoutesById
 }
@@ -411,6 +436,7 @@ export interface RootRouteChildren {
   ResultsRoute: typeof ResultsRoute
   ApiPublicHooksAutoDeclareResultsRoute: typeof ApiPublicHooksAutoDeclareResultsRoute
   ApiPublicHooksBackfillResultsRoute: typeof ApiPublicHooksBackfillResultsRoute
+  ApiPublicHooksHealthCheckRoute: typeof ApiPublicHooksHealthCheckRoute
   ApiPublicHooksScrapeResultsRoute: typeof ApiPublicHooksScrapeResultsRoute
 }
 
@@ -498,6 +524,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/monitoring': {
+      id: '/admin/monitoring'
+      path: '/monitoring'
+      fullPath: '/admin/monitoring'
+      preLoaderRoute: typeof AdminMonitoringRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/markets': {
@@ -619,6 +652,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksScrapeResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/health-check': {
+      id: '/api/public/hooks/health-check'
+      path: '/api/public/hooks/health-check'
+      fullPath: '/api/public/hooks/health-check'
+      preLoaderRoute: typeof ApiPublicHooksHealthCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/backfill-results': {
       id: '/api/public/hooks/backfill-results'
       path: '/api/public/hooks/backfill-results'
@@ -663,6 +703,7 @@ interface AdminRouteChildren {
   AdminBroadcastsRoute: typeof AdminBroadcastsRoute
   AdminDepositsRoute: typeof AdminDepositsRoute
   AdminMarketsRoute: typeof AdminMarketsRoute
+  AdminMonitoringRoute: typeof AdminMonitoringRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminWithdrawalsRoute: typeof AdminWithdrawalsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -679,6 +720,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBroadcastsRoute: AdminBroadcastsRoute,
   AdminDepositsRoute: AdminDepositsRoute,
   AdminMarketsRoute: AdminMarketsRoute,
+  AdminMonitoringRoute: AdminMonitoringRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminWithdrawalsRoute: AdminWithdrawalsRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -704,6 +746,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResultsRoute: ResultsRoute,
   ApiPublicHooksAutoDeclareResultsRoute: ApiPublicHooksAutoDeclareResultsRoute,
   ApiPublicHooksBackfillResultsRoute: ApiPublicHooksBackfillResultsRoute,
+  ApiPublicHooksHealthCheckRoute: ApiPublicHooksHealthCheckRoute,
   ApiPublicHooksScrapeResultsRoute: ApiPublicHooksScrapeResultsRoute,
 }
 export const routeTree = rootRouteImport
