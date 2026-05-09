@@ -7,7 +7,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { useAuthStore } from "@/stores/authStore";
 
 import appCss from "../styles.css?url";
 
