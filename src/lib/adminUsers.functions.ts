@@ -124,7 +124,7 @@ export const adjustBalance = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({
       userId: z.string().uuid(),
-      delta: z.number().refine((n) => n !== 0, "delta cannot be zero").min(-10_000_000).max(10_000_000),
+      delta: z.number().min(-10_000_000).max(10_000_000).refine((n) => n !== 0, "delta cannot be zero"),
       reason: z.string().trim().min(3).max(200),
     }).parse(input)
   )
