@@ -23,20 +23,19 @@ function LoginPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier || !password) {
-      toast.error("Enter username and password");
+      toast.error("Enter email and password");
       return;
     }
     setBusy(true);
-    await new Promise((r) => setTimeout(r, 500));
-    login(identifier);
-    toast.success(`Welcome back, ${identifier}!`);
-    navigate({ to: "/dashboard" });
-  };
-
-  const demoAdmin = () => {
-    login("admin", "ADMIN");
-    toast.success("Logged in as admin (demo)");
-    navigate({ to: "/admin" });
+    try {
+      await login(identifier, password);
+      toast.success(`Welcome back!`);
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
