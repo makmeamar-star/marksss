@@ -27,6 +27,7 @@ function HomePage() {
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
   const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
+  useEnsureFreshResults();
 
   const declaredToday = results.filter((r) => r.status === "DECLARED").length;
   const openNow = markets.filter((m) => m.isOpen).length;
