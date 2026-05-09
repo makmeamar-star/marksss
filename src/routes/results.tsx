@@ -3,9 +3,10 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultCard } from "@/components/ResultCard";
 import { ResultsTicker } from "@/components/ResultsTicker";
-import { useMarketStore } from "@/stores/marketStore";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { useMarkets, useResultsForDate, useResultsRange } from "@/hooks/useGameData";
+import { todayIST } from "@/lib/marketTime";
 
 export const Route = createFileRoute("/results")({
   head: () => ({
@@ -19,10 +20,12 @@ export const Route = createFileRoute("/results")({
 });
 
 function ResultsPage() {
-  const markets = useMarketStore((s) => s.markets);
-  const results = useMarketStore((s) => s.results);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
   const [date, setDate] = useState(today);
+
+  const { data: markets = [] } = useMarkets();
+  const { data: results = [] } = useResultsForDate(date);
+  const { data: history = [] } = useResultsRange(14);
 
   return (
     <div className="min-h-screen">
@@ -75,7 +78,7 @@ function ResultsPage() {
                     <tr key={ds} className="border-t border-border/50">
                       <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{ds}</td>
                       {markets.map((m) => {
-                        const r = results.find((x) => x.marketId === m.id && x.sessionDate === ds);
+                        const r = history.find((x) => x.marketId === m.id && x.sessionDate === ds);
                         return (
                           <td key={m.id} className="px-3 py-2.5 text-center font-mono">
                             {r?.jodi
