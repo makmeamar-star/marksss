@@ -59,6 +59,9 @@ function ResultsPage() {
               result={results.find((r) => r.marketId === m.id && r.sessionDate === date)}
               previousResult={latestPerMarket[m.id]}
               showPreviousFallback={isToday}
+              previousLoading={isToday && prevLoading}
+              previousError={isToday && prevError}
+              onRetryPrevious={() => refetchPrev()}
             />
           ))}
         </div>
