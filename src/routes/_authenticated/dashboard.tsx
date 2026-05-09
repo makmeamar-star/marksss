@@ -14,12 +14,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const user = useAuthStore((s) => s.user);
-  const bets = useBetStore((s) => s.bets);
-  const markets = useMarketStore((s) => s.markets);
-  const results = useMarketStore((s) => s.results);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
+  const { data: bets = [] } = useMyBets();
+  const { data: markets = [] } = useMarkets();
+  const { data: results = [] } = useResultsForDate(today);
 
-  const userBets = bets.filter((b) => b.userId === user?.id);
+  const userBets = bets;
   const todayBets = userBets.filter((b) => b.sessionDate === today);
   const wonToday = todayBets.filter((b) => b.status === "WON");
   const pending = userBets.filter((b) => b.status === "PENDING");
