@@ -25,6 +25,12 @@ const tiles = [
     desc: "Toggle automatic result declaration per market. Scheduler runs every minute.",
   },
   {
+    to: "/admin/results/scrape" as const,
+    icon: Globe,
+    title: "Scrape Real Results",
+    desc: "Pull live Open/Close panas from dpboss + backfill historical panel charts.",
+  },
+  {
     to: "/admin/results/automation-runs" as const,
     icon: History,
     title: "Automation Runs",
