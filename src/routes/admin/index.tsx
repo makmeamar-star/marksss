@@ -1,35 +1,63 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Trophy, ArrowRight } from "lucide-react";
+import { Trophy, ArrowRight, Zap, Wallet, ArrowDownToLine } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminHome,
 });
 
+const tiles = [
+  {
+    to: "/admin/results/declare" as const,
+    icon: Trophy,
+    title: "Declare Results",
+    desc: "Enter Open/Close pana with full validation, financial impact preview, and 10-min correction window.",
+  },
+  {
+    to: "/admin/results/automation" as const,
+    icon: Zap,
+    title: "Result Automation",
+    desc: "Toggle automatic result declaration per market. Scheduler runs every minute.",
+  },
+  {
+    to: "/admin/deposits" as const,
+    icon: Wallet,
+    title: "Deposit Requests",
+    desc: "Review and approve pending user deposits.",
+  },
+  {
+    to: "/admin/withdrawals" as const,
+    icon: ArrowDownToLine,
+    title: "Withdrawal Requests",
+    desc: "Approve or reject withdrawal requests.",
+  },
+];
+
 function AdminHome() {
   return (
     <div className="container mx-auto px-6 py-12 max-w-4xl">
       <h1 className="font-display text-4xl font-bold">Admin Dashboard</h1>
-      <p className="text-muted-foreground mt-2">
-        The full admin surface lands in Phase 4. Result declaration is live now.
-      </p>
+      <p className="text-muted-foreground mt-2">Operations control center.</p>
 
-      <Link
-        to="/admin/results/declare"
-        className="mt-8 group flex items-center justify-between rounded-2xl glass-gold p-6 hover:ring-gold transition-all"
-      >
-        <div className="flex items-center gap-4">
-          <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-gold text-background">
-            <Trophy className="h-6 w-6" />
-          </span>
-          <div>
-            <div className="font-display text-2xl font-bold">Declare Results</div>
-            <div className="text-sm text-muted-foreground">
-              Enter Open/Close pana with full validation, financial impact preview, and 10-min correction window.
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        {tiles.map((t) => (
+          <Link
+            key={t.to}
+            to={t.to}
+            className="group flex items-start justify-between gap-4 rounded-2xl glass-gold p-5 hover:ring-gold transition-all"
+          >
+            <div className="flex items-start gap-4">
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-gold text-background shrink-0">
+                <t.icon className="h-5 w-5" />
+              </span>
+              <div>
+                <div className="font-display text-lg font-bold">{t.title}</div>
+                <div className="text-xs text-muted-foreground mt-1">{t.desc}</div>
+              </div>
             </div>
-          </div>
-        </div>
-        <ArrowRight className="h-5 w-5 text-primary group-hover:translate-x-1 transition-transform" />
-      </Link>
+            <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform mt-2 shrink-0" />
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
