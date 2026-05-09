@@ -26,6 +26,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyBetsRouteImport } from './routes/_authenticated/my-bets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AdminResultsScrapeRouteImport } from './routes/admin/results.scrape'
 import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
 import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.declare'
 import { Route as AdminResultsAutomationRunsRouteImport } from './routes/admin/results.automation-runs'
@@ -121,6 +122,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AdminResultsScrapeRoute = AdminResultsScrapeRouteImport.update({
+  id: '/results/scrape',
+  path: '/results/scrape',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminResultsHistoryRoute = AdminResultsHistoryRouteImport.update({
   id: '/results/history',
   path: '/results/history',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
@@ -222,6 +229,7 @@ export interface FileRoutesByTo {
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
     | '/admin/results/history'
+    | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/scrape-results'
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
     | '/admin/results/history'
+    | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/scrape-results'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
     | '/admin/results/history'
+    | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/scrape-results'
@@ -474,6 +486,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/admin/results/scrape': {
+      id: '/admin/results/scrape'
+      path: '/results/scrape'
+      fullPath: '/admin/results/scrape'
+      preLoaderRoute: typeof AdminResultsScrapeRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/results/history': {
       id: '/admin/results/history'
       path: '/results/history'
@@ -572,6 +591,7 @@ interface AdminRouteChildren {
   AdminResultsAutomationRunsRoute: typeof AdminResultsAutomationRunsRoute
   AdminResultsDeclareRoute: typeof AdminResultsDeclareRoute
   AdminResultsHistoryRoute: typeof AdminResultsHistoryRoute
+  AdminResultsScrapeRoute: typeof AdminResultsScrapeRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -584,6 +604,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminResultsAutomationRunsRoute: AdminResultsAutomationRunsRoute,
   AdminResultsDeclareRoute: AdminResultsDeclareRoute,
   AdminResultsHistoryRoute: AdminResultsHistoryRoute,
+  AdminResultsScrapeRoute: AdminResultsScrapeRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
@@ -604,3 +625,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
