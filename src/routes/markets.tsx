@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultCard } from "@/components/ResultCard";
-import { useMarketStore } from "@/stores/marketStore";
+import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
+import { todayIST } from "@/lib/marketTime";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/markets")({
