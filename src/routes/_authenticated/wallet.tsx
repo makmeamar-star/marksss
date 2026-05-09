@@ -1,19 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
-import { useWalletStore, TX_LABEL, type BankAccount, type UpiId } from "@/stores/walletStore";
+import { ArrowDownToLine, ArrowUpToLine, Wallet, History, Loader2, Copy, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import { ArrowDownToLine, ArrowUpToLine, QrCode, Wallet, Trash2, Plus, Copy } from "lucide-react";
-import { TransactionsLedger } from "@/components/TransactionsLedger";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthStore } from "@/stores/authStore";
 
 export const Route = createFileRoute("/_authenticated/wallet")({
   head: () => ({ meta: [{ title: "Wallet — SattaKing Pro" }] }),
@@ -24,47 +22,50 @@ const DEMO_UPI = "sattakingpro@upi";
 
 function WalletPage() {
   const user = useAuthStore((s) => s.user);
-  const wallet = useWalletStore();
+  const refreshProfile = useAuthStore((s) => s.refreshProfile);
+  const qc = useQueryClient();
+
+  // Realtime: balance + new requests
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel("wallet-self-" + user.id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` }, () => refreshProfile())
+      .on("postgres_changes", { event: "*", schema: "public", table: "wallet_transactions", filter: `user_id=eq.${user.id}` }, () =>
+        qc.invalidateQueries({ queryKey: ["wallet-tx", user.id] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "deposit_requests", filter: `user_id=eq.${user.id}` }, () =>
+        qc.invalidateQueries({ queryKey: ["wallet-deposits", user.id] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "withdrawal_requests", filter: `user_id=eq.${user.id}` }, () =>
+        qc.invalidateQueries({ queryKey: ["wallet-withdrawals", user.id] }))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, qc, refreshProfile]);
+
   if (!user) return null;
-  const txns = wallet.transactionsForUser(user.id);
-  const todayPnL = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    return txns
-      .filter((t) => t.createdAt.slice(0, 10) === today && t.status === "COMPLETED")
-      .reduce((s, t) => {
-        if (t.type === "BET_WIN" || t.type === "BET_REFUND") return s + t.amount;
-        if (t.type === "BET_PLACED") return s - t.amount;
-        return s;
-      }, 0);
-  }, [txns]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl font-bold">Wallet</h1>
-          <p className="text-sm text-muted-foreground">Manage your funds, payouts, and ledger.</p>
-        </div>
+      <header>
+        <h1 className="font-display text-3xl font-bold">Wallet</h1>
+        <p className="text-sm text-muted-foreground">Deposits, withdrawals & ledger.</p>
       </header>
 
-      <div className="grid sm:grid-cols-3 gap-3">
+      <div className="grid sm:grid-cols-4 gap-3">
         <KpiCard label="Available Balance" value={`₹${user.balance.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`} accent />
-        <KpiCard label="Today's P&L" value={`${todayPnL >= 0 ? "+" : ""}₹${todayPnL.toLocaleString("en-IN")}`} positive={todayPnL >= 0} />
         <KpiCard label="Lifetime Deposits" value={`₹${user.totalDeposit.toLocaleString("en-IN")}`} />
+        <KpiCard label="Lifetime Withdrawals" value={`₹${user.totalWithdraw.toLocaleString("en-IN")}`} />
+        <KpiCard label="Total Won" value={`₹${user.totalWin.toLocaleString("en-IN")}`} positive />
       </div>
 
       <Tabs defaultValue="deposit">
         <TabsList className="bg-surface border border-border/60">
           <TabsTrigger value="deposit"><ArrowDownToLine className="h-4 w-4 mr-1" /> Deposit</TabsTrigger>
           <TabsTrigger value="withdraw"><ArrowUpToLine className="h-4 w-4 mr-1" /> Withdraw</TabsTrigger>
-          <TabsTrigger value="transactions"><Wallet className="h-4 w-4 mr-1" /> Transactions</TabsTrigger>
-          <TabsTrigger value="methods"><QrCode className="h-4 w-4 mr-1" /> Methods</TabsTrigger>
+          <TabsTrigger value="history"><History className="h-4 w-4 mr-1" /> History</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="deposit"><DepositForm /></TabsContent>
-        <TabsContent value="withdraw"><WithdrawForm /></TabsContent>
-        <TabsContent value="transactions" className="mt-4"><TransactionsLedger /></TabsContent>
-        <TabsContent value="methods"><PaymentMethods /></TabsContent>
+        <TabsContent value="deposit"><DepositForm userId={user.id} /></TabsContent>
+        <TabsContent value="withdraw"><WithdrawForm userId={user.id} balance={user.balance} /></TabsContent>
+        <TabsContent value="history"><WalletHistory userId={user.id} /></TabsContent>
       </Tabs>
     </div>
   );
@@ -74,26 +75,61 @@ function KpiCard({ label, value, accent, positive }: { label: string; value: str
   return (
     <div className={`${accent ? "glass-gold" : "glass"} rounded-xl p-4`}>
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`font-mono text-2xl font-bold mt-1 ${accent ? "text-primary text-glow-gold" : positive === false ? "text-destructive" : positive ? "text-emerald-400" : "text-foreground"}`}>
+      <div className={`font-mono text-2xl font-bold mt-1 ${accent ? "text-primary text-glow-gold" : positive ? "text-emerald-400" : "text-foreground"}`}>
         {value}
       </div>
     </div>
   );
 }
 
-function DepositForm() {
+function DepositForm({ userId }: { userId: string }) {
+  const qc = useQueryClient();
   const [amount, setAmount] = useState("500");
-  const [method, setMethod] = useState<"UPI" | "BANK" | "QR">("UPI");
-  const [reference, setReference] = useState("");
-  const requestDeposit = useWalletStore((s) => s.requestDeposit);
-  const submit = () => {
+  const [method, setMethod] = useState<"UPI" | "BANK">("UPI");
+  const [utr, setUtr] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const { data: pending } = useQuery({
+    queryKey: ["wallet-deposits", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("deposit_requests")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const submit = async () => {
     const n = Number(amount);
-    if (!n || n <= 0) return toast.error("Enter a valid amount");
-    const r = requestDeposit({ amount: n, method, reference });
-    if (!r.ok) return toast.error(r.error!);
-    toast.success("Deposit submitted for approval");
-    setReference("");
+    if (!n || n < 100) return toast.error("Minimum deposit is ₹100");
+    if (n > 100000) return toast.error("Maximum deposit is ₹100,000");
+    if (!utr || utr.length < 4) return toast.error("Enter a valid UTR / reference");
+    setBusy(true);
+    try {
+      let screenshot_url: string | null = null;
+      if (file) {
+        const path = `${userId}/${crypto.randomUUID()}-${file.name}`;
+        const up = await supabase.storage.from("payment-screenshots").upload(path, file);
+        if (up.error) throw new Error(up.error.message);
+        screenshot_url = up.data.path;
+      }
+      const { error } = await supabase.from("deposit_requests").insert({
+        user_id: userId, amount: n, method, utr, screenshot_url, status: "PENDING",
+      });
+      if (error) throw error;
+      toast.success("Deposit submitted — awaiting admin approval");
+      setUtr(""); setFile(null);
+      qc.invalidateQueries({ queryKey: ["wallet-deposits", userId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Submit failed");
+    } finally { setBusy(false); }
   };
+
   return (
     <div className="grid md:grid-cols-2 gap-4 mt-4">
       <div className="glass rounded-xl p-5 space-y-4">
@@ -103,7 +139,7 @@ function DepositForm() {
           <Input type="number" min={100} max={100000} value={amount} onChange={(e) => setAmount(e.target.value)} />
           <div className="flex gap-2 mt-2">
             {[500, 1000, 2500, 5000].map((v) => (
-              <button key={v} className="flex-1 rounded-md border border-border/60 py-1 text-xs hover:border-primary/50" onClick={() => setAmount(String(v))}>
+              <button key={v} type="button" className="flex-1 rounded-md border border-border/60 py-1 text-xs hover:border-primary/50" onClick={() => setAmount(String(v))}>
                 ₹{v}
               </button>
             ))}
@@ -111,60 +147,95 @@ function DepositForm() {
         </div>
         <div>
           <Label>Method</Label>
-          <Select value={method} onValueChange={(v) => setMethod(v as "UPI" | "BANK" | "QR")}>
+          <Select value={method} onValueChange={(v) => setMethod(v as "UPI" | "BANK")}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="UPI">UPI Transfer</SelectItem>
-              <SelectItem value="QR">Scan QR</SelectItem>
               <SelectItem value="BANK">Bank Transfer (IMPS/NEFT)</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div>
-          <Label>UTR / Reference (optional)</Label>
-          <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="e.g. 4234567890" />
+          <Label>UTR / Reference *</Label>
+          <Input value={utr} onChange={(e) => setUtr(e.target.value)} placeholder="e.g. 4234567890" />
         </div>
-        <Button className="w-full bg-gradient-gold text-background" onClick={submit}>I have paid — submit</Button>
+        <div>
+          <Label>Screenshot (optional)</Label>
+          <Input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        </div>
+        <Button className="w-full bg-gradient-gold text-background" onClick={submit} disabled={busy}>
+          {busy ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting…</> : "I have paid — submit"}
+        </Button>
       </div>
 
-      <div className="glass-gold rounded-xl p-5 space-y-3 text-center">
-        <h3 className="font-display text-lg font-bold">Pay to</h3>
-        <div className="mx-auto h-44 w-44 grid place-items-center rounded-lg bg-background/40 border border-primary/30">
-          <QrCode className="h-32 w-32 text-primary/80" />
+      <div className="space-y-4">
+        <div className="glass-gold rounded-xl p-5 text-center space-y-2">
+          <h3 className="font-display text-lg font-bold">Pay to</h3>
+          <div className="mx-auto h-32 w-32 grid place-items-center rounded-lg bg-background/40 border border-primary/30">
+            <QrCode className="h-24 w-24 text-primary/80" />
+          </div>
+          <div className="flex items-center justify-center gap-2 text-sm">
+            <span className="font-mono text-primary">{DEMO_UPI}</span>
+            <button onClick={() => { navigator.clipboard.writeText(DEMO_UPI); toast.success("Copied"); }} className="text-muted-foreground hover:text-primary">
+              <Copy className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center justify-center gap-2 text-sm">
-          <span className="font-mono text-primary">{DEMO_UPI}</span>
-          <button onClick={() => { navigator.clipboard.writeText(DEMO_UPI); toast.success("UPI copied"); }} className="text-muted-foreground hover:text-primary">
-            <Copy className="h-3.5 w-3.5" />
-          </button>
+
+        <div className="glass rounded-xl p-4 space-y-2">
+          <h4 className="text-sm font-semibold">Recent requests</h4>
+          {pending?.length === 0 && <p className="text-xs text-muted-foreground">None yet.</p>}
+          {pending?.map((r) => (
+            <div key={r.id} className="flex items-center justify-between text-sm border border-border/40 rounded-md px-3 py-2">
+              <div>
+                <div className="font-mono">₹{Number(r.amount).toLocaleString("en-IN")}</div>
+                <div className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</div>
+              </div>
+              <StatusBadge status={r.status} reason={r.reject_reason ?? undefined} />
+            </div>
+          ))}
         </div>
-        <p className="text-xs text-muted-foreground">After paying, enter the UTR and submit. Admin approves within 5 minutes (mock).</p>
       </div>
     </div>
   );
 }
 
-function WithdrawForm() {
-  const user = useAuthStore((s) => s.user)!;
-  const banks = useWalletStore((s) => s.banks).filter((b) => b.userId === user.id);
-  const upis = useWalletStore((s) => s.upis).filter((u) => u.userId === user.id);
-  const requestWithdraw = useWalletStore((s) => s.requestWithdraw);
+function WithdrawForm({ userId, balance }: { userId: string; balance: number }) {
+  const qc = useQueryClient();
   const [amount, setAmount] = useState("500");
-  const [destination, setDestination] = useState<string>("");
+  const [method, setMethod] = useState<"UPI" | "BANK">("UPI");
+  const [details, setDetails] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const options = [
-    ...upis.map((u) => ({ id: u.id, type: "UPI" as const, label: `UPI · ${u.upi}` })),
-    ...banks.map((b) => ({ id: b.id, type: "BANK" as const, label: `${b.bankName} · ****${b.accountNumber.slice(-4)}` })),
-  ];
+  const { data: history } = useQuery({
+    queryKey: ["wallet-withdrawals", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("withdrawal_requests").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const hasPending = (history ?? []).some((r) => r.status === "PENDING");
 
-  const submit = () => {
+  const submit = async () => {
     const n = Number(amount);
-    if (!n) return toast.error("Enter a valid amount");
-    const opt = options.find((o) => o.id === destination);
-    if (!opt) return toast.error("Select a payout method");
-    const r = requestWithdraw({ amount: n, destinationType: opt.type, destinationId: opt.id, destinationLabel: opt.label });
-    if (!r.ok) return toast.error(r.error!);
-    toast.success("Withdrawal submitted");
+    if (!n || n < 500) return toast.error("Minimum withdrawal is ₹500");
+    if (n > balance) return toast.error("Insufficient balance");
+    if (!details || details.length < 6) return toast.error(method === "UPI" ? "Enter UPI ID" : "Enter bank details (acc / ifsc / name)");
+    if (hasPending) return toast.error("You already have a pending withdrawal");
+    setBusy(true);
+    try {
+      const bank_details = method === "UPI" ? { upi: details } : { raw: details };
+      const { error } = await supabase.from("withdrawal_requests").insert({
+        user_id: userId, amount: n, method, bank_details, status: "PENDING",
+      });
+      if (error) throw error;
+      toast.success("Withdrawal submitted");
+      setDetails("");
+      qc.invalidateQueries({ queryKey: ["wallet-withdrawals", userId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Submit failed");
+    } finally { setBusy(false); }
   };
 
   return (
@@ -174,98 +245,93 @@ function WithdrawForm() {
         <div>
           <Label>Amount (₹)</Label>
           <Input type="number" min={500} value={amount} onChange={(e) => setAmount(e.target.value)} />
-          <p className="text-[11px] text-muted-foreground mt-1">Min ₹500 · Available ₹{user.balance.toLocaleString("en-IN")}</p>
+          <p className="text-[11px] text-muted-foreground mt-1">Min ₹500 · Available ₹{balance.toLocaleString("en-IN")}</p>
         </div>
         <div>
-          <Label>Send to</Label>
-          {options.length === 0 ? (
-            <p className="text-xs text-muted-foreground border border-dashed border-border/60 rounded-md p-3">
-              No payout methods. Add one in the Methods tab first.
-            </p>
-          ) : (
-            <Select value={destination} onValueChange={setDestination}>
-              <SelectTrigger><SelectValue placeholder="Choose method" /></SelectTrigger>
-              <SelectContent>
-                {options.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          )}
+          <Label>Method</Label>
+          <Select value={method} onValueChange={(v) => setMethod(v as "UPI" | "BANK")}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="UPI">UPI</SelectItem>
+              <SelectItem value="BANK">Bank Account</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Button className="w-full bg-gradient-gold text-background" disabled={options.length === 0} onClick={submit}>
-          Request withdrawal
+        <div>
+          <Label>{method === "UPI" ? "UPI ID" : "Bank details"}</Label>
+          {method === "UPI"
+            ? <Input value={details} onChange={(e) => setDetails(e.target.value)} placeholder="yourname@upi" />
+            : <Textarea value={details} onChange={(e) => setDetails(e.target.value)} placeholder="Holder name, A/C number, IFSC, Bank" rows={3} />
+          }
+        </div>
+        <Button className="w-full bg-gradient-gold text-background" onClick={submit} disabled={busy || hasPending}>
+          {busy ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting…</> : hasPending ? "Pending request exists" : "Request withdrawal"}
         </Button>
       </div>
-      <div className="glass rounded-xl p-5 text-sm text-muted-foreground space-y-2">
-        <h3 className="font-display text-lg font-bold text-foreground">How it works</h3>
-        <ol className="list-decimal pl-5 space-y-1">
-          <li>Funds are held immediately when you request.</li>
-          <li>Admin reviews within 30 minutes (mock).</li>
-          <li>On approval, money lands in your account; on rejection, it's refunded.</li>
-        </ol>
+      <div className="glass rounded-xl p-4 space-y-2">
+        <h4 className="text-sm font-semibold">Recent withdrawals</h4>
+        {history?.length === 0 && <p className="text-xs text-muted-foreground">No withdrawals yet.</p>}
+        {history?.map((r) => (
+          <div key={r.id} className="flex items-center justify-between text-sm border border-border/40 rounded-md px-3 py-2">
+            <div>
+              <div className="font-mono">₹{Number(r.amount).toLocaleString("en-IN")} · {r.method}</div>
+              <div className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</div>
+            </div>
+            <StatusBadge status={r.status} reason={r.reject_reason ?? undefined} />
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-
-function PaymentMethods() {
-  const user = useAuthStore((s) => s.user)!;
-  const wallet = useWalletStore();
-  const banks = wallet.banks.filter((b) => b.userId === user.id);
-  const upis = wallet.upis.filter((u) => u.userId === user.id);
-  const [upi, setUpi] = useState("");
-  const [bank, setBank] = useState({ holderName: "", accountNumber: "", ifsc: "", bankName: "" });
+function WalletHistory({ userId }: { userId: string }) {
+  const { data } = useQuery({
+    queryKey: ["wallet-tx", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("wallet_transactions").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(100);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   return (
-    <div className="grid md:grid-cols-2 gap-4 mt-4">
-      <div className="glass rounded-xl p-5 space-y-3">
-        <h3 className="font-display text-lg font-bold">UPI IDs</h3>
-        <div className="flex gap-2">
-          <Input placeholder="yourname@upi" value={upi} onChange={(e) => setUpi(e.target.value)} />
-          <Button onClick={() => {
-            if (!/^.+@.+$/.test(upi)) return toast.error("Invalid UPI ID");
-            wallet.addUpi({ userId: user.id, upi });
-            setUpi(""); toast.success("UPI added");
-          }}><Plus className="h-4 w-4" /></Button>
+    <div className="glass rounded-xl p-4 mt-4">
+      {!data && <div className="py-10 text-center text-muted-foreground"><Loader2 className="h-5 w-5 inline animate-spin" /></div>}
+      {data && data.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">No transactions yet.</p>}
+      {data && data.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-muted-foreground text-xs uppercase tracking-wider">
+              <tr><th className="text-left p-2">Date</th><th className="text-left p-2">Type</th><th className="text-left p-2">Description</th><th className="text-right p-2">Amount</th><th className="text-right p-2">Balance</th></tr>
+            </thead>
+            <tbody>
+              {data.map((t) => (
+                <tr key={t.id} className="border-t border-border/40">
+                  <td className="p-2 text-xs text-muted-foreground whitespace-nowrap">{new Date(t.created_at).toLocaleString()}</td>
+                  <td className="p-2"><Badge variant="outline">{t.type}</Badge></td>
+                  <td className="p-2 text-xs">{t.description}</td>
+                  <td className={`p-2 text-right font-mono ${Number(t.amount) >= 0 ? "text-emerald-400" : "text-destructive"}`}>
+                    {Number(t.amount) >= 0 ? "+" : ""}{Number(t.amount).toLocaleString("en-IN")}
+                  </td>
+                  <td className="p-2 text-right font-mono text-muted-foreground">{Number(t.balance_after).toLocaleString("en-IN")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <ul className="space-y-1.5">
-          {upis.length === 0 && <li className="text-xs text-muted-foreground">No UPI IDs added.</li>}
-          {upis.map((u: UpiId) => (
-            <li key={u.id} className="flex items-center justify-between border border-border/40 rounded-md px-3 py-2 text-sm">
-              <span className="font-mono text-primary">{u.upi}</span>
-              <button className="text-muted-foreground hover:text-destructive" onClick={() => wallet.removeUpi(u.id)}><Trash2 className="h-4 w-4" /></button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="glass rounded-xl p-5 space-y-3">
-        <h3 className="font-display text-lg font-bold">Bank Accounts</h3>
-        <div className="grid grid-cols-2 gap-2">
-          <Input placeholder="Holder name" value={bank.holderName} onChange={(e) => setBank({ ...bank, holderName: e.target.value })} />
-          <Input placeholder="Bank name" value={bank.bankName} onChange={(e) => setBank({ ...bank, bankName: e.target.value })} />
-          <Input placeholder="Account number" value={bank.accountNumber} onChange={(e) => setBank({ ...bank, accountNumber: e.target.value })} />
-          <Input placeholder="IFSC" value={bank.ifsc} onChange={(e) => setBank({ ...bank, ifsc: e.target.value.toUpperCase() })} />
-        </div>
-        <Button className="w-full" variant="outline" onClick={() => {
-          if (!bank.holderName || !bank.accountNumber || !bank.ifsc || !bank.bankName) return toast.error("Fill all bank fields");
-          wallet.addBank({ userId: user.id, ...bank });
-          setBank({ holderName: "", accountNumber: "", ifsc: "", bankName: "" });
-          toast.success("Bank added");
-        }}>Add bank</Button>
-        <ul className="space-y-1.5">
-          {banks.length === 0 && <li className="text-xs text-muted-foreground">No bank accounts added.</li>}
-          {banks.map((b: BankAccount) => (
-            <li key={b.id} className="flex items-center justify-between border border-border/40 rounded-md px-3 py-2 text-sm">
-              <div>
-                <div className="font-medium">{b.bankName}</div>
-                <div className="text-[11px] text-muted-foreground font-mono">****{b.accountNumber.slice(-4)} · {b.ifsc}</div>
-              </div>
-              <button className="text-muted-foreground hover:text-destructive" onClick={() => wallet.removeBank(b.id)}><Trash2 className="h-4 w-4" /></button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      )}
     </div>
+  );
+}
+
+function StatusBadge({ status, reason }: { status: string; reason?: string }) {
+  const tone = status === "APPROVED" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+    : status === "REJECTED" ? "bg-destructive/15 text-destructive border-destructive/30"
+    : "bg-amber-500/15 text-amber-400 border-amber-500/30";
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider border ${tone}`} title={reason}>
+      {status}
+    </span>
   );
 }

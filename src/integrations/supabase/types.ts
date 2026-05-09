@@ -261,6 +261,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          metadata: Json | null
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          metadata?: Json | null
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          metadata?: Json | null
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pana_chart: {
         Row: {
           digit: number
@@ -428,6 +464,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_deposit: {
+        Args: { _note?: string; _request_id: string }
+        Returns: Json
+      }
+      approve_withdrawal: {
+        Args: { _note?: string; _request_id: string }
+        Returns: Json
+      }
       correct_result: {
         Args: {
           _market_id: string
@@ -458,6 +502,14 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       place_bets: {
         Args: { _items: Json; _market_id: string; _session_date: string }
+        Returns: Json
+      }
+      reject_deposit: {
+        Args: { _reason: string; _request_id: string }
+        Returns: Json
+      }
+      reject_withdrawal: {
+        Args: { _reason: string; _request_id: string }
         Returns: Json
       }
       validate_pana: {

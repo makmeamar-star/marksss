@@ -26,9 +26,11 @@ interface Props {
 }
 
 export function CountdownTimer({ targetTime, label, onExpire }: Props) {
-  const [ms, setMs] = useState(() => msUntil(targetTime));
+  // SSR-safe: render placeholder until first effect tick on client
+  const [ms, setMs] = useState<number | null>(null);
 
   useEffect(() => {
+    setMs(msUntil(targetTime));
     const i = setInterval(() => {
       const next = msUntil(targetTime);
       setMs(next);
@@ -37,8 +39,10 @@ export function CountdownTimer({ targetTime, label, onExpire }: Props) {
     return () => clearInterval(i);
   }, [targetTime, onExpire]);
 
-  const mins = ms / 1000 / 60;
+  const display = ms === null ? "--:--:--" : formatDuration(ms);
+  const mins = (ms ?? Infinity) / 1000 / 60;
   const tone =
+    ms === null ? "text-muted-foreground" :
     mins < 1 ? "text-danger animate-pulse" :
     mins < 5 ? "text-danger" :
     mins < 30 ? "text-warning" :
@@ -47,9 +51,7 @@ export function CountdownTimer({ targetTime, label, onExpire }: Props) {
   return (
     <div className="flex flex-col items-center gap-0.5">
       {label && <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>}
-      <span className={`font-mono text-sm font-semibold ${tone}`}>
-        {formatDuration(ms)}
-      </span>
+      <span className={`font-mono text-sm font-semibold ${tone}`}>{display}</span>
     </div>
   );
 }
