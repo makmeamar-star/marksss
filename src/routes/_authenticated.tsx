@@ -41,6 +41,11 @@ const NAV = [
 function AuthLayout() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const lastWin = useBetStore((s) => s.lastWin);
+  const clearLastWin = useBetStore((s) => s.clearLastWin);
+  const unread = useNotificationStore((s) =>
+    user ? s.notifications.filter((n) => n.userId === user.id && !n.read).length : 0
+  );
 
   // hydration-safe re-render after persist mounts
   const [hydrated, setHydrated] = useState(false);
@@ -51,7 +56,7 @@ function AuthLayout() {
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-border/60 bg-sidebar">
         <SidebarHeader />
-        <SidebarNav />
+        <SidebarNav unread={unread} />
         <SidebarFooter user={user} onLogout={logout} hydrated={hydrated} />
       </aside>
 
