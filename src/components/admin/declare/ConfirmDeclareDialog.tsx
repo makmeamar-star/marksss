@@ -17,7 +17,7 @@ import { digitFromPana, panaType } from "@/lib/panaChart";
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  onConfirm: (confirmationText: string) => Promise<{ ok: boolean; error?: string }>;
+  onConfirm: (confirmationText: string) => Promise<unknown> | void;
   busy: boolean;
 }
 
