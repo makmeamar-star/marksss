@@ -17,9 +17,9 @@ export const Route = createFileRoute("/markets")({
 });
 
 function MarketsPage() {
-  const markets = useMarketStore((s) => s.markets);
-  const results = useMarketStore((s) => s.results);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
+  const { data: markets = [] } = useMarkets();
+  const { data: results = [] } = useResultsForDate(today);
 
   return (
     <div className="min-h-screen">
