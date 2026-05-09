@@ -42,7 +42,13 @@ export function ResultCard({
   const prevClose = usePrev && previousResult?.closePana && previousResult?.closeDigit !== undefined
     ? `${previousResult.closeDigit}-${previousResult.closePana}` : undefined;
   const prevDateLabel = usePrev && previousResult
-    ? new Date(previousResult.sessionDate).toLocaleDateString(undefined, { day: "2-digit", month: "short" })
+    ? (() => {
+        const [y, m, d] = previousResult.sessionDate.split("-").map(Number);
+        // Use UTC to avoid local-timezone day shifts; sessionDate is already IST calendar date.
+        return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1)).toLocaleDateString(undefined, {
+          day: "2-digit", month: "short", timeZone: "UTC",
+        });
+      })()
     : undefined;
 
   return (
