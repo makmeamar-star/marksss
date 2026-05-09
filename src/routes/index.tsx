@@ -25,6 +25,7 @@ function HomePage() {
   const today = todayIST();
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
+  const { data: latestPerMarket = {} } = useLatestResultsPerMarket();
 
   const declaredToday = results.filter((r) => r.status === "DECLARED").length;
   const openNow = markets.filter((m) => m.isOpen).length;
