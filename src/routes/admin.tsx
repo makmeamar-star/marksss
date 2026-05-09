@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import {
   LayoutDashboard, Trophy, Wallet, Crown, LogOut, Menu,
-  Store, ArrowLeftRight, History, Zap, Globe, FileSearch, Users, Activity,
+  Store, ArrowLeftRight, History, Zap, Globe, FileSearch, Users, Activity, Megaphone,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,7 @@ const NAV = [
   { to: "/admin/results/automation-audit", label: "Automation Audit", icon: FileSearch },
   { to: "/admin/deposits", label: "Deposits", icon: Wallet },
   { to: "/admin/withdrawals", label: "Withdrawals", icon: ArrowLeftRight },
+  { to: "/admin/broadcasts", label: "Broadcasts", icon: Megaphone },
 ] as const;
 
 function AdminLayout() {
