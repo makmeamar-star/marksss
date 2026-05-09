@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useAuthStore } from "@/stores/authStore";
 import { ErrorMonitor } from "@/components/ErrorMonitor";
 import { reportError } from "@/lib/errorReporter";
+import "@/integrations/supabase/server-fn-fetch.client";
 
 import appCss from "../styles.css?url";
 
