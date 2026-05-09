@@ -44,6 +44,28 @@ function LoginPage() {
     }
   };
 
+  const demoLogin = async () => {
+    if (demoBusy || busy) return;
+    setDemoBusy(true);
+    try {
+      try {
+        await login(DEMO_EMAIL, DEMO_PASSWORD);
+      } catch {
+        try {
+          await register({ username: DEMO_USERNAME, email: DEMO_EMAIL, password: DEMO_PASSWORD });
+        } catch {
+          await login(DEMO_EMAIL, DEMO_PASSWORD);
+        }
+      }
+      toast.success("Welcome to the demo!");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Demo login failed");
+    } finally {
+      setDemoBusy(false);
+    }
+  };
+
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
       <div className="relative hidden lg:flex flex-col justify-between p-12 bg-radial-spotlight border-r border-border/60 overflow-hidden">
