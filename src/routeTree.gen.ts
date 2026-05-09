@@ -22,6 +22,7 @@ import { Route as AdminWithdrawalsRouteImport } from './routes/admin/withdrawals
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminMarketsRouteImport } from './routes/admin/markets'
 import { Route as AdminDepositsRouteImport } from './routes/admin/deposits'
+import { Route as AdminBetsRouteImport } from './routes/admin/bets'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -100,6 +101,11 @@ const AdminMarketsRoute = AdminMarketsRouteImport.update({
 const AdminDepositsRoute = AdminDepositsRouteImport.update({
   id: '/deposits',
   path: '/deposits',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBetsRoute = AdminBetsRouteImport.update({
+  id: '/bets',
+  path: '/bets',
   getParentRoute: () => AdminRoute,
 } as any)
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/wallet': typeof AuthenticatedWalletRoute
+  '/admin/bets': typeof AdminBetsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/wallet': typeof AuthenticatedWalletRoute
+  '/admin/bets': typeof AdminBetsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
+  '/admin/bets': typeof AdminBetsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/wallet'
+    | '/admin/bets'
     | '/admin/deposits'
     | '/admin/markets'
     | '/admin/users'
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/wallet'
+    | '/admin/bets'
     | '/admin/deposits'
     | '/admin/markets'
     | '/admin/users'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/wallet'
+    | '/admin/bets'
     | '/admin/deposits'
     | '/admin/markets'
     | '/admin/users'
@@ -468,6 +480,13 @@ declare module '@tanstack/react-router' {
       path: '/deposits'
       fullPath: '/admin/deposits'
       preLoaderRoute: typeof AdminDepositsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bets': {
+      id: '/admin/bets'
+      path: '/bets'
+      fullPath: '/admin/bets'
+      preLoaderRoute: typeof AdminBetsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_authenticated/wallet': {
@@ -601,6 +620,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminBetsRoute: typeof AdminBetsRoute
   AdminDepositsRoute: typeof AdminDepositsRoute
   AdminMarketsRoute: typeof AdminMarketsRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -615,6 +635,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminBetsRoute: AdminBetsRoute,
   AdminDepositsRoute: AdminDepositsRoute,
   AdminMarketsRoute: AdminMarketsRoute,
   AdminUsersRoute: AdminUsersRoute,

@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import {
   LayoutDashboard, Trophy, Wallet, Crown, LogOut, Menu,
-  Store, ArrowLeftRight, History, Zap, Globe, FileSearch, Users,
+  Store, ArrowLeftRight, History, Zap, Globe, FileSearch, Users, Activity,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ const NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/markets", label: "Markets", icon: Store },
   { to: "/admin/users", label: "Users", icon: Users },
+  { to: "/admin/bets", label: "Bets Monitor", icon: Activity },
   { to: "/admin/results/declare", label: "Declare Results", icon: Trophy },
   { to: "/admin/results/history", label: "Result History", icon: History },
   { to: "/admin/results/automation", label: "Automation", icon: Zap },
