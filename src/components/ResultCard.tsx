@@ -1,0 +1,64 @@
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { NumberReveal } from "./NumberReveal";
+import { CountdownTimer } from "./CountdownTimer";
+import type { Market, MarketResult } from "@/lib/types";
+
+interface Props {
+  market: Market;
+  result?: MarketResult;
+}
+
+export function ResultCard({ market, result }: Props) {
+  const declared = result?.status === "DECLARED";
+  const openText = result?.openPana && result?.openDigit !== undefined
+    ? `${result.openPana}-${result.openDigit}`
+    : undefined;
+  const closeText = result?.closePana && result?.closeDigit !== undefined
+    ? `${result.closeDigit}-${result.closePana}`
+    : undefined;
+
+  return (
+    <motion.div
+      whileHover={{ y: -4 }}
+      className={`glass rounded-xl p-5 transition-shadow ${declared ? "ring-gold" : "hover:border-primary/40"}`}
+    >
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div>
+          <h3 className="font-display text-xl font-bold text-foreground">{market.displayName}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {market.openTime} — {market.closeTime}
+          </p>
+        </div>
+        {declared ? (
+          <Badge className="bg-primary/15 text-primary border-primary/40">DECLARED</Badge>
+        ) : market.isOpen ? (
+          <Badge className="bg-success/15 text-success border-success/40 pulse-live">OPEN</Badge>
+        ) : (
+          <Badge variant="outline" className="text-muted-foreground">CLOSED</Badge>
+        )}
+      </div>
+
+      <div className="flex items-center justify-center my-4">
+        <div className="flex items-center gap-2 text-center">
+          <span className="font-mono text-primary text-xl md:text-2xl text-glow-gold">
+            {openText ?? "***"}
+          </span>
+          <span className="text-muted-foreground mx-1">·</span>
+          <NumberReveal value={result?.jodi} size="lg" />
+          <span className="text-muted-foreground mx-1">·</span>
+          <span className="font-mono text-primary text-xl md:text-2xl text-glow-gold">
+            {closeText ?? "***"}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/60">
+        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          Result @ {market.resultTime}
+        </span>
+        {!declared && <CountdownTimer targetTime={market.resultTime} label="Reveals in" />}
+      </div>
+    </motion.div>
+  );
+}
