@@ -29,6 +29,7 @@ function ResultsPage() {
   const { data: history = [] } = useResultsRange(14);
   const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
   const isToday = date === today;
+  useEnsureFreshResults();
 
   return (
     <div className="min-h-screen">
