@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ResultsTicker } from "@/components/ResultsTicker";
 import { ResultCard } from "@/components/ResultCard";
 import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
+import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
 
 export const Route = createFileRoute("/")({
@@ -26,6 +27,7 @@ function HomePage() {
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
   const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
+  useEnsureFreshResults();
 
   const declaredToday = results.filter((r) => r.status === "DECLARED").length;
   const openNow = markets.filter((m) => m.isOpen).length;

@@ -6,6 +6,7 @@ import { ResultsTicker } from "@/components/ResultsTicker";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useMarkets, useResultsForDate, useResultsRange, useLatestResultsPerMarket } from "@/hooks/useGameData";
+import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
 
 export const Route = createFileRoute("/results")({
@@ -28,6 +29,7 @@ function ResultsPage() {
   const { data: history = [] } = useResultsRange(14);
   const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
   const isToday = date === today;
+  useEnsureFreshResults();
 
   return (
     <div className="min-h-screen">
