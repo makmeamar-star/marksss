@@ -74,8 +74,8 @@ function PanaChartView() {
 }
 
 function JodiChartView() {
-  const markets = useMarketStore((s) => s.markets);
-  const results = useMarketStore((s) => s.results);
+  const { data: markets = [] } = useMarkets();
+  const { data: results = [] } = useResultsRange(60);
   const [marketId, setMarketId] = useState(markets[0]?.id);
 
   const data = useMemo(
