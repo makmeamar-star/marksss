@@ -296,6 +296,38 @@ export type Database = {
           },
         ]
       }
+      market_source_map: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          market_id: string
+          slug: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          market_id: string
+          slug: string
+          source: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          market_id?: string
+          slug?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_source_map_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       markets: {
         Row: {
           close_time: string
@@ -443,6 +475,42 @@ export type Database = {
         }
         Relationships: []
       }
+      result_scrape_log: {
+        Row: {
+          error: string | null
+          id: string
+          market_id: string
+          pana: string | null
+          run_at: string
+          session: string
+          session_date: string
+          source: string
+          status: string
+        }
+        Insert: {
+          error?: string | null
+          id?: string
+          market_id: string
+          pana?: string | null
+          run_at?: string
+          session: string
+          session_date: string
+          source: string
+          status: string
+        }
+        Update: {
+          error?: string | null
+          id?: string
+          market_id?: string
+          pana?: string | null
+          run_at?: string
+          session?: string
+          session_date?: string
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -544,7 +612,19 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      result_scrape_latest: {
+        Row: {
+          error: string | null
+          market_id: string | null
+          pana: string | null
+          run_at: string | null
+          session: string | null
+          session_date: string | null
+          source: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_delete_market: { Args: { _market_id: string }; Returns: Json }
