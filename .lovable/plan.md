@@ -1,112 +1,83 @@
+## End-to-end audit of SattaKing Pro
 
-# Admin Dashboard — Activate All + Roadmap
-
-## Current state
-The admin shell and these pages already work: Dashboard, Markets, Declare Results, Result History, Automation, Scraper, Automation Runs, Automation Audit, Deposits, Withdrawals. The home page is just a static tile grid — no live data, no KPIs, and several common admin surfaces (users, bets monitor, broadcasts, reports, settings) don't exist yet.
-
-## Phase 1 — Activate the shell into a real control center
-
-### 1.1 Live Dashboard (`/admin`)
-Replace the static tile grid with an operational overview:
-- **KPI strip (today, IST):** Active users • New signups • Bets placed • Bet volume ₹ • Gross payout ₹ • House P&L ₹ • Pending deposits • Pending withdrawals.
-- **Today's markets table:** market, open/close time, scraped status, declared open pana, declared close pana, automation on/off, quick "Declare" link.
-- **Recent activity feed:** last 20 audit_log rows (declares, corrections, approvals, auto-declares).
-- **Health tiles:** last scraper run + success rate (24h), last automation run, count of client_errors (24h).
-- All data via `createServerFn` + `requireSupabaseAuth`, 30 s `useQuery` refetch + realtime invalidation on `bets`, `market_results`, `deposit_requests`, `withdrawal_requests`.
-
-### 1.2 Users (`/admin/users`)
-- Searchable, paginated table of `profiles` joined with role + last bet/deposit.
-- Row actions: view profile drawer (balance, totals, KYC, recent bets/tx), grant/revoke admin role, adjust balance (admin credit/debit with reason → `wallet_transactions` + `audit_log`), suspend (set a `profiles.status` flag — needs migration).
-
-### 1.3 Bets Monitor (`/admin/bets`)
-- Live table of bets with filters: market, session, status, date range, user, min amount.
-- Aggregate footer: count, total stake, exposure (potential payout) per bet_type / number — surfaces concentration risk before declaring.
-- Bulk export CSV.
-
-### 1.4 Broadcasts (`/admin/broadcasts`)
-- Compose a notification → insert one `notifications` row per active user (server fn, batched).
-- Audience: all users / admins only / users with balance > X / users who bet today.
-- History table with delivered count + read rate.
-
-### 1.5 Reports (`/admin/reports`)
-- Date-range picker (default last 7 days IST).
-- Charts: daily bet volume, daily payout, daily new users, daily deposits vs withdrawals, per-market P&L.
-- "Export CSV" for each table. Use Recharts (already in shadcn stack).
-
-### 1.6 Settings (`/admin/settings`)
-- Global config: default min/max bet, scraper sources & cron interval, automation default grace minutes, welcome bonus amount, payment screenshots required toggle.
-- Stored in a new `app_settings` key/value table (admin RLS).
-
-### 1.7 Polish
-- Sidebar: add Users, Bets, Broadcasts, Reports, Settings (with section dividers: Operations / Money / Growth / System).
-- Fix `beforeLoad` race: gate via `_authenticated` style — wait for `supabase.auth.getUser()` then role check; show skeleton instead of redirect flash.
-- Add a global `<AdminBreadcrumbs />` in the shell.
-- Mobile: make tables horizontally scrollable wrappers; sticky table headers.
-
-### 1.8 QA pass
-For every admin route: load → primary action → empty state → error state → mobile (430px). Log fixes.
+I tested the full app via the browser, walked the codebase, and inspected the database. Here is what I found, grouped by severity.
 
 ---
 
-## Phase 2 — Advanced future features (roadmap)
+### Bugs (must fix)
 
-**Risk & Liability**
-- Per-market real-time exposure heatmap (which numbers, if hit, cost the house most).
-- Auto-suspend a number when exposure > threshold.
-- Per-user bet limits and daily loss caps.
+1. **Admin Dashboard crashes** — `/admin` throws `TypeError: Cannot read properties of undefined (reading 'scrapeOk')` and renders blank KPIs / "No active markets" even though 8 markets exist. The page error was logged to `client_errors`. Source: `src/routes/admin/index.tsx` references `data?.health.scrapeOk` (and similar) without guarding `data.health`. Server function returns shape inconsistently / errors silently.
 
-**Fraud & Safety**
-- Multi-account detection (shared device fingerprint, IP, UPI/UTR).
-- Velocity rules (X deposits/withdrawals in Y minutes → flag).
-- Withdrawal hold rules (first withdraw after deposit, KYC gating).
-- Admin-only "shadow ban" (user can place bets but they're voided).
+2. **Login does not redirect** — clicking "Demo Admin" shows a "Welcome, admin!" toast but the user stays on `/login`; they must navigate manually. Login flow's `navigate({ to: search.redirect })` is not firing.
 
-**KYC & Compliance**
-- KYC document upload + admin review queue, status on profile.
-- Audit export (CSV/PDF) for any date range, signed by admin.
-- Per-state geo-block toggle.
+3. **Notifications page is disconnected from the database** — `/notifications` reads/writes a local Zustand store (`notificationStore.ts`, persisted to localStorage). The real `notifications` table — populated by DB triggers for bet wins/losses, deposit/withdraw approvals, admin actions — is **never read or shown to users**. The bell icon and inbox are effectively dead.
 
-**Payments**
-- Payment-method manager (UPI VPAs, QR images, bank accounts) shown to users on deposit screen — sourced from admin.
-- Auto-match UTR → deposit request (background job).
-- Payout queue with batching + CSV export for bank upload.
+4. **Hero / hardcoded fake stats on homepage** — "48,219 Active Players" and "1,847 Today's Winners" are string literals in `src/routes/index.tsx`. Misleading on a real product.
 
-**Result Pipeline**
-- Multi-source consensus scraper (dpboss + matka results + 1 more), auto-declare only when ≥2 agree.
-- Manual override with side-by-side source comparison.
-- Per-market scrape cadence and selector overrides editable in UI.
+5. **Login page misleading copy** — header says "Use any username — this is a mock login" but it is real Supabase auth. Confusing for real users.
 
-**Engagement**
-- In-app banners/announcements scheduler.
-- Push notifications (web push) + WhatsApp/SMS provider hooks.
-- Referral program admin: codes, commission %, payouts ledger.
-- Promotions engine: cashback rules, deposit bonuses with wagering requirements.
+6. **Auth store hardcodes `status: "ACTIVE"` and a synthetic `referralCode`** — `src/stores/authStore.ts` ignores the actual `profiles.status` column (so a SUSPENDED user still sees "ACTIVE" in their profile) and fabricates a referral code per session.
 
-**Analytics**
-- Cohort retention, ARPU/ARPDAU, churn dashboard.
-- Funnel: signup → first deposit → first bet → repeat.
-- Anomaly alerts (bet volume spike, payout spike) via email/Telegram.
+### Incomplete features (placeholders / mock-only)
 
-**Ops & Reliability**
-- Background job runner page (cron status, last run, manual trigger).
-- Edge-function & client-error log viewer with search.
-- Feature flags table (toggle any feature without deploy).
-- Maintenance mode banner + bet-blocking switch.
+7. **Result History page is a stub** — `src/routes/admin/results.history.tsx` literally says "Historical results browser arrives in Phase 4.5."
 
-**Admin org**
-- Multiple admin roles: super_admin, finance, support, content (extend `app_role` enum + per-route guards).
-- Per-action 2FA prompt for sensitive ops (balance adjust, role grant, withdrawal approve > ₹X).
-- Full activity audit per admin user.
+8. **Profile page is mostly mock** — phone "Save changes" only shows a toast (no DB write); 2FA toggle is fake; KYC upload buttons are fake; "Change password" sends a fake toast (no `resetPasswordForEmail`); "Delete account" is disabled with an error toast.
+
+9. **No `/reset-password` page** — the login page links to "Forgot password?" but there is no recovery route, so even if the email were sent the user cannot complete the reset.
+
+10. **Referral system not implemented** — registration captures a referral code, profile shows one, but nothing is stored, validated, credited, or paid out. No `referrals` table, no bonus logic.
+
+11. **KYC not implemented** — `profiles.kyc_status` exists and is shown, but there is no upload flow, no document storage, no admin KYC review queue, and the wallet does not actually gate withdrawals on KYC.
+
+12. **Charts page – Open/Close + Jodi tabs are partial** — only the Pana tab is meaningful; the others render basic tables without filtering UX expected from a Matka chart.
+
+### Missing admin/operational features (planned but never built)
+
+13. **Broadcasts** — sidebar plan called for an admin broadcast composer that inserts into the `notifications` table for user segments. Not built.
+
+14. **Reports / Analytics** — no `/admin/reports` (volume, payouts, growth charts). The admin nav lists no analytics page.
+
+15. **Settings** — no `/admin/settings` (global limits, scraper interval, bonus toggles, app_settings table).
+
+16. **Risk / exposure dashboard** — Bets Monitor shows totals but there is no per-number / per-market exposure view to spot a high-risk pana before declaring.
+
+17. **Edge functions are nearly empty** — only `ensure-demo-admin`. Cron-like tasks (`run_due_auto_declarations`) are SQL functions that need a scheduler or `/api/public/*` endpoint to be triggered.
+
+### Smaller polish items
+
+18. SiteHeader bell icon does not show real unread count (because of #3).
+19. Wallet page deposit screenshot upload exists but I should confirm it actually uploads to the `payment-screenshots` bucket end-to-end.
+20. `src/routes/api/public/hooks/` — verify cron endpoints are wired (auto-declare, scrape, backfill) and have signed access if invoked externally.
 
 ---
 
-## Technical notes
-- All new server logic via `createServerFn` (`requireSupabaseAuth` + `is_admin()` check inside handler).
-- New tables (`app_settings`, KYC docs, payment methods, feature flags, referrals) added via `supabase--migration` with RLS limited to admins / owner.
-- Reuse existing patterns: `useQuery` + realtime channel invalidation; toast on mutation; shadcn `Table`, `Dialog`, `Sheet`, `DropdownMenu`.
-- No design-token violations — all new UI uses semantic tokens from `src/styles.css`.
+### Proposed remediation order
 
-## Suggested order
-Phase 1.1 (Live Dashboard) → 1.2 (Users) → 1.3 (Bets Monitor) → 1.7 (sidebar/polish) → 1.5 (Reports) → 1.4 (Broadcasts) → 1.6 (Settings) → 1.8 (QA). Phase 2 items picked per business priority.
+**Phase A — Hot fixes (ship today):**
+- Fix admin dashboard crash (guard `data?.health?.scrapeOk` etc., make server fn always return a complete shape).
+- Fix login redirect after demo/normal login.
+- Replace hardcoded homepage stats with real counts (or remove them).
+- Update login copy ("Sign in to your account" instead of "mock login").
+- Read `profiles.status` into auth store.
 
-Confirm and I'll start with Phase 1.1.
+**Phase B — Notifications & profile (1 PR):**
+- Replace `notificationStore` with a Supabase-backed query + realtime subscription on `notifications` table; mark-read writes to DB; bell icon shows real unread count.
+- Make profile phone save persist; remove fake 2FA / KYC / change-password buttons OR wire them properly (see Phase C).
+
+**Phase C — Auth completeness:**
+- Add `/reset-password` route + Forgot Password flow with `resetPasswordForEmail`.
+- Optional Google OAuth.
+
+**Phase D — Build out missing admin pages:**
+- Result History (paginated `market_results` browser with filters + CSV export, mirroring Bets Monitor pattern).
+- Broadcasts composer.
+- Reports (Recharts on bets/wallet_transactions, date range).
+- Settings (`app_settings` table + CRUD).
+- Per-number exposure view in Bets Monitor.
+
+**Phase E — Real KYC & Referrals:**
+- KYC: upload to storage, admin review queue, gate withdrawals.
+- Referrals: `referrals` table, credit on first deposit, expose stats on profile.
+
+I will not start any of this until you pick the slice you want first. My recommendation is to do **Phase A** (hot fixes only) immediately because the admin dashboard is currently crashing for every admin.

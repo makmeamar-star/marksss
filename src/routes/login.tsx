@@ -131,7 +131,7 @@ function LoginPage() {
         <form onSubmit={submit} className="w-full max-w-sm space-y-5">
           <div>
             <h1 className="font-display text-3xl font-bold">Sign in</h1>
-            <p className="text-sm text-muted-foreground mt-1">Use any username — this is a mock login.</p>
+            <p className="text-sm text-muted-foreground mt-1">Sign in to your SattaKing Pro account.</p>
           </div>
 
           <div className="space-y-2">

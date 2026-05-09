@@ -28,13 +28,17 @@ async function loadUserFor(userId: string, fallbackEmail: string | null): Promis
   if (!profile) return null;
   const isAdmin = (roles ?? []).some((r) => r.role === "admin");
   const role: Role = isAdmin ? "ADMIN" : "USER";
+  const dbStatus = (profile.status ?? "ACTIVE") as string;
+  const status = (["ACTIVE", "SUSPENDED", "BANNED", "PENDING_VERIFICATION"].includes(dbStatus)
+    ? dbStatus
+    : "ACTIVE") as AppUser["status"];
   return {
     id: userId,
     username: profile.username,
     email: profile.email ?? fallbackEmail ?? "",
     phone: profile.phone ?? undefined,
     role,
-    status: "ACTIVE",
+    status,
     balance: Number(profile.balance ?? 0),
     totalDeposit: Number(profile.total_deposit ?? 0),
     totalWithdraw: Number(profile.total_withdraw ?? 0),
