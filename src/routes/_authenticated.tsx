@@ -5,7 +5,10 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
+import { useBetStore } from "@/stores/betStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { WinCelebration } from "@/components/WinCelebration";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: () => {
