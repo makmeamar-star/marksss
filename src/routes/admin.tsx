@@ -40,12 +40,12 @@ const NAV = [
   { to: "/admin/markets", label: "Markets", icon: Store },
   { to: "/admin/results/declare", label: "Declare Results", icon: Trophy },
   { to: "/admin/results/history", label: "Result History", icon: History },
-  { to: "/admin/bets", label: "Bets", icon: ListChecks },
-  { to: "/admin/users", label: "Users", icon: Users },
+  { to: "/admin/results/automation", label: "Automation", icon: Zap },
+  { to: "/admin/results/scrape", label: "Scraper", icon: Globe },
+  { to: "/admin/results/automation-runs", label: "Automation Runs", icon: History },
+  { to: "/admin/results/automation-audit", label: "Automation Audit", icon: FileSearch },
   { to: "/admin/deposits", label: "Deposits", icon: Wallet },
   { to: "/admin/withdrawals", label: "Withdrawals", icon: ArrowLeftRight },
-  { to: "/admin/broadcasts", label: "Broadcasts", icon: Megaphone },
-  { to: "/admin/reports", label: "Reports", icon: BarChart3 },
 ] as const;
 
 function AdminLayout() {
