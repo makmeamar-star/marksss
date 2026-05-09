@@ -98,7 +98,7 @@ export function useResultsForDate(date: string) {
 
   useEffect(() => {
     const ch = supabase
-      .channel(`results:${date}`)
+      .channel(`results:${date}:${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "market_results", filter: `session_date=eq.${date}` },
