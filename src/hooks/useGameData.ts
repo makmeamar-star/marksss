@@ -111,6 +111,29 @@ export function useResultsForDate(date: string) {
   return q;
 }
 
+export function useLatestResultsPerMarket(lookbackDays = 30) {
+  return useQuery({
+    queryKey: ["latest-results-per-market", lookbackDays],
+    queryFn: async () => {
+      const from = new Date();
+      from.setDate(from.getDate() - lookbackDays);
+      const { data, error } = await supabase
+        .from("market_results")
+        .select("*")
+        .eq("status", "DECLARED")
+        .gte("session_date", from.toISOString().slice(0, 10))
+        .order("session_date", { ascending: false });
+      if (error) throw error;
+      const map: Record<string, MarketResult> = {};
+      for (const r of data ?? []) {
+        if (!map[r.market_id]) map[r.market_id] = rowToResult(r);
+      }
+      return map;
+    },
+    staleTime: 60_000,
+  });
+}
+
 export function useResultsRange(days = 14) {
   return useQuery({
     queryKey: ["results-range", days],
