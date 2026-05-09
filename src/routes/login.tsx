@@ -88,8 +88,8 @@ function LoginPage() {
     setAdminBusy(true);
     try {
       await ensureSignedIn(DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD, DEMO_ADMIN_USERNAME);
-      // Promote to admin if not already (no-op for any other email).
-      await supabase.rpc("ensure_demo_admin");
+      // Promote to admin via server-side edge function (no public RPC needed).
+      await supabase.functions.invoke("ensure-demo-admin");
       await refreshProfile();
       toast.success("Welcome, admin!");
       navigate({ to: "/admin" });
