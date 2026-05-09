@@ -42,10 +42,15 @@ function RegisterPage() {
     if (pwdScore < 3) return toast.error("Choose a stronger password");
     if (!agreed) return toast.error("Please accept the Terms & Conditions");
     setBusy(true);
-    await new Promise((r) => setTimeout(r, 600));
-    register({ username: form.username, email: form.email, phone: form.phone });
-    toast.success(`Welcome ${form.username}! ₹1,000 bonus credited.`);
-    navigate({ to: "/dashboard" });
+    try {
+      await register({ username: form.username, email: form.email, phone: form.phone, password: form.password });
+      toast.success(`Welcome ${form.username}! ₹1,000 bonus credited.`);
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Sign up failed");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
