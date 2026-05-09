@@ -19,6 +19,7 @@ function ProfilePage() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [phone, setPhone] = useState(user?.phone ?? "");
+  const [savingPhone, setSavingPhone] = useState(false);
   const [twoFA, setTwoFA] = useState(false);
   const [notifResults, setNotifResults] = useState(true);
   const [notifWins, setNotifWins] = useState(true);
