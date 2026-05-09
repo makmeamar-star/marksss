@@ -1,22 +1,127 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteHeader } from "@/components/SiteHeader";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Crown, Sparkles, Trophy, Zap } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuthStore } from "@/stores/authStore";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Login — SattaKing Pro" }] }),
-  component: () => <Stub title="Login" />,
+  component: LoginPage,
 });
 
-function Stub({ title }: { title: string }) {
+function LoginPage() {
+  const login = useAuthStore((s) => s.login);
+  const navigate = useNavigate();
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!identifier || !password) {
+      toast.error("Enter username and password");
+      return;
+    }
+    setBusy(true);
+    await new Promise((r) => setTimeout(r, 500));
+    login(identifier);
+    toast.success(`Welcome back, ${identifier}!`);
+    navigate({ to: "/dashboard" });
+  };
+
+  const demoAdmin = () => {
+    login("admin", "ADMIN");
+    toast.success("Logged in as admin (demo)");
+    navigate({ to: "/admin" });
+  };
+
   return (
-    <div className="min-h-screen">
-      <SiteHeader />
-      <section className="container mx-auto px-4 py-24 text-center">
-        <h1 className="font-display text-4xl font-bold">{title}</h1>
-        <p className="text-muted-foreground mt-3 max-w-md mx-auto">
-          Coming in Phase 2 — full auth UI with the dark gold treatment, real-time username availability, OTP, and password strength meter.
+    <div className="min-h-screen grid lg:grid-cols-2 bg-background">
+      <div className="relative hidden lg:flex flex-col justify-between p-12 bg-radial-spotlight border-r border-border/60 overflow-hidden">
+        <div className="absolute inset-0 particles-bg opacity-30 pointer-events-none" />
+        <Link to="/" className="flex items-center gap-2 relative">
+          <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-gold text-background">
+            <Crown className="h-5 w-5" />
+          </span>
+          <span className="font-display text-xl font-bold">
+            Satta<span className="text-primary">King</span> Pro
+          </span>
+        </Link>
+        <div className="relative space-y-6">
+          <h2 className="font-display text-4xl font-bold">
+            Welcome back, <span className="text-primary text-glow-gold">player</span>.
+          </h2>
+          <ul className="space-y-3 text-muted-foreground">
+            <Perk icon={<Zap />} text="Instant settlements the moment results are declared" />
+            <Perk icon={<Trophy />} text="Live results across 8 major Matka markets" />
+            <Perk icon={<Sparkles />} text="Welcome bonus + referral rewards" />
+          </ul>
+        </div>
+        <p className="text-xs text-muted-foreground/60 relative">
+          Prototype build · No real money is exchanged.
         </p>
-        <Link to="/" className="inline-block mt-6 text-primary hover:underline">← Back home</Link>
-      </section>
+      </div>
+
+      <div className="flex items-center justify-center p-6 sm:p-12">
+        <form onSubmit={submit} className="w-full max-w-sm space-y-5">
+          <div>
+            <h1 className="font-display text-3xl font-bold">Sign in</h1>
+            <p className="text-sm text-muted-foreground mt-1">Use any username — this is a mock login.</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="id">Username / Email / Phone</Label>
+            <Input id="id" value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="player1" autoComplete="username" />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="pwd">Password</Label>
+            <div className="relative">
+              <Input id="pwd" type={showPwd ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" />
+              <button type="button" onClick={() => setShowPwd((x) => !x)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-primary">
+                {showPwd ? "hide" : "show"}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs">
+            <label className="flex items-center gap-2 text-muted-foreground"><input type="checkbox" className="accent-[var(--primary)]" /> Remember me</label>
+            <button type="button" className="text-primary hover:underline">Forgot password?</button>
+          </div>
+
+          <Button type="submit" disabled={busy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
+            {busy ? "Signing in…" : "Sign In"}
+          </Button>
+
+          <div className="relative text-center">
+            <span className="absolute inset-0 top-1/2 border-t border-border/60" />
+            <span className="relative bg-background px-3 text-xs uppercase tracking-widest text-muted-foreground">or</span>
+          </div>
+
+          <Button type="button" variant="outline" onClick={demoAdmin} className="w-full border-primary/40 text-primary hover:bg-primary/10">
+            Demo: Login as Admin
+          </Button>
+
+          <p className="text-sm text-center text-muted-foreground">
+            Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
+          </p>
+        </form>
+      </div>
     </div>
+  );
+}
+
+function Perk({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <li className="flex items-start gap-3">
+      <span className="grid h-8 w-8 place-items-center rounded-md border border-primary/30 bg-primary/10 text-primary shrink-0">
+        {icon}
+      </span>
+      <span>{text}</span>
+    </li>
   );
 }
