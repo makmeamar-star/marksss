@@ -96,14 +96,9 @@ function LoginPage() {
             {busy ? "Signing in…" : "Sign In"}
           </Button>
 
-          <div className="relative text-center">
-            <span className="absolute inset-0 top-1/2 border-t border-border/60" />
-            <span className="relative bg-background px-3 text-xs uppercase tracking-widest text-muted-foreground">or</span>
-          </div>
-
-          <Button type="button" variant="outline" onClick={demoAdmin} className="w-full border-primary/40 text-primary hover:bg-primary/10">
-            Demo: Login as Admin
-          </Button>
+          <p className="text-xs text-center text-muted-foreground">
+            First account created automatically becomes the admin.
+          </p>
 
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
