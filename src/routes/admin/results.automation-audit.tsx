@@ -47,7 +47,7 @@ function AuditPage() {
   // Debounce free-text search into URL
   useEffect(() => {
     const t = setTimeout(() => {
-      if (qLocal !== q) navigate({ search: (p) => ({ ...p, q: qLocal }) });
+      if (qLocal !== q) navigate({ search: (p: { market: string; date: string; session: "" | "OPEN" | "CLOSE"; q: string }) => ({ ...p, q: qLocal }) });
     }, 300);
     return () => clearTimeout(t);
   }, [qLocal, q, navigate]);
@@ -146,7 +146,7 @@ function AuditPage() {
           <label className="text-xs text-muted-foreground mb-1 block">Market</label>
           <Select
             value={market || "__all"}
-            onValueChange={(v) => navigate({ search: (p) => ({ ...p, market: v === "__all" ? "" : v }) })}
+            onValueChange={(v) => navigate({ search: (p: { market: string; date: string; session: "" | "OPEN" | "CLOSE"; q: string }) => ({ ...p, market: v === "__all" ? "" : v }) })}
           >
             <SelectTrigger>
               <SelectValue placeholder="All markets" />
@@ -179,7 +179,7 @@ function AuditPage() {
                 mode="single"
                 selected={dateObj}
                 onSelect={(d) =>
-                  navigate({ search: (p) => ({ ...p, date: d ? format(d, "yyyy-MM-dd") : "" }) })
+                  navigate({ search: (p: { market: string; date: string; session: "" | "OPEN" | "CLOSE"; q: string }) => ({ ...p, date: d ? format(d, "yyyy-MM-dd") : "" }) })
                 }
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
@@ -193,7 +193,7 @@ function AuditPage() {
           <Select
             value={session || "__all"}
             onValueChange={(v) =>
-              navigate({ search: (p) => ({ ...p, session: v === "__all" ? "" : (v as "OPEN" | "CLOSE") }) })
+              navigate({ search: (p: { market: string; date: string; session: "" | "OPEN" | "CLOSE"; q: string }) => ({ ...p, session: v === "__all" ? "" : (v as "OPEN" | "CLOSE") }) })
             }
           >
             <SelectTrigger>
