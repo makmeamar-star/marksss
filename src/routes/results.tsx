@@ -5,7 +5,7 @@ import { ResultCard } from "@/components/ResultCard";
 import { ResultsTicker } from "@/components/ResultsTicker";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { useMarkets, useResultsForDate, useResultsRange } from "@/hooks/useGameData";
+import { useMarkets, useResultsForDate, useResultsRange, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { todayIST } from "@/lib/marketTime";
 
 export const Route = createFileRoute("/results")({
