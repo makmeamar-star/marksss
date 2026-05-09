@@ -24,6 +24,7 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedMyBetsRouteImport } from './routes/_authenticated/my-bets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
+import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.declare'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
 
 const ResultsRoute = ResultsRouteImport.update({
@@ -101,6 +102,11 @@ const AdminResultsHistoryRoute = AdminResultsHistoryRouteImport.update({
   path: '/results/history',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminResultsDeclareRoute = AdminResultsDeclareRouteImport.update({
+  id: '/results/declare',
+  path: '/results/declare',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AuthenticatedBetMarketIdRoute =
   AuthenticatedBetMarketIdRouteImport.update({
     id: '/bet/$marketId',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin/': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
 }
 export interface FileRoutesByTo {
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
 }
 export interface FileRoutesById {
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/admin/': typeof AdminIndexRoute
   '/_authenticated/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
 }
 export interface FileRouteTypes {
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/admin/'
     | '/bet/$marketId'
+    | '/admin/results/declare'
     | '/admin/results/history'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/admin'
     | '/bet/$marketId'
+    | '/admin/results/declare'
     | '/admin/results/history'
   id:
     | '__root__'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wallet'
     | '/admin/'
     | '/_authenticated/bet/$marketId'
+    | '/admin/results/declare'
     | '/admin/results/history'
   fileRoutesById: FileRoutesById
 }
@@ -332,6 +344,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResultsHistoryRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/results/declare': {
+      id: '/admin/results/declare'
+      path: '/results/declare'
+      fullPath: '/admin/results/declare'
+      preLoaderRoute: typeof AdminResultsDeclareRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_authenticated/bet/$marketId': {
       id: '/_authenticated/bet/$marketId'
       path: '/bet/$marketId'
@@ -366,11 +385,13 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminResultsDeclareRoute: typeof AdminResultsDeclareRoute
   AdminResultsHistoryRoute: typeof AdminResultsHistoryRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
+  AdminResultsDeclareRoute: AdminResultsDeclareRoute,
   AdminResultsHistoryRoute: AdminResultsHistoryRoute,
 }
 
@@ -389,3 +410,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
