@@ -14,16 +14,286 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          id: string
+          market_id: string | null
+          metadata: Json | null
+          pana: string | null
+          previous_pana: string | null
+          reason: string | null
+          session: string | null
+          session_date: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          market_id?: string | null
+          metadata?: Json | null
+          pana?: string | null
+          previous_pana?: string | null
+          reason?: string | null
+          session?: string | null
+          session_date?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          market_id?: string | null
+          metadata?: Json | null
+          pana?: string | null
+          previous_pana?: string | null
+          reason?: string | null
+          session?: string | null
+          session_date?: string | null
+        }
+        Relationships: []
+      }
+      bets: {
+        Row: {
+          amount: number
+          bet_number: string
+          bet_type: string
+          created_at: string
+          id: string
+          market_id: string
+          payout: number
+          session: string
+          session_date: string
+          settled_at: string | null
+          status: string
+          user_id: string
+          win_amount: number | null
+        }
+        Insert: {
+          amount: number
+          bet_number: string
+          bet_type: string
+          created_at?: string
+          id?: string
+          market_id: string
+          payout: number
+          session: string
+          session_date: string
+          settled_at?: string | null
+          status?: string
+          user_id: string
+          win_amount?: number | null
+        }
+        Update: {
+          amount?: number
+          bet_number?: string
+          bet_type?: string
+          created_at?: string
+          id?: string
+          market_id?: string
+          payout?: number
+          session?: string
+          session_date?: string
+          settled_at?: string | null
+          status?: string
+          user_id?: string
+          win_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_results: {
+        Row: {
+          close_digit: number | null
+          close_pana: string | null
+          created_at: string
+          declared_at: string | null
+          declared_by: string | null
+          id: string
+          jodi: string | null
+          market_id: string
+          open_digit: number | null
+          open_pana: string | null
+          session_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          close_digit?: number | null
+          close_pana?: string | null
+          created_at?: string
+          declared_at?: string | null
+          declared_by?: string | null
+          id?: string
+          jodi?: string | null
+          market_id: string
+          open_digit?: number | null
+          open_pana?: string | null
+          session_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          close_digit?: number | null
+          close_pana?: string | null
+          created_at?: string
+          declared_at?: string | null
+          declared_by?: string | null
+          id?: string
+          jodi?: string | null
+          market_id?: string
+          open_digit?: number | null
+          open_pana?: string | null
+          session_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_results_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      markets: {
+        Row: {
+          close_time: string
+          created_at: string
+          days: string[]
+          display_name: string
+          id: string
+          max_bet: number
+          min_bet: number
+          name: string
+          open_time: string
+          payouts: Json
+          result_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          close_time: string
+          created_at?: string
+          days: string[]
+          display_name: string
+          id: string
+          max_bet?: number
+          min_bet?: number
+          name: string
+          open_time: string
+          payouts: Json
+          result_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          close_time?: string
+          created_at?: string
+          days?: string[]
+          display_name?: string
+          id?: string
+          max_bet?: number
+          min_bet?: number
+          name?: string
+          open_time?: string
+          payouts?: Json
+          result_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          description: string | null
+          id: string
+          reference_id: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          status?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +420,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
