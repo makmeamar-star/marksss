@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import {
   LayoutDashboard, Trophy, Wallet, Crown, LogOut, Menu,
-  Store, ArrowLeftRight, History, Zap, Globe, FileSearch, Users,
+  Store, ArrowLeftRight, History, Zap, Globe, FileSearch, Users, Activity,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
