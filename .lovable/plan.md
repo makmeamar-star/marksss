@@ -1,112 +1,112 @@
 
-# Real Matka Results: Scraper + Auto-Settle
+# Admin Dashboard — Activate All + Roadmap
 
-## Goal
+## Current state
+The admin shell and these pages already work: Dashboard, Markets, Declare Results, Result History, Automation, Scraper, Automation Runs, Automation Audit, Deposits, Withdrawals. The home page is just a static tile grid — no live data, no KPIs, and several common admin surfaces (users, bets monitor, broadcasts, reports, settings) don't exist yet.
 
-Replace the random seed data with real Kalyan / Milan / Rajdhani / Main Mumbai / Madhur / Time Bazar results scraped from public matka result sites, then keep results live and auto-settle bets without admin intervention.
+## Phase 1 — Activate the shell into a real control center
 
-## Sources (with fallback)
+### 1.1 Live Dashboard (`/admin`)
+Replace the static tile grid with an operational overview:
+- **KPI strip (today, IST):** Active users • New signups • Bets placed • Bet volume ₹ • Gross payout ₹ • House P&L ₹ • Pending deposits • Pending withdrawals.
+- **Today's markets table:** market, open/close time, scraped status, declared open pana, declared close pana, automation on/off, quick "Declare" link.
+- **Recent activity feed:** last 20 audit_log rows (declares, corrections, approvals, auto-declares).
+- **Health tiles:** last scraper run + success rate (24h), last automation run, count of client_errors (24h).
+- All data via `createServerFn` + `requireSupabaseAuth`, 30 s `useQuery` refetch + realtime invalidation on `bets`, `market_results`, `deposit_requests`, `withdrawal_requests`.
 
-Order tried per market per session:
+### 1.2 Users (`/admin/users`)
+- Searchable, paginated table of `profiles` joined with role + last bet/deposit.
+- Row actions: view profile drawer (balance, totals, KYC, recent bets/tx), grant/revoke admin role, adjust balance (admin credit/debit with reason → `wallet_transactions` + `audit_log`), suspend (set a `profiles.status` flag — needs migration).
 
-1. **dpboss.services** (primary) — has both today's panel (`/`) and full historical panel chart per market (`/panel-chart-record/<market-slug>.php`).
-2. **sattamatkano1.net** (fallback 1) — same panel chart structure.
-3. **matka.org / matkaresult.com** (fallback 2) — used only if both above are missing the row.
+### 1.3 Bets Monitor (`/admin/bets`)
+- Live table of bets with filters: market, session, status, date range, user, min amount.
+- Aggregate footer: count, total stake, exposure (potential payout) per bet_type / number — surfaces concentration risk before declaring.
+- Bulk export CSV.
 
-Each scrape returns `{ open_pana, close_pana }`. We derive `open_digit`, `close_digit`, `jodi` exactly like `declare_result` does. If only OPEN is published, we store OPEN and retry CLOSE later.
+### 1.4 Broadcasts (`/admin/broadcasts`)
+- Compose a notification → insert one `notifications` row per active user (server fn, batched).
+- Audience: all users / admins only / users with balance > X / users who bet today.
+- History table with delivered count + read rate.
 
-A small `market_source_map` table maps each internal `markets.id` → slug per source, so adding a new source or a new market is config, not code.
+### 1.5 Reports (`/admin/reports`)
+- Date-range picker (default last 7 days IST).
+- Charts: daily bet volume, daily payout, daily new users, daily deposits vs withdrawals, per-market P&L.
+- "Export CSV" for each table. Use Recharts (already in shadcn stack).
 
-## Architecture
+### 1.6 Settings (`/admin/settings`)
+- Global config: default min/max bet, scraper sources & cron interval, automation default grace minutes, welcome bonus amount, payment screenshots required toggle.
+- Stored in a new `app_settings` key/value table (admin RLS).
 
-```text
-                           ┌──────────────────────────┐
- pg_cron every 2 min ────► │ /api/public/hooks/       │
-                           │   scrape-results         │ (TanStack server route)
-                           └──────────┬───────────────┘
-                                      │  for each ACTIVE market × session due today
-                                      ▼
-                           ┌──────────────────────────┐
-                  ┌──────► │ scrapeMarket(marketId,   │
-                  │        │   session, date)         │
-                  │        └──────────┬───────────────┘
-                  │                   │ try dpboss → sattamatkano1 → matka.org
-                  │                   ▼
-                  │        ┌──────────────────────────┐
-                  │        │ system_auto_declare(...)│ ← existing SQL fn,
-                  │        │   inserts result +       │   already settles bets
-                  │        │   settles bets           │   and credits wallets
-                  │        └──────────┬───────────────┘
-                  │                   │
-                  │                   ▼
-                  │        audit_log row (action=AUTO_SCRAPE, source=dpboss/...)
-                  │
- manual button ───┘  /admin/results/scrape  →  same route, ?backfill=YYYY-MM-DD..YYYY-MM-DD
-```
+### 1.7 Polish
+- Sidebar: add Users, Bets, Broadcasts, Reports, Settings (with section dividers: Operations / Money / Growth / System).
+- Fix `beforeLoad` race: gate via `_authenticated` style — wait for `supabase.auth.getUser()` then role check; show skeleton instead of redirect flash.
+- Add a global `<AdminBreadcrumbs />` in the shell.
+- Mobile: make tables horizontally scrollable wrappers; sticky table headers.
 
-Why reuse `system_auto_declare`: it already validates the pana, writes `market_results`, computes jodi, settles `bets`, credits `profiles.balance`, writes `wallet_transactions` and `notifications`. The scraper just picks the right pana — settlement logic stays in one place.
+### 1.8 QA pass
+For every admin route: load → primary action → empty state → error state → mobile (430px). Log fixes.
 
-## Scope of work
+---
 
-### 1. Database (one migration)
+## Phase 2 — Advanced future features (roadmap)
 
-- New table `market_source_map(market_id, source, slug, PRIMARY KEY(market_id, source))`.
-- Seed it for the 8 existing markets across the 3 sources.
-- New table `result_scrape_log(id, run_at, market_id, session_date, session, source, status, pana, error)` for visibility.
-- New SQL function `system_set_result(_market_id, _session_date, _session, _pana, _source)` — same body as `system_auto_declare` but accepts a `source` string written into `audit_log.metadata`. (We can also just call `system_auto_declare` and add a separate audit row — leaning toward the latter to avoid duplicating ~100 lines of settle logic.)
-- Keep `run_due_auto_declarations()` but switch its random pana picker to call the scraper endpoint instead. (Discussed in step 3.)
+**Risk & Liability**
+- Per-market real-time exposure heatmap (which numbers, if hit, cost the house most).
+- Auto-suspend a number when exposure > threshold.
+- Per-user bet limits and daily loss caps.
 
-### 2. Scraper module — `src/lib/scraper/`
+**Fraud & Safety**
+- Multi-account detection (shared device fingerprint, IP, UPI/UTR).
+- Velocity rules (X deposits/withdrawals in Y minutes → flag).
+- Withdrawal hold rules (first withdraw after deposit, KYC gating).
+- Admin-only "shadow ban" (user can place bets but they're voided).
 
-- `dpboss.ts`, `sattamatkano1.ts`, `matkaorg.ts` — each exports `fetchPanel(slug, dateRange)` and `fetchToday(slug)` returning `{ openPana?, closePana? }`.
-- `index.ts` — `scrapeMarketSession(marketId, date, session)` walks sources in order, returns first valid pana (validated against `pana_chart`) or `null`.
-- HTML parsed with `node-html-parser` (Worker-safe, already pure JS — confirmed compatible with the Cloudflare Worker runtime).
-- 6-second timeout per source, no retries inside a single cron tick.
+**KYC & Compliance**
+- KYC document upload + admin review queue, status on profile.
+- Audit export (CSV/PDF) for any date range, signed by admin.
+- Per-state geo-block toggle.
 
-### 3. Server routes (TanStack)
+**Payments**
+- Payment-method manager (UPI VPAs, QR images, bank accounts) shown to users on deposit screen — sourced from admin.
+- Auto-match UTR → deposit request (background job).
+- Payout queue with batching + CSV export for bank upload.
 
-- `src/routes/api/public/hooks/scrape-results.ts` — POST. Iterates today's active markets, calls scraper, on success calls `system_auto_declare` via service-role client. Logs each attempt to `result_scrape_log`.
-- `src/routes/api/public/hooks/backfill-results.ts` — POST `{ from, to, marketIds? }`. Same loop but for past dates, only writes if `market_results` row is missing **or was generated by the random seeder** (we mark the seed rows so we can safely overwrite them — see step 5).
-- Both routes verify the Supabase anon key in the `apikey` header (standard `/api/public/*` pattern).
+**Result Pipeline**
+- Multi-source consensus scraper (dpboss + matka results + 1 more), auto-declare only when ≥2 agree.
+- Manual override with side-by-side source comparison.
+- Per-market scrape cadence and selector overrides editable in UI.
 
-### 4. Admin UI — `/admin/results/scrape` (new tab on the existing results page)
+**Engagement**
+- In-app banners/announcements scheduler.
+- Push notifications (web push) + WhatsApp/SMS provider hooks.
+- Referral program admin: codes, commission %, payouts ledger.
+- Promotions engine: cashback rules, deposit bonuses with wagering requirements.
 
-- "Run scraper now" button → calls scrape-results route.
-- "Backfill range" form: date range + market multi-select → calls backfill route, streams progress.
-- Table view of latest 100 `result_scrape_log` rows (market, session, source, status, pana, time).
-- Toggle per market: "Use scraper for auto-declare" (writes to `market_automation.mode = 'SCRAPER' | 'RANDOM' | 'MANUAL'`).
+**Analytics**
+- Cohort retention, ARPU/ARPDAU, churn dashboard.
+- Funnel: signup → first deposit → first bet → repeat.
+- Anomaly alerts (bet volume spike, payout spike) via email/Telegram.
 
-### 5. Replace the random seed history
+**Ops & Reliability**
+- Background job runner page (cron status, last run, manual trigger).
+- Edge-function & client-error log viewer with search.
+- Feature flags table (toggle any feature without deploy).
+- Maintenance mode banner + bet-blocking switch.
 
-- Add `audit_log` flag or simple `market_results.declared_by IS NULL AND status='DECLARED'` heuristic to identify seed rows (current seeder leaves `declared_by` NULL).
-- One-time backfill run for the last 90 days that overwrites those rows with real scraped data. Real declared admin/system results are left untouched.
+**Admin org**
+- Multiple admin roles: super_admin, finance, support, content (extend `app_role` enum + per-route guards).
+- Per-action 2FA prompt for sensitive ops (balance adjust, role grant, withdrawal approve > ₹X).
+- Full activity audit per admin user.
 
-### 6. Cron schedule
+---
 
-- `pg_cron` job every 2 minutes between 09:00–00:30 IST calling `/api/public/hooks/scrape-results`. Outside that window the route is a no-op (nothing due).
-- Keep the existing automation cron, but its handler now calls the scraper first and only falls back to the random pana if `market_automation.mode = 'RANDOM'` (preserves existing behavior for any market admin opts out).
+## Technical notes
+- All new server logic via `createServerFn` (`requireSupabaseAuth` + `is_admin()` check inside handler).
+- New tables (`app_settings`, KYC docs, payment methods, feature flags, referrals) added via `supabase--migration` with RLS limited to admins / owner.
+- Reuse existing patterns: `useQuery` + realtime channel invalidation; toast on mutation; shadcn `Table`, `Dialog`, `Sheet`, `DropdownMenu`.
+- No design-token violations — all new UI uses semantic tokens from `src/styles.css`.
 
-## Out of scope
+## Suggested order
+Phase 1.1 (Live Dashboard) → 1.2 (Users) → 1.3 (Bets Monitor) → 1.7 (sidebar/polish) → 1.5 (Reports) → 1.4 (Broadcasts) → 1.6 (Settings) → 1.8 (QA). Phase 2 items picked per business priority.
 
-- Scraping bookies that require login or Cloudflare challenges.
-- Historical results older than what dpboss publishes on the panel chart page (~10 years available, but we only backfill 90 days here to match the existing UI).
-- Editing already-declared real results (10-min `correct_result` window still applies).
-- Scraping for markets we haven't added yet — admin must add the market and its source slugs first.
-
-## Risks & mitigations
-
-- **Source HTML changes.** Each source is in its own file with one parse function; failure is contained, fallback kicks in, and `result_scrape_log` makes breakage visible immediately.
-- **Source rate-limits / blocks.** 2-minute cadence with 8 markets × 3 sources worst case = ~24 requests / cycle, well below normal. Cache today's panel HTML for 60s in-process.
-- **Auto-settling wrong pana.** Scraper only writes panas that exist in our `pana_chart` table; mismatches are logged and skipped, not declared. The 10-min `correct_result` window is still available to admins.
-- **Auto-payouts on bad data.** Because settlement is automatic, a wrong scraped value pays out users we can't easily reverse. Mitigation: **two-source agreement required for auto-settle.** A pana is declared only when the primary source AND at least one fallback agree. If only one source has it, we write the result with `status='PENDING_REVIEW'` and surface it on the admin scrape tab for one-click confirm. (Worth your call — see question below.)
-
-## Technical details
-
-- HTML parser: `node-html-parser` (~30 KB, pure JS, Worker-compatible).
-- Service-role Supabase client created inside server route from `SUPABASE_SERVICE_ROLE_KEY` (already in secrets) so we can call `system_auto_declare` regardless of caller auth.
-- Scraper functions are pure (URL in, panas out) — easy to unit-test against captured HTML fixtures.
-- Audit metadata for each scraped declare: `{ source: 'dpboss', sources_agreed: ['dpboss','sattamatkano1'], scraped_at }`.
-
-## Decision to confirm before building
-
-Two-source agreement gate (risk-mitigation above) adds safety but means if only dpboss has the result, we wait. I'll default to **ON** unless you'd rather get faster declares and accept single-source risk.
+Confirm and I'll start with Phase 1.1.
