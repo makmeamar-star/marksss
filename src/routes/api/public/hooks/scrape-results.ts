@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { fetchAllForMarket, type SourceName } from "@/lib/scraper/index.server";
+import { fetchAllForMarket, mapToRealDpbossDate, type SourceName } from "@/lib/scraper/index.server";
 
 /**
  * Live scrape hook. Iterates every enabled market_source_map row, fetches
