@@ -151,7 +151,7 @@ function AdminHome() {
                 </div>
               </li>
             ))}
-            {(!data || data.activity.length === 0) && (
+            {(!data?.activity || data.activity.length === 0) && (
               <li className="text-xs text-muted-foreground">No recent activity.</li>
             )}
           </ul>
