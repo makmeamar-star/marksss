@@ -103,7 +103,7 @@ function AuthLayout() {
         <main className="flex-1 pb-20 lg:pb-8">
           <Outlet />
         </main>
-        <WinCelebration amount={lastWin} onClose={clearLastWin} />
+        <WinCelebration amount={lastWin} onClose={() => setLastWin(null)} />
 
         {/* Mobile bottom nav */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur grid grid-cols-5">
