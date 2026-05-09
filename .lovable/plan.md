@@ -1,83 +1,40 @@
-## End-to-end audit of SattaKing Pro
+# Fix: admin dashboard flashes then errors (server-fn 401)
 
-I tested the full app via the browser, walked the codebase, and inspected the database. Here is what I found, grouped by severity.
+## Root cause
 
----
+All admin server functions (`getAdminOverview`, `listUsers`, `listBets`, `sendBroadcast`, `listRecentBroadcasts`) are wrapped with `requireSupabaseAuth`, which demands an `Authorization: Bearer <token>` header. The client never attaches that header when calling server functions — TanStack Start's default fetch sends no Supabase token. Result:
 
-### Bugs (must fix)
+```
+GET /_serverFn/...  →  401 Unauthorized
+```
 
-1. **Admin Dashboard crashes** — `/admin` throws `TypeError: Cannot read properties of undefined (reading 'scrapeOk')` and renders blank KPIs / "No active markets" even though 8 markets exist. The page error was logged to `client_errors`. Source: `src/routes/admin/index.tsx` references `data?.health.scrapeOk` (and similar) without guarding `data.health`. Server function returns shape inconsistently / errors silently.
+Browser then receives a thrown `Response` object, surfaces it as `Error: [object Response]`, and the root `errorComponent` renders. That's the "shows dashboard for a sec, then error" behavior.
 
-2. **Login does not redirect** — clicking "Demo Admin" shows a "Welcome, admin!" toast but the user stays on `/login`; they must navigate manually. Login flow's `navigate({ to: search.redirect })` is not firing.
+## Fix
 
-3. **Notifications page is disconnected from the database** — `/notifications` reads/writes a local Zustand store (`notificationStore.ts`, persisted to localStorage). The real `notifications` table — populated by DB triggers for bet wins/losses, deposit/withdraw approvals, admin actions — is **never read or shown to users**. The bell icon and inbox are effectively dead.
+Add a tiny client-side fetch interceptor that attaches the current Supabase access token to every same-origin `/_serverFn/...` request. Load it once at app boot.
 
-4. **Hero / hardcoded fake stats on homepage** — "48,219 Active Players" and "1,847 Today's Winners" are string literals in `src/routes/index.tsx`. Misleading on a real product.
+### Changes
 
-5. **Login page misleading copy** — header says "Use any username — this is a mock login" but it is real Supabase auth. Confusing for real users.
+1. **New file `src/integrations/supabase/server-fn-fetch.client.ts`**
+   - On import (browser only), monkey-patches `window.fetch`.
+   - For requests whose URL pathname starts with `/_serverFn/`, calls `supabase.auth.getSession()` and, if a session exists, sets `Authorization: Bearer <access_token>` (without overwriting an explicit Authorization the caller already set).
+   - No-op on the server.
 
-6. **Auth store hardcodes `status: "ACTIVE"` and a synthetic `referralCode`** — `src/stores/authStore.ts` ignores the actual `profiles.status` column (so a SUSPENDED user still sees "ACTIVE" in their profile) and fabricates a referral code per session.
+2. **`src/routes/__root.tsx`**
+   - Add `import "@/integrations/supabase/server-fn-fetch.client";` so the patch installs as soon as the client bundle runs.
 
-### Incomplete features (placeholders / mock-only)
+3. **Hardening (optional but cheap):**
+   - Update `src/routes/admin/index.tsx` so the failure case shows a clearer message and a Sign-in CTA when status is 401, instead of throwing into the root error boundary. (Just guard `q.error` rendering — no behavior change for the happy path.)
 
-7. **Result History page is a stub** — `src/routes/admin/results.history.tsx` literally says "Historical results browser arrives in Phase 4.5."
+### Verification
 
-8. **Profile page is mostly mock** — phone "Save changes" only shows a toast (no DB write); 2FA toggle is fake; KYC upload buttons are fake; "Change password" sends a fake toast (no `resetPasswordForEmail`); "Delete account" is disabled with an error toast.
+- Reload `/admin` while logged in as the new admin (`owner@sattaking.app`).
+- Watch worker logs: `/_serverFn/...` should be `200`, not `401`.
+- KPI tiles populate (active users, bets, payout, etc.); markets and activity feed render.
+- Visit `/admin/users`, `/admin/bets`, `/admin/broadcasts` — all should load without the error screen.
+- Sign out → visit `/admin` → admin layout `beforeLoad` redirects to `/login` (unchanged).
 
-9. **No `/reset-password` page** — the login page links to "Forgot password?" but there is no recovery route, so even if the email were sent the user cannot complete the reset.
+## Out of scope
 
-10. **Referral system not implemented** — registration captures a referral code, profile shows one, but nothing is stored, validated, credited, or paid out. No `referrals` table, no bonus logic.
-
-11. **KYC not implemented** — `profiles.kyc_status` exists and is shown, but there is no upload flow, no document storage, no admin KYC review queue, and the wallet does not actually gate withdrawals on KYC.
-
-12. **Charts page – Open/Close + Jodi tabs are partial** — only the Pana tab is meaningful; the others render basic tables without filtering UX expected from a Matka chart.
-
-### Missing admin/operational features (planned but never built)
-
-13. **Broadcasts** — sidebar plan called for an admin broadcast composer that inserts into the `notifications` table for user segments. Not built.
-
-14. **Reports / Analytics** — no `/admin/reports` (volume, payouts, growth charts). The admin nav lists no analytics page.
-
-15. **Settings** — no `/admin/settings` (global limits, scraper interval, bonus toggles, app_settings table).
-
-16. **Risk / exposure dashboard** — Bets Monitor shows totals but there is no per-number / per-market exposure view to spot a high-risk pana before declaring.
-
-17. **Edge functions are nearly empty** — only `ensure-demo-admin`. Cron-like tasks (`run_due_auto_declarations`) are SQL functions that need a scheduler or `/api/public/*` endpoint to be triggered.
-
-### Smaller polish items
-
-18. SiteHeader bell icon does not show real unread count (because of #3).
-19. Wallet page deposit screenshot upload exists but I should confirm it actually uploads to the `payment-screenshots` bucket end-to-end.
-20. `src/routes/api/public/hooks/` — verify cron endpoints are wired (auto-declare, scrape, backfill) and have signed access if invoked externally.
-
----
-
-### Proposed remediation order
-
-**Phase A — Hot fixes (ship today):**
-- Fix admin dashboard crash (guard `data?.health?.scrapeOk` etc., make server fn always return a complete shape).
-- Fix login redirect after demo/normal login.
-- Replace hardcoded homepage stats with real counts (or remove them).
-- Update login copy ("Sign in to your account" instead of "mock login").
-- Read `profiles.status` into auth store.
-
-**Phase B — Notifications & profile (1 PR):**
-- Replace `notificationStore` with a Supabase-backed query + realtime subscription on `notifications` table; mark-read writes to DB; bell icon shows real unread count.
-- Make profile phone save persist; remove fake 2FA / KYC / change-password buttons OR wire them properly (see Phase C).
-
-**Phase C — Auth completeness:**
-- Add `/reset-password` route + Forgot Password flow with `resetPasswordForEmail`.
-- Optional Google OAuth.
-
-**Phase D — Build out missing admin pages:**
-- Result History (paginated `market_results` browser with filters + CSV export, mirroring Bets Monitor pattern).
-- Broadcasts composer.
-- Reports (Recharts on bets/wallet_transactions, date range).
-- Settings (`app_settings` table + CRUD).
-- Per-number exposure view in Bets Monitor.
-
-**Phase E — Real KYC & Referrals:**
-- KYC: upload to storage, admin review queue, gate withdrawals.
-- Referrals: `referrals` table, credit on first deposit, expose stats on profile.
-
-I will not start any of this until you pick the slice you want first. My recommendation is to do **Phase A** (hot fixes only) immediately because the admin dashboard is currently crashing for every admin.
+No DB/schema changes. No changes to RLS or to the `requireSupabaseAuth` middleware. Other admin pages that already use the browser supabase client directly are unaffected.
