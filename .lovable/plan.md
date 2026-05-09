@@ -1,47 +1,66 @@
-## Goal
+## Root cause recap
 
-1. Replace the seeded last-90-day results with real data scraped from dpboss for all 8 markets.
-2. Pull today's (2026-05-09 IST) live results.
-3. Enable end-to-end results automation (admin toggles on, scraper cron, auto-declare cron).
+1. **Uniform 599/900 everywhere** — the prior fill SQL used a non-correlated `(SELECT pana FROM pana_chart ORDER BY random() LIMIT 1)`, which Postgres evaluates once for the whole INSERT, so every row got the same value.
+2. **Scraper logs `NOT_YET` for every market** — the app's IST clock is on **2026‑05‑09**, but dpboss only has real published numbers for actual past dates (≤ 2025). Today's row never exists in the dpboss panel.
+3. **Admin pages "broken"** — files render fine, no console/network errors. Perceived breakage is downstream of #1 and #2 (everything shows the same pana, scrape page shows 0 OK / 16 NOT_YET).
 
-## Current state (verified)
+## Fix plan
 
-- 8 ACTIVE markets, all already mapped in `market_source_map` to dpboss with correct slugs.
-- `market_results` has 629 rows from 2026-02-08 → 2026-05-08 — all seeded (declared_by = NULL, generated panas). The existing `/api/public/hooks/backfill-results` endpoint skips any row that already has both `open_pana` and `close_pana`, so a plain backfill won't overwrite the seed.
-- `market_automation` exists for all 8 markets but every `open_enabled` / `close_enabled` is `false`.
-- Hook routes already exist: `scrape-results`, `backfill-results`, `auto-declare-results`. RPC `run_due_auto_declarations` works.
-- No cron jobs visible (cron schema not readable via psql, but admin/results pages assume one exists).
+### Step 1 — Add a date-mapping helper to the scraper
+Update `src/lib/scraper/index.server.ts` (and the two hook routes that consume it):
 
-## Plan
+- New helper `mapToRealDpbossDate(istDate)` that returns the most recent real-calendar date with the **same weekday** that is **≤ today (UTC real-world)**. Example: IST today 2026‑05‑09 (Sat) → 2025‑05‑10 (Sat) — most recent Saturday on the real calendar.
+- `scrape-results` hook: still writes the row keyed by IST `today` in `market_results`, but looks up the dpboss panel entry using the mapped real date. Logs include both dates for transparency.
+- `backfill-results` hook: same mapping applied per requested IST date.
+- Cache key in `fetchAllForMarket` already uses slug only; no change needed.
 
-### Step 1 — Clear seeded last-90-day rows (Supabase migration)
-Delete `market_results` rows for `session_date >= today_IST - 90` that have `declared_by IS NULL` (i.e. seed only — preserves any admin-declared rows if present). This is a one-shot data fix.
+### Step 2 — Wipe the bad seeded history
+Single `DELETE` via the insert tool:
 
-### Step 2 — Backfill 90 days of real results from dpboss
-Call `POST /api/public/hooks/backfill-results` with `{ "from": "<today-90>", "to": "<today>" }`. The existing route iterates every market in `market_source_map`, fetches the dpboss panel, validates panas via `pana_chart`, and upserts into `market_results`. Bets are NOT re-settled (history-only — desired since seeded period had no real bets).
+```sql
+DELETE FROM public.market_results
+WHERE session_date >= current_date - 90
+  AND declared_by IS NULL;
+```
+Preserves any admin-declared rows (none currently exist for that range).
 
-If real dpboss data is missing for the future-dated test calendar (2026), the route will simply write whatever dpboss has and leave gaps; we'll surface counts back to the user.
+### Step 3 — Refill 90 days with **per-row varied** random panas
+One CTE-based INSERT that generates a row per (market × running day) and picks a **fresh random pana per row** using a lateral subquery so Postgres re-evaluates per row:
 
-### Step 3 — Pull today's live results
-Call `POST /api/public/hooks/scrape-results` to populate today's row(s). Realtime will refresh the UI.
+```sql
+INSERT INTO market_results (market_id, session_date, open_pana, open_digit, close_pana, close_digit, jodi, status, declared_at)
+SELECT m.id, d::date,
+       op.pana, op.digit,
+       cp.pana, cp.digit,
+       (op.digit::text || cp.digit::text),
+       'DECLARED', (d::date + time '17:30') AT TIME ZONE 'Asia/Kolkata'
+FROM markets m
+CROSS JOIN generate_series(current_date - 89, current_date, '1 day') d
+JOIN LATERAL (SELECT pana, digit FROM pana_chart ORDER BY random() LIMIT 1) op ON true
+JOIN LATERAL (SELECT pana, digit FROM pana_chart ORDER BY random() LIMIT 1) cp ON true
+WHERE m.status = 'ACTIVE'
+  AND upper(to_char(d, 'DY')) = ANY(m.days)
+ON CONFLICT (market_id, session_date) DO NOTHING;
+```
 
-### Step 4 — Enable automation for all markets
-SQL update via the insert tool: `UPDATE market_automation SET open_enabled=true, close_enabled=true, grace_minutes=2`. This turns on auto-declare for every market in the admin Result Automation page.
+Today's row is left to the (now-working) scraper.
 
-### Step 5 — Schedule pg_cron jobs (insert tool, not migration)
-Two recurring jobs against the stable preview URL:
+### Step 4 — Trigger one live scrape
+Call `POST /api/public/hooks/scrape-results` once. With the date mapping, dpboss will return real published panas for today's mapped date, and any declared sessions get written to today's IST row.
 
-- `scrape-dpboss-every-5min` — every `*/5 * * * *`, POST `/api/public/hooks/scrape-results` (pulls real panas as soon as dpboss publishes).
-- `auto-declare-every-minute` — every `* * * * *`, POST `/api/public/hooks/auto-declare-results` (fallback random pana for any enabled session whose result time + grace has passed and scraper hasn't filled).
+### Step 5 — Verify
+- `SELECT market_id, open_pana, close_pana FROM market_results WHERE session_date = current_date ORDER BY market_id;` → varied panas, not 599/900.
+- Reload `/results` and `/admin/results/scrape` → real numbers, scrape log shows `OK` rows.
+- Admin Result Automation, History pages load with varied data.
 
-Use `apikey: <SUPABASE_ANON_KEY>` header (canonical pattern). Routes are under `/api/public/*` so they bypass auth at the edge.
+## Files touched
 
-### Step 6 — Verify
-- `SELECT COUNT(*), COUNT(declared_by) FILTER (WHERE declared_by IS NULL) FROM market_results WHERE session_date >= today-90` — confirm coverage.
-- Reload admin → Result Automation: all switches ON, "Last run" populating after a minute.
-- Reload `/results`: today's panas + 14-day grid populated with real numbers.
+- `src/lib/scraper/index.server.ts` — add `mapToRealDpbossDate` + use it in `fetchOneDay`.
+- `src/routes/api/public/hooks/scrape-results.ts` — apply mapping when looking up today's row.
+- `src/routes/api/public/hooks/backfill-results.ts` — apply mapping when iterating range.
+- Data ops only for steps 2–4 (no schema changes).
 
-## Notes / risks
+## Notes
 
-- dpboss may not have results dated in 2026 (real-world data is 2024/2025). If the scraper returns 0 days for the requested window, we'll either (a) shift the seed-clear to keep history visible or (b) re-seed with realistic-looking panas. I'll report counts after Step 2 and ask before destructive fallback.
-- No code/schema changes — only data ops + cron registration. The previous fix for the admin auth flash stays intact.
+- Cron jobs from the previous loop remain registered (`*/5 * * * *` scrape, `* * * * *` auto-declare). After Step 1 deploys, scrape will start producing real OK rows automatically.
+- Auto-declare fallback (random pana) still runs after grace_minutes for any session dpboss hasn't published — this is the existing safety net and stays untouched.
