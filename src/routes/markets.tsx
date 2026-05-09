@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultCard } from "@/components/ResultCard";
 import { useMarketStore } from "@/stores/marketStore";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/markets")({
   head: () => ({
@@ -24,13 +25,15 @@ function MarketsPage() {
       <SiteHeader />
       <section className="container mx-auto px-4 py-10">
         <h1 className="font-display text-4xl font-bold">Markets</h1>
-        <p className="text-muted-foreground mt-1 mb-8">
-          Tap a market to see details. Betting flows arrive in Phase 2 — for now,{" "}
-          <Link to="/login" className="text-primary hover:underline">log in</Link> to preview the dashboard shell.
-        </p>
+        <p className="text-muted-foreground mt-1 mb-8">Pick a market to view bet types and place your stake.</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {markets.map((m) => (
-            <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} />
+            <div key={m.id} className="space-y-2">
+              <ResultCard market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} />
+              <Button asChild className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
+                <Link to="/bet/$marketId" params={{ marketId: m.id }}>Bet Now</Link>
+              </Button>
+            </div>
           ))}
         </div>
       </section>
