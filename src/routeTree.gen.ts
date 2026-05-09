@@ -17,11 +17,14 @@ import { Route as ChartsRouteImport } from './routes/charts'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyBetsRouteImport } from './routes/_authenticated/my-bets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
+import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.declare'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
 
 const ResultsRoute = ResultsRouteImport.update({
@@ -63,6 +66,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
@@ -89,6 +97,16 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AdminResultsHistoryRoute = AdminResultsHistoryRouteImport.update({
+  id: '/results/history',
+  path: '/results/history',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminResultsDeclareRoute = AdminResultsDeclareRouteImport.update({
+  id: '/results/declare',
+  path: '/results/declare',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AuthenticatedBetMarketIdRoute =
   AuthenticatedBetMarketIdRouteImport.update({
     id: '/bet/$marketId',
@@ -98,7 +116,7 @@ const AuthenticatedBetMarketIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/charts': typeof ChartsRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
@@ -109,11 +127,13 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/wallet': typeof AuthenticatedWalletRoute
+  '/admin/': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/admin/results/declare': typeof AdminResultsDeclareRoute
+  '/admin/results/history': typeof AdminResultsHistoryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/charts': typeof ChartsRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
@@ -124,13 +144,16 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/wallet': typeof AuthenticatedWalletRoute
+  '/admin': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/admin/results/declare': typeof AdminResultsDeclareRoute
+  '/admin/results/history': typeof AdminResultsHistoryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/charts': typeof ChartsRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
@@ -141,7 +164,10 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
+  '/admin/': typeof AdminIndexRoute
   '/_authenticated/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/admin/results/declare': typeof AdminResultsDeclareRoute
+  '/admin/results/history': typeof AdminResultsHistoryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -158,11 +184,13 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/wallet'
+    | '/admin/'
     | '/bet/$marketId'
+    | '/admin/results/declare'
+    | '/admin/results/history'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/charts'
     | '/login'
     | '/markets'
@@ -173,7 +201,10 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/wallet'
+    | '/admin'
     | '/bet/$marketId'
+    | '/admin/results/declare'
+    | '/admin/results/history'
   id:
     | '__root__'
     | '/'
@@ -189,13 +220,16 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/wallet'
+    | '/admin/'
     | '/_authenticated/bet/$marketId'
+    | '/admin/results/declare'
+    | '/admin/results/history'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ChartsRoute: typeof ChartsRoute
   LoginRoute: typeof LoginRoute
   MarketsRoute: typeof MarketsRoute
@@ -261,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_authenticated/wallet': {
       id: '/_authenticated/wallet'
       path: '/wallet'
@@ -296,6 +337,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/admin/results/history': {
+      id: '/admin/results/history'
+      path: '/results/history'
+      fullPath: '/admin/results/history'
+      preLoaderRoute: typeof AdminResultsHistoryRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/results/declare': {
+      id: '/admin/results/declare'
+      path: '/results/declare'
+      fullPath: '/admin/results/declare'
+      preLoaderRoute: typeof AdminResultsDeclareRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_authenticated/bet/$marketId': {
       id: '/_authenticated/bet/$marketId'
       path: '/bet/$marketId'
@@ -328,10 +383,24 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface AdminRouteChildren {
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminResultsDeclareRoute: typeof AdminResultsDeclareRoute
+  AdminResultsHistoryRoute: typeof AdminResultsHistoryRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminIndexRoute: AdminIndexRoute,
+  AdminResultsDeclareRoute: AdminResultsDeclareRoute,
+  AdminResultsHistoryRoute: AdminResultsHistoryRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   ChartsRoute: ChartsRoute,
   LoginRoute: LoginRoute,
   MarketsRoute: MarketsRoute,
