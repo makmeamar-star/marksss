@@ -62,7 +62,13 @@ function ProfilePage() {
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91…" />
           </div>
         </div>
-        <Button variant="outline" onClick={() => toast.success("Profile updated")}>Save changes</Button>
+        <Button variant="outline" disabled={savingPhone} onClick={async () => {
+          setSavingPhone(true);
+          const { error } = await supabase.from("profiles").update({ phone }).eq("user_id", user.id);
+          setSavingPhone(false);
+          if (error) return toast.error(error.message);
+          toast.success("Profile updated");
+        }}>{savingPhone ? "Saving…" : "Save changes"}</Button>
       </section>
 
       {/* KYC */}
