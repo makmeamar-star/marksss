@@ -1,51 +1,112 @@
+
+# Real Matka Results: Scraper + Auto-Settle
+
 ## Goal
 
-1. Backfill historical market results so the public Results / Charts pages show real history for Kalyan and every other market.
-2. Add an admin Markets page to create, edit, and remove markets (games) from the admin dashboard.
+Replace the random seed data with real Kalyan / Milan / Rajdhani / Main Mumbai / Madhur / Time Bazar results scraped from public matka result sites, then keep results live and auto-settle bets without admin intervention.
 
-## 1. Backfill historical results
+## Sources (with fallback)
 
-Seed ~90 days of past `market_results` for all 8 existing markets (Kalyan, Madhur Day, Main Mumbai, Milan Day, Milan Night, Rajdhani Day, Rajdhani Night, Time Bazar).
+Order tried per market per session:
 
-- For each market × each past day (skipping days not in the market's `days` array): pick a random valid `open_pana` and `close_pana` from `pana_chart`, derive `open_digit`, `close_digit`, `jodi`.
-- Insert rows with `status = 'DECLARED'`, `declared_at = session_date + close_time`, `declared_by = NULL` (system seed).
-- Idempotent: skip dates that already exist.
-- Done via a one-off SQL `INSERT ... SELECT` using `ON CONFLICT DO NOTHING` (after confirming a unique index on `(market_id, session_date)`; add it if missing).
+1. **dpboss.services** (primary) — has both today's panel (`/`) and full historical panel chart per market (`/panel-chart-record/<market-slug>.php`).
+2. **sattamatkano1.net** (fallback 1) — same panel chart structure.
+3. **matka.org / matkaresult.com** (fallback 2) — used only if both above are missing the row.
 
-This only affects historical display data. No bets, wallets, or audit settling logic runs.
+Each scrape returns `{ open_pana, close_pana }`. We derive `open_digit`, `close_digit`, `jodi` exactly like `declare_result` does. If only OPEN is published, we store OPEN and retry CLOSE later.
 
-## 2. Admin "Manage Markets" feature
+A small `market_source_map` table maps each internal `markets.id` → slug per source, so adding a new source or a new market is config, not code.
 
-### Database
-Markets table already has full CRUD-friendly columns and admin-only RLS (`Admins write markets`). No schema change needed beyond optionally adding a soft-delete safety: we'll keep hard delete but block it server-side if any `bets` or `market_results` reference the market — instead set `status = 'INACTIVE'`.
+## Architecture
 
-Add a SECURITY DEFINER function `admin_delete_market(_market_id text)` that:
-- Requires admin role.
-- If referenced by bets/results → updates `status='INACTIVE'` and returns `{ soft: true }`.
-- Else deletes the row and its `market_automation` entry, returns `{ soft: false }`.
+```text
+                           ┌──────────────────────────┐
+ pg_cron every 2 min ────► │ /api/public/hooks/       │
+                           │   scrape-results         │ (TanStack server route)
+                           └──────────┬───────────────┘
+                                      │  for each ACTIVE market × session due today
+                                      ▼
+                           ┌──────────────────────────┐
+                  ┌──────► │ scrapeMarket(marketId,   │
+                  │        │   session, date)         │
+                  │        └──────────┬───────────────┘
+                  │                   │ try dpboss → sattamatkano1 → matka.org
+                  │                   ▼
+                  │        ┌──────────────────────────┐
+                  │        │ system_auto_declare(...)│ ← existing SQL fn,
+                  │        │   inserts result +       │   already settles bets
+                  │        │   settles bets           │   and credits wallets
+                  │        └──────────┬───────────────┘
+                  │                   │
+                  │                   ▼
+                  │        audit_log row (action=AUTO_SCRAPE, source=dpboss/...)
+                  │
+ manual button ───┘  /admin/results/scrape  →  same route, ?backfill=YYYY-MM-DD..YYYY-MM-DD
+```
 
-### UI
-New route `src/routes/admin/markets.tsx`:
-- Table of all markets with: display name, id, open/close, days, min/max bet, status.
-- "Add Market" button → dialog with form (id, display_name, name, open_time, close_time, result_time, days multi-select Mon–Sun, min_bet, max_bet, payouts JSON with sane defaults pulled from an existing market as template).
-- Row actions: Edit (same dialog prefilled), Activate/Suspend toggle (flips `status`), Delete (calls `admin_delete_market` RPC, shows toast indicating hard vs soft delete).
-- Also auto-creates a `market_automation` row (disabled) when a market is added.
+Why reuse `system_auto_declare`: it already validates the pana, writes `market_results`, computes jodi, settles `bets`, credits `profiles.balance`, writes `wallet_transactions` and `notifications`. The scraper just picks the right pana — settlement logic stays in one place.
 
-Add a new tile on `src/routes/admin/index.tsx` linking to `/admin/markets`.
+## Scope of work
 
-### Validation
-- `id`: lowercase, kebab-case, unique.
-- `open_time` < `close_time`, both `HH:MM`.
-- `payouts` defaulted from Kalyan's payouts so admin doesn't need to type JSON for normal use; advanced JSON editor available.
+### 1. Database (one migration)
 
-## Technical notes
-- Migrations:
-  1. Add unique index `market_results_market_session_uniq` on `(market_id, session_date)` if missing.
-  2. Create `admin_delete_market` function.
-  3. Seed historical results (90 days, all markets).
-- Frontend uses `supabase` client directly (admin RLS already enforced).
-- No changes to bet settlement, automation, or public pages required — Results/Charts pages will simply start showing data.
+- New table `market_source_map(market_id, source, slug, PRIMARY KEY(market_id, source))`.
+- Seed it for the 8 existing markets across the 3 sources.
+- New table `result_scrape_log(id, run_at, market_id, session_date, session, source, status, pana, error)` for visibility.
+- New SQL function `system_set_result(_market_id, _session_date, _session, _pana, _source)` — same body as `system_auto_declare` but accepts a `source` string written into `audit_log.metadata`. (We can also just call `system_auto_declare` and add a separate audit row — leaning toward the latter to avoid duplicating ~100 lines of settle logic.)
+- Keep `run_due_auto_declarations()` but switch its random pana picker to call the scraper endpoint instead. (Discussed in step 3.)
+
+### 2. Scraper module — `src/lib/scraper/`
+
+- `dpboss.ts`, `sattamatkano1.ts`, `matkaorg.ts` — each exports `fetchPanel(slug, dateRange)` and `fetchToday(slug)` returning `{ openPana?, closePana? }`.
+- `index.ts` — `scrapeMarketSession(marketId, date, session)` walks sources in order, returns first valid pana (validated against `pana_chart`) or `null`.
+- HTML parsed with `node-html-parser` (Worker-safe, already pure JS — confirmed compatible with the Cloudflare Worker runtime).
+- 6-second timeout per source, no retries inside a single cron tick.
+
+### 3. Server routes (TanStack)
+
+- `src/routes/api/public/hooks/scrape-results.ts` — POST. Iterates today's active markets, calls scraper, on success calls `system_auto_declare` via service-role client. Logs each attempt to `result_scrape_log`.
+- `src/routes/api/public/hooks/backfill-results.ts` — POST `{ from, to, marketIds? }`. Same loop but for past dates, only writes if `market_results` row is missing **or was generated by the random seeder** (we mark the seed rows so we can safely overwrite them — see step 5).
+- Both routes verify the Supabase anon key in the `apikey` header (standard `/api/public/*` pattern).
+
+### 4. Admin UI — `/admin/results/scrape` (new tab on the existing results page)
+
+- "Run scraper now" button → calls scrape-results route.
+- "Backfill range" form: date range + market multi-select → calls backfill route, streams progress.
+- Table view of latest 100 `result_scrape_log` rows (market, session, source, status, pana, time).
+- Toggle per market: "Use scraper for auto-declare" (writes to `market_automation.mode = 'SCRAPER' | 'RANDOM' | 'MANUAL'`).
+
+### 5. Replace the random seed history
+
+- Add `audit_log` flag or simple `market_results.declared_by IS NULL AND status='DECLARED'` heuristic to identify seed rows (current seeder leaves `declared_by` NULL).
+- One-time backfill run for the last 90 days that overwrites those rows with real scraped data. Real declared admin/system results are left untouched.
+
+### 6. Cron schedule
+
+- `pg_cron` job every 2 minutes between 09:00–00:30 IST calling `/api/public/hooks/scrape-results`. Outside that window the route is a no-op (nothing due).
+- Keep the existing automation cron, but its handler now calls the scraper first and only falls back to the random pana if `market_automation.mode = 'RANDOM'` (preserves existing behavior for any market admin opts out).
 
 ## Out of scope
-- Editing past results (already covered by `correct_result` within 10-min window for current day).
-- Bulk import from external sources.
+
+- Scraping bookies that require login or Cloudflare challenges.
+- Historical results older than what dpboss publishes on the panel chart page (~10 years available, but we only backfill 90 days here to match the existing UI).
+- Editing already-declared real results (10-min `correct_result` window still applies).
+- Scraping for markets we haven't added yet — admin must add the market and its source slugs first.
+
+## Risks & mitigations
+
+- **Source HTML changes.** Each source is in its own file with one parse function; failure is contained, fallback kicks in, and `result_scrape_log` makes breakage visible immediately.
+- **Source rate-limits / blocks.** 2-minute cadence with 8 markets × 3 sources worst case = ~24 requests / cycle, well below normal. Cache today's panel HTML for 60s in-process.
+- **Auto-settling wrong pana.** Scraper only writes panas that exist in our `pana_chart` table; mismatches are logged and skipped, not declared. The 10-min `correct_result` window is still available to admins.
+- **Auto-payouts on bad data.** Because settlement is automatic, a wrong scraped value pays out users we can't easily reverse. Mitigation: **two-source agreement required for auto-settle.** A pana is declared only when the primary source AND at least one fallback agree. If only one source has it, we write the result with `status='PENDING_REVIEW'` and surface it on the admin scrape tab for one-click confirm. (Worth your call — see question below.)
+
+## Technical details
+
+- HTML parser: `node-html-parser` (~30 KB, pure JS, Worker-compatible).
+- Service-role Supabase client created inside server route from `SUPABASE_SERVICE_ROLE_KEY` (already in secrets) so we can call `system_auto_declare` regardless of caller auth.
+- Scraper functions are pure (URL in, panas out) — easy to unit-test against captured HTML fixtures.
+- Audit metadata for each scraped declare: `{ source: 'dpboss', sources_agreed: ['dpboss','sattamatkano1'], scraped_at }`.
+
+## Decision to confirm before building
+
+Two-source agreement gate (risk-mitigation above) adds safety but means if only dpboss has the result, we wait. I'll default to **ON** unless you'd rather get faster declares and accept single-source risk.
