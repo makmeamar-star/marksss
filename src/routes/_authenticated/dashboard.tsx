@@ -3,8 +3,8 @@ import { ArrowUpRight, Wallet, Receipt, Trophy, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/stores/authStore";
-import { useBetStore } from "@/stores/betStore";
-import { useMarketStore } from "@/stores/marketStore";
+import { useMarkets, useMyBets, useResultsForDate } from "@/hooks/useGameData";
+import { todayIST } from "@/lib/marketTime";
 import { ResultCard } from "@/components/ResultCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
