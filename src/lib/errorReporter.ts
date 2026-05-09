@@ -52,7 +52,7 @@ export async function reportError(input: ReportInput): Promise<void> {
       route: window.location.pathname,
       user_agent: navigator.userAgent,
       app_version: import.meta.env.MODE,
-      context: input.context ?? null,
+      context: (input.context ?? null) as never,
     });
   } catch {
     // Never throw from reporter
