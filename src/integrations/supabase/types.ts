@@ -157,6 +157,44 @@ export type Database = {
         }
         Relationships: []
       }
+      market_automation: {
+        Row: {
+          close_enabled: boolean
+          grace_minutes: number
+          last_run_at: string | null
+          market_id: string
+          mode: string
+          open_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          close_enabled?: boolean
+          grace_minutes?: number
+          last_run_at?: string | null
+          market_id: string
+          mode?: string
+          open_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          close_enabled?: boolean
+          grace_minutes?: number
+          last_run_at?: string | null
+          market_id?: string
+          mode?: string
+          open_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_automation_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: true
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       market_results: {
         Row: {
           close_digit: number | null
@@ -510,6 +548,16 @@ export type Database = {
       }
       reject_withdrawal: {
         Args: { _reason: string; _request_id: string }
+        Returns: Json
+      }
+      run_due_auto_declarations: { Args: never; Returns: Json }
+      system_auto_declare: {
+        Args: {
+          _market_id: string
+          _pana: string
+          _session: string
+          _session_date: string
+        }
         Returns: Json
       }
       validate_pana: {
