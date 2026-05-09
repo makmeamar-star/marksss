@@ -115,6 +115,48 @@ export type Database = {
           },
         ]
       }
+      deposit_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          method: string
+          processed_at: string | null
+          processed_by: string | null
+          reject_reason: string | null
+          screenshot_url: string | null
+          status: string
+          user_id: string
+          utr: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          method: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reject_reason?: string | null
+          screenshot_url?: string | null
+          status?: string
+          user_id: string
+          utr?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reject_reason?: string | null
+          screenshot_url?: string | null
+          status?: string
+          user_id?: string
+          utr?: string | null
+        }
+        Relationships: []
+      }
       market_results: {
         Row: {
           close_digit: number | null
@@ -219,6 +261,69 @@ export type Database = {
         }
         Relationships: []
       }
+      pana_chart: {
+        Row: {
+          digit: number
+          pana: string
+          pana_type: string
+        }
+        Insert: {
+          digit: number
+          pana: string
+          pana_type: string
+        }
+        Update: {
+          digit?: number
+          pana?: string
+          pana_type?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          balance: number
+          created_at: string
+          email: string | null
+          kyc_status: string
+          phone: string | null
+          total_bet: number
+          total_deposit: number
+          total_win: number
+          total_withdraw: number
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          email?: string | null
+          kyc_status?: string
+          phone?: string | null
+          total_bet?: number
+          total_deposit?: number
+          total_win?: number
+          total_withdraw?: number
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          email?: string | null
+          kyc_status?: string
+          phone?: string | null
+          total_bet?: number
+          total_deposit?: number
+          total_win?: number
+          total_withdraw?: number
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -279,17 +384,89 @@ export type Database = {
         }
         Relationships: []
       }
+      withdrawal_requests: {
+        Row: {
+          amount: number
+          bank_details: Json | null
+          created_at: string
+          id: string
+          method: string
+          processed_at: string | null
+          processed_by: string | null
+          reject_reason: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bank_details?: Json | null
+          created_at?: string
+          id?: string
+          method: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reject_reason?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bank_details?: Json | null
+          created_at?: string
+          id?: string
+          method?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reject_reason?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      correct_result: {
+        Args: {
+          _market_id: string
+          _new_pana: string
+          _reason: string
+          _session: string
+          _session_date: string
+        }
+        Returns: Json
+      }
+      declare_result: {
+        Args: {
+          _market_id: string
+          _pana: string
+          _reason?: string
+          _session: string
+          _session_date: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
+      place_bets: {
+        Args: { _items: Json; _market_id: string; _session_date: string }
+        Returns: Json
+      }
+      validate_pana: {
+        Args: { _pana: string }
+        Returns: {
+          digit: number
+          pana_type: string
+          valid: boolean
+        }[]
       }
     }
     Enums: {
