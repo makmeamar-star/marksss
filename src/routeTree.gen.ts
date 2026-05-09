@@ -38,6 +38,7 @@ import { Route as AdminResultsAutomationAuditRouteImport } from './routes/admin/
 import { Route as AdminResultsAutomationRouteImport } from './routes/admin/results.automation'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
 import { Route as ApiPublicHooksScrapeResultsRouteImport } from './routes/api/public/hooks/scrape-results'
+import { Route as ApiPublicHooksHealthCheckRouteImport } from './routes/api/public/hooks/health-check'
 import { Route as ApiPublicHooksBackfillResultsRouteImport } from './routes/api/public/hooks/backfill-results'
 import { Route as ApiPublicHooksAutoDeclareResultsRouteImport } from './routes/api/public/hooks/auto-declare-results'
 
@@ -190,6 +191,12 @@ const ApiPublicHooksScrapeResultsRoute =
     path: '/api/public/hooks/scrape-results',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksHealthCheckRoute =
+  ApiPublicHooksHealthCheckRouteImport.update({
+    id: '/api/public/hooks/health-check',
+    path: '/api/public/hooks/health-check',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksBackfillResultsRoute =
   ApiPublicHooksBackfillResultsRouteImport.update({
     id: '/api/public/hooks/backfill-results',
@@ -233,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
 }
 export interface FileRoutesByTo {
@@ -264,6 +272,7 @@ export interface FileRoutesByTo {
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
 }
 export interface FileRoutesById {
@@ -298,6 +307,7 @@ export interface FileRoutesById {
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
 }
 export interface FileRouteTypes {
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -363,6 +374,7 @@ export interface FileRouteTypes {
     | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
   id:
     | '__root__'
@@ -396,6 +408,7 @@ export interface FileRouteTypes {
     | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
   fileRoutesById: FileRoutesById
 }
@@ -411,6 +424,7 @@ export interface RootRouteChildren {
   ResultsRoute: typeof ResultsRoute
   ApiPublicHooksAutoDeclareResultsRoute: typeof ApiPublicHooksAutoDeclareResultsRoute
   ApiPublicHooksBackfillResultsRoute: typeof ApiPublicHooksBackfillResultsRoute
+  ApiPublicHooksHealthCheckRoute: typeof ApiPublicHooksHealthCheckRoute
   ApiPublicHooksScrapeResultsRoute: typeof ApiPublicHooksScrapeResultsRoute
 }
 
@@ -619,6 +633,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksScrapeResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/health-check': {
+      id: '/api/public/hooks/health-check'
+      path: '/api/public/hooks/health-check'
+      fullPath: '/api/public/hooks/health-check'
+      preLoaderRoute: typeof ApiPublicHooksHealthCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/backfill-results': {
       id: '/api/public/hooks/backfill-results'
       path: '/api/public/hooks/backfill-results'
@@ -704,6 +725,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResultsRoute: ResultsRoute,
   ApiPublicHooksAutoDeclareResultsRoute: ApiPublicHooksAutoDeclareResultsRoute,
   ApiPublicHooksBackfillResultsRoute: ApiPublicHooksBackfillResultsRoute,
+  ApiPublicHooksHealthCheckRoute: ApiPublicHooksHealthCheckRoute,
   ApiPublicHooksScrapeResultsRoute: ApiPublicHooksScrapeResultsRoute,
 }
 export const routeTree = rootRouteImport
