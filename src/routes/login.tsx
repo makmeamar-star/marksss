@@ -23,20 +23,19 @@ function LoginPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier || !password) {
-      toast.error("Enter username and password");
+      toast.error("Enter email and password");
       return;
     }
     setBusy(true);
-    await new Promise((r) => setTimeout(r, 500));
-    login(identifier);
-    toast.success(`Welcome back, ${identifier}!`);
-    navigate({ to: "/dashboard" });
-  };
-
-  const demoAdmin = () => {
-    login("admin", "ADMIN");
-    toast.success("Logged in as admin (demo)");
-    navigate({ to: "/admin" });
+    try {
+      await login(identifier, password);
+      toast.success(`Welcome back!`);
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -74,8 +73,8 @@ function LoginPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="id">Username / Email / Phone</Label>
-            <Input id="id" value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="player1" autoComplete="username" />
+            <Label htmlFor="id">Email</Label>
+            <Input id="id" type="email" value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="you@example.com" autoComplete="email" />
           </div>
 
           <div className="space-y-2">
@@ -97,14 +96,9 @@ function LoginPage() {
             {busy ? "Signing in…" : "Sign In"}
           </Button>
 
-          <div className="relative text-center">
-            <span className="absolute inset-0 top-1/2 border-t border-border/60" />
-            <span className="relative bg-background px-3 text-xs uppercase tracking-widest text-muted-foreground">or</span>
-          </div>
-
-          <Button type="button" variant="outline" onClick={demoAdmin} className="w-full border-primary/40 text-primary hover:bg-primary/10">
-            Demo: Login as Admin
-          </Button>
+          <p className="text-xs text-center text-muted-foreground">
+            First account created automatically becomes the admin.
+          </p>
 
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>

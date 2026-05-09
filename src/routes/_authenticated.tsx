@@ -11,17 +11,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WinCelebration } from "@/components/WinCelebration";
 
 export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: () => {
+  beforeLoad: async ({ location }) => {
     if (typeof window === "undefined") return;
-    const raw = localStorage.getItem("skp-auth");
-    try {
-      const parsed = raw ? JSON.parse(raw) : null;
-      if (!parsed?.state?.user) {
-        throw redirect({ to: "/login" });
-      }
-    } catch (e) {
-      if (e instanceof Error && "to" in e) throw e;
-      throw redirect({ to: "/login" });
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      throw redirect({ to: "/login", search: { redirect: location.href } as never });
     }
   },
   component: AuthLayout,
@@ -141,7 +136,7 @@ function SidebarNav({ unread }: { unread: number }) {
   );
 }
 
-function SidebarFooter({ user, onLogout, hydrated }: { user: ReturnType<typeof useAuthStore.getState>["user"]; onLogout: () => void; hydrated: boolean }) {
+function SidebarFooter({ user, onLogout, hydrated }: { user: ReturnType<typeof useAuthStore.getState>["user"]; onLogout: () => void | Promise<void>; hydrated: boolean }) {
   if (!hydrated) return null;
   return (
     <div className="border-t border-border/60 p-3 space-y-2">

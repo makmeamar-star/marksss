@@ -7,7 +7,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { useAuthStore } from "@/stores/authStore";
 
 import appCss from "../styles.css?url";
 
@@ -111,6 +113,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const bootstrap = useAuthStore((s) => s.bootstrap);
+  const hydrated = useAuthStore((s) => s.hydrated);
+  useEffect(() => {
+    if (!hydrated) void bootstrap();
+  }, [hydrated, bootstrap]);
 
   return (
     <QueryClientProvider client={queryClient}>
