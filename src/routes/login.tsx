@@ -151,7 +151,21 @@ function LoginPage() {
 
           <div className="flex items-center justify-between text-xs">
             <label className="flex items-center gap-2 text-muted-foreground"><input type="checkbox" className="accent-[var(--primary)]" /> Remember me</label>
-            <button type="button" className="text-primary hover:underline">Forgot password?</button>
+            <button
+              type="button"
+              className="text-primary hover:underline"
+              onClick={async () => {
+                if (!username || !username.includes("@")) {
+                  toast.error("Enter your account email above first");
+                  return;
+                }
+                const { error } = await supabase.auth.resetPasswordForEmail(username, {
+                  redirectTo: `${window.location.origin}/reset-password`,
+                });
+                if (error) toast.error(error.message);
+                else toast.success("Password reset email sent");
+              }}
+            >Forgot password?</button>
           </div>
 
           <Button type="submit" disabled={anyBusy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
