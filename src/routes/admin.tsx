@@ -49,6 +49,7 @@ const NAV = [
   { to: "/admin/deposits", label: "Deposits", icon: Wallet },
   { to: "/admin/withdrawals", label: "Withdrawals", icon: ArrowLeftRight },
   { to: "/admin/broadcasts", label: "Broadcasts", icon: Megaphone },
+  { to: "/admin/monitoring", label: "Monitoring", icon: ShieldAlert },
 ] as const;
 
 function AdminLayout() {
