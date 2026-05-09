@@ -3,12 +3,13 @@ import {
   LayoutDashboard, Store, Receipt, BarChart3, Wallet, Bell, User, LogOut, Crown, Trophy, Menu,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
-import { useBetStore } from "@/stores/betStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WinCelebration } from "@/components/WinCelebration";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
