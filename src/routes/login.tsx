@@ -53,19 +53,27 @@ function LoginPage() {
     }
   };
 
+  const ensureSignedIn = async (
+    email: string,
+    password: string,
+    username: string,
+  ) => {
+    try {
+      await login(email, password);
+    } catch {
+      try {
+        await register({ username, email, password });
+      } catch {
+        await login(email, password);
+      }
+    }
+  };
+
   const demoLogin = async () => {
-    if (demoBusy || busy) return;
+    if (anyBusy) return;
     setDemoBusy(true);
     try {
-      try {
-        await login(DEMO_EMAIL, DEMO_PASSWORD);
-      } catch {
-        try {
-          await register({ username: DEMO_USERNAME, email: DEMO_EMAIL, password: DEMO_PASSWORD });
-        } catch {
-          await login(DEMO_EMAIL, DEMO_PASSWORD);
-        }
-      }
+      await ensureSignedIn(DEMO_EMAIL, DEMO_PASSWORD, DEMO_USERNAME);
       toast.success("Welcome to the demo!");
       navigate({ to: "/dashboard" });
     } catch (err) {
@@ -73,6 +81,24 @@ function LoginPage() {
     } finally {
       setDemoBusy(false);
     }
+  };
+
+  const demoAdminLogin = async () => {
+    if (anyBusy) return;
+    setAdminBusy(true);
+    try {
+      await ensureSignedIn(DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD, DEMO_ADMIN_USERNAME);
+      // Promote to admin if not already (no-op for any other email).
+      await supabase.rpc("ensure_demo_admin");
+      await refreshProfile();
+      toast.success("Welcome, admin!");
+      navigate({ to: "/admin" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Admin demo login failed");
+    } finally {
+      setAdminBusy(false);
+    }
+  };
   };
 
   return (
