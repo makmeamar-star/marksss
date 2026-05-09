@@ -26,6 +26,8 @@ function ResultsPage() {
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(date);
   const { data: history = [] } = useResultsRange(14);
+  const { data: latestPerMarket = {} } = useLatestResultsPerMarket();
+  const isToday = date === today;
 
   return (
     <div className="min-h-screen">
