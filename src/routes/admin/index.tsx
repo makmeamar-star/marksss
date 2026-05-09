@@ -59,6 +59,9 @@ function AdminHome() {
 
   const data = q.data;
   const k = data?.kpis;
+  const health = data?.health;
+  const markets = data?.markets ?? [];
+  const activity = data?.activity ?? [];
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-8 max-w-7xl">
@@ -82,10 +85,10 @@ function AdminHome() {
         <Kpi icon={Activity} label="Bets placed" value={k ? String(k.bets) : "—"} sub={inr(k?.betVolume ?? 0) + " volume"} />
         <Kpi icon={TrendingDown} label="Gross payout" value={inr(k?.grossPayout ?? 0)} tone="warn" />
         <Kpi icon={TrendingUp} label="House net (today)" value={inr(k?.houseNet ?? 0)} tone={(k?.houseNet ?? 0) >= 0 ? "good" : "warn"} />
-        <Kpi icon={Wallet} label="Pending deposits" value={String(k?.pendingDeposits.count ?? "—")} sub={inr(k?.pendingDeposits.amount ?? 0)} />
-        <Kpi icon={ArrowDownToLine} label="Pending withdrawals" value={String(k?.pendingWithdrawals.count ?? "—")} sub={inr(k?.pendingWithdrawals.amount ?? 0)} />
-        <Kpi icon={Globe} label="Scraper 24h" value={`${data?.health.scrapeOk ?? 0} ok`} sub={`${data?.health.scrapeFail ?? 0} failed · ${timeAgo(data?.health.scrapeLastRunAt ?? null)}`} />
-        <Kpi icon={AlertTriangle} label="Client errors 24h" value={String(data?.health.clientErrors24h ?? "—")} tone={(data?.health.clientErrors24h ?? 0) > 0 ? "warn" : "good"} />
+        <Kpi icon={Wallet} label="Pending deposits" value={String(k?.pendingDeposits?.count ?? "—")} sub={inr(k?.pendingDeposits?.amount ?? 0)} />
+        <Kpi icon={ArrowDownToLine} label="Pending withdrawals" value={String(k?.pendingWithdrawals?.count ?? "—")} sub={inr(k?.pendingWithdrawals?.amount ?? 0)} />
+        <Kpi icon={Globe} label="Scraper 24h" value={`${health?.scrapeOk ?? 0} ok`} sub={`${health?.scrapeFail ?? 0} failed · ${timeAgo(health?.scrapeLastRunAt ?? null)}`} />
+        <Kpi icon={AlertTriangle} label="Client errors 24h" value={String(health?.clientErrors24h ?? "—")} tone={(health?.clientErrors24h ?? 0) > 0 ? "warn" : "good"} />
       </div>
 
       <div className="mt-8 grid lg:grid-cols-3 gap-4">
