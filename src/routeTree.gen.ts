@@ -28,6 +28,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
 import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.declare'
 import { Route as AdminResultsAutomationRunsRouteImport } from './routes/admin/results.automation-runs'
+import { Route as AdminResultsAutomationAuditRouteImport } from './routes/admin/results.automation-audit'
 import { Route as AdminResultsAutomationRouteImport } from './routes/admin/results.automation'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
 import { Route as ApiPublicHooksAutoDeclareResultsRouteImport } from './routes/api/public/hooks/auto-declare-results'
@@ -128,6 +129,12 @@ const AdminResultsAutomationRunsRoute =
     path: '/results/automation-runs',
     getParentRoute: () => AdminRoute,
   } as any)
+const AdminResultsAutomationAuditRoute =
+  AdminResultsAutomationAuditRouteImport.update({
+    id: '/results/automation-audit',
+    path: '/results/automation-audit',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminResultsAutomationRoute = AdminResultsAutomationRouteImport.update({
   id: '/results/automation',
   path: '/results/automation',
@@ -164,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
+  '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
@@ -186,6 +194,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
+  '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
@@ -211,6 +220,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/_authenticated/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
+  '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/bet/$marketId'
     | '/admin/results/automation'
+    | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
     | '/admin/results/history'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bet/$marketId'
     | '/admin/results/automation'
+    | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
     | '/admin/results/history'
@@ -282,6 +294,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/_authenticated/bet/$marketId'
     | '/admin/results/automation'
+    | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
     | '/admin/results/history'
@@ -435,6 +448,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResultsAutomationRunsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/results/automation-audit': {
+      id: '/admin/results/automation-audit'
+      path: '/results/automation-audit'
+      fullPath: '/admin/results/automation-audit'
+      preLoaderRoute: typeof AdminResultsAutomationAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/results/automation': {
       id: '/admin/results/automation'
       path: '/results/automation'
@@ -486,6 +506,7 @@ interface AdminRouteChildren {
   AdminWithdrawalsRoute: typeof AdminWithdrawalsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminResultsAutomationRoute: typeof AdminResultsAutomationRoute
+  AdminResultsAutomationAuditRoute: typeof AdminResultsAutomationAuditRoute
   AdminResultsAutomationRunsRoute: typeof AdminResultsAutomationRunsRoute
   AdminResultsDeclareRoute: typeof AdminResultsDeclareRoute
   AdminResultsHistoryRoute: typeof AdminResultsHistoryRoute
@@ -496,6 +517,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminWithdrawalsRoute: AdminWithdrawalsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminResultsAutomationRoute: AdminResultsAutomationRoute,
+  AdminResultsAutomationAuditRoute: AdminResultsAutomationAuditRoute,
   AdminResultsAutomationRunsRoute: AdminResultsAutomationRunsRoute,
   AdminResultsDeclareRoute: AdminResultsDeclareRoute,
   AdminResultsHistoryRoute: AdminResultsHistoryRoute,
@@ -517,3 +539,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
