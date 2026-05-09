@@ -28,6 +28,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
 import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.declare'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
+import { Route as ApiPublicHooksAutoDeclareResultsRouteImport } from './routes/api/public/hooks/auto-declare-results'
 
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
@@ -125,6 +126,12 @@ const AuthenticatedBetMarketIdRoute =
     path: '/bet/$marketId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const ApiPublicHooksAutoDeclareResultsRoute =
+  ApiPublicHooksAutoDeclareResultsRouteImport.update({
+    id: '/api/public/hooks/auto-declare-results',
+    path: '/api/public/hooks/auto-declare-results',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -164,6 +172,7 @@ export interface FileRoutesByTo {
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -186,6 +195,7 @@ export interface FileRoutesById {
   '/_authenticated/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/bet/$marketId'
     | '/admin/results/declare'
     | '/admin/results/history'
+    | '/api/public/hooks/auto-declare-results'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/bet/$marketId'
     | '/admin/results/declare'
     | '/admin/results/history'
+    | '/api/public/hooks/auto-declare-results'
   id:
     | '__root__'
     | '/'
@@ -248,6 +260,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bet/$marketId'
     | '/admin/results/declare'
     | '/admin/results/history'
+    | '/api/public/hooks/auto-declare-results'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -259,6 +272,7 @@ export interface RootRouteChildren {
   MarketsRoute: typeof MarketsRoute
   RegisterRoute: typeof RegisterRoute
   ResultsRoute: typeof ResultsRoute
+  ApiPublicHooksAutoDeclareResultsRoute: typeof ApiPublicHooksAutoDeclareResultsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -396,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBetMarketIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/hooks/auto-declare-results': {
+      id: '/api/public/hooks/auto-declare-results'
+      path: '/api/public/hooks/auto-declare-results'
+      fullPath: '/api/public/hooks/auto-declare-results'
+      preLoaderRoute: typeof ApiPublicHooksAutoDeclareResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -448,6 +469,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketsRoute: MarketsRoute,
   RegisterRoute: RegisterRoute,
   ResultsRoute: ResultsRoute,
+  ApiPublicHooksAutoDeclareResultsRoute: ApiPublicHooksAutoDeclareResultsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
