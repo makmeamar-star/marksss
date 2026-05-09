@@ -3,12 +3,13 @@ import {
   LayoutDashboard, Store, Receipt, BarChart3, Wallet, Bell, User, LogOut, Crown, Trophy, Menu,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
-import { useBetStore } from "@/stores/betStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WinCelebration } from "@/components/WinCelebration";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
@@ -35,9 +36,10 @@ const NAV = [
 
 function AuthLayout() {
   const user = useAuthStore((s) => s.user);
+  const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const logout = useAuthStore((s) => s.logout);
-  const lastWin = useBetStore((s) => s.lastWin);
-  const clearLastWin = useBetStore((s) => s.clearLastWin);
+  const qc = useQueryClient();
+  const [lastWin, setLastWin] = useState<number | null>(null);
   const unread = useNotificationStore((s) =>
     user ? s.notifications.filter((n) => n.userId === user.id && !n.read).length : 0
   );
@@ -45,6 +47,29 @@ function AuthLayout() {
   // hydration-safe re-render after persist mounts
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
+
+  // Realtime: listen for win notifications
+  useEffect(() => {
+    if (!user?.id) return;
+    const ch = supabase
+      .channel(`win:${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const n: any = payload.new;
+          if (n?.type === "bet_won") {
+            const amt = Number(n.metadata?.win_amount ?? 0);
+            if (amt > 0) setLastWin(amt);
+          }
+          if (n?.type === "deposit_approved" || n?.type === "withdraw_approved") {
+            refreshProfile();
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id, refreshProfile, qc]);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -78,7 +103,7 @@ function AuthLayout() {
         <main className="flex-1 pb-20 lg:pb-8">
           <Outlet />
         </main>
-        <WinCelebration amount={lastWin} onClose={clearLastWin} />
+        <WinCelebration amount={lastWin} onClose={() => setLastWin(null)} />
 
         {/* Mobile bottom nav */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur grid grid-cols-5">

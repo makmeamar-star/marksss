@@ -3,7 +3,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PANA_CHART, panaType } from "@/lib/panaChart";
-import { useMarketStore } from "@/stores/marketStore";
+import { useMarkets, useResultsRange } from "@/hooks/useGameData";
 import { useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -74,8 +74,8 @@ function PanaChartView() {
 }
 
 function JodiChartView() {
-  const markets = useMarketStore((s) => s.markets);
-  const results = useMarketStore((s) => s.results);
+  const { data: markets = [] } = useMarkets();
+  const { data: results = [] } = useResultsRange(60);
   const [marketId, setMarketId] = useState(markets[0]?.id);
 
   const data = useMemo(
@@ -127,8 +127,8 @@ function JodiChartView() {
 }
 
 function OpenCloseView() {
-  const markets = useMarketStore((s) => s.markets);
-  const results = useMarketStore((s) => s.results);
+  const { data: markets = [] } = useMarkets();
+  const { data: results = [] } = useResultsRange(30);
   const [marketId, setMarketId] = useState(markets[0]?.id);
 
   const data = results

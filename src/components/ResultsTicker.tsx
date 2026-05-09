@@ -1,23 +1,19 @@
-import { useMarketStore } from "@/stores/marketStore";
 import { useEffect, useState } from "react";
+import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
+import { todayIST } from "@/lib/marketTime";
 
 export function ResultsTicker() {
-  const results = useMarketStore((s) => s.results);
-  const markets = useMarketStore((s) => s.markets);
+  const today = todayIST();
+  const { data: markets = [] } = useMarkets();
+  const { data: results = [] } = useResultsForDate(today);
   const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-    const t = setInterval(() => setMounted((x) => !x || true), 30000);
-    return () => clearInterval(t);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
   if (!mounted) {
     return <div className="border-y border-border/60 bg-surface/60 h-9" suppressHydrationWarning />;
   }
 
-  const today = new Date().toISOString().slice(0, 10);
   const items = markets.map((m) => {
-    const r = results.find((x) => x.marketId === m.id && x.sessionDate === today)
-          ?? results.find((x) => x.marketId === m.id);
+    const r = results.find((x) => x.marketId === m.id);
     return {
       name: m.displayName,
       jodi: r?.jodi ?? "--",

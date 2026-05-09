@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultCard } from "@/components/ResultCard";
-import { useMarketStore } from "@/stores/marketStore";
+import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
+import { todayIST } from "@/lib/marketTime";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/markets")({
@@ -16,9 +17,9 @@ export const Route = createFileRoute("/markets")({
 });
 
 function MarketsPage() {
-  const markets = useMarketStore((s) => s.markets);
-  const results = useMarketStore((s) => s.results);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
+  const { data: markets = [] } = useMarkets();
+  const { data: results = [] } = useResultsForDate(today);
 
   return (
     <div className="min-h-screen">

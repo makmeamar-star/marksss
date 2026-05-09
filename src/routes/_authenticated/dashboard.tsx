@@ -3,8 +3,8 @@ import { ArrowUpRight, Wallet, Receipt, Trophy, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/stores/authStore";
-import { useBetStore } from "@/stores/betStore";
-import { useMarketStore } from "@/stores/marketStore";
+import { useMarkets, useMyBets, useResultsForDate } from "@/hooks/useGameData";
+import { todayIST } from "@/lib/marketTime";
 import { ResultCard } from "@/components/ResultCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -14,12 +14,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const user = useAuthStore((s) => s.user);
-  const bets = useBetStore((s) => s.bets);
-  const markets = useMarketStore((s) => s.markets);
-  const results = useMarketStore((s) => s.results);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
+  const { data: bets = [] } = useMyBets();
+  const { data: markets = [] } = useMarkets();
+  const { data: results = [] } = useResultsForDate(today);
 
-  const userBets = bets.filter((b) => b.userId === user?.id);
+  const userBets = bets;
   const todayBets = userBets.filter((b) => b.sessionDate === today);
   const wonToday = todayBets.filter((b) => b.status === "WON");
   const pending = userBets.filter((b) => b.status === "PENDING");

@@ -2,9 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuthStore } from "@/stores/authStore";
-import { useBetStore } from "@/stores/betStore";
-import { useMarketStore } from "@/stores/marketStore";
+import { useMyBets, useMarkets } from "@/hooks/useGameData";
 import { BetBadge } from "./dashboard";
 
 export const Route = createFileRoute("/_authenticated/my-bets")({
@@ -13,15 +11,14 @@ export const Route = createFileRoute("/_authenticated/my-bets")({
 });
 
 function MyBetsPage() {
-  const user = useAuthStore((s) => s.user);
-  const bets = useBetStore((s) => s.bets);
-  const markets = useMarketStore((s) => s.markets);
+  const { data: bets = [] } = useMyBets();
+  const { data: markets = [] } = useMarkets();
 
   const [status, setStatus] = useState<string>("ALL");
   const [marketId, setMarketId] = useState<string>("ALL");
   const [date, setDate] = useState<string>("");
 
-  const mine = useMemo(() => bets.filter((b) => b.userId === user?.id), [bets, user]);
+  const mine = useMemo(() => bets, [bets]);
 
   const filtered = mine.filter((b) =>
     (status === "ALL" || b.status === status) &&

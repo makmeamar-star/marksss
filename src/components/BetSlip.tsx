@@ -2,27 +2,56 @@ import { motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useBetStore } from "@/stores/betStore";
 import { useAuthStore } from "@/stores/authStore";
+import { placeBets } from "@/hooks/useGameData";
 
 function SlipBody({ onClose }: { onClose?: () => void }) {
   const slip = useBetStore((s) => s.slip);
   const remove = useBetStore((s) => s.removeFromSlip);
   const clear = useBetStore((s) => s.clearSlip);
-  const placeAll = useBetStore((s) => s.placeAll);
   const balance = useAuthStore((s) => s.user?.balance ?? 0);
+  const refreshProfile = useAuthStore((s) => s.refreshProfile);
+  const qc = useQueryClient();
+  const [submitting, setSubmitting] = useState(false);
 
   const total = slip.reduce((s, x) => s + x.amount, 0);
   const potential = slip.reduce((s, x) => s + x.amount * x.payout, 0);
 
-  const submit = () => {
-    const r = placeAll();
-    if (!r.ok) toast.error(r.error ?? "Could not place bets");
-    else {
-      toast.success(`Placed ${r.placed} bet${r.placed > 1 ? "s" : ""} successfully`);
+  const submit = async () => {
+    if (slip.length === 0) return;
+    // Group by marketId — single RPC per market
+    const byMarket = new Map<string, typeof slip>();
+    slip.forEach((b) => {
+      const arr = byMarket.get(b.marketId) ?? [];
+      arr.push(b);
+      byMarket.set(b.marketId, arr);
+    });
+    setSubmitting(true);
+    try {
+      let placed = 0;
+      for (const [marketId, items] of byMarket) {
+        const res = await placeBets(marketId, items.map((b) => ({
+          session: b.session,
+          bet_type: b.betType,
+          bet_number: b.betNumber,
+          amount: b.amount,
+          payout: b.payout,
+        })));
+        placed += res.placedCount;
+      }
+      toast.success(`Placed ${placed} bet${placed > 1 ? "s" : ""} successfully`);
+      clear();
+      await refreshProfile();
+      qc.invalidateQueries({ queryKey: ["my-bets"] });
       onClose?.();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not place bets");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -88,10 +117,10 @@ function SlipBody({ onClose }: { onClose?: () => void }) {
         </div>
         <Button
           onClick={submit}
-          disabled={slip.length === 0 || total > balance}
+          disabled={slip.length === 0 || total > balance || submitting}
           className="w-full bg-gradient-gold text-background font-bold hover:opacity-90"
         >
-          {total > balance ? "Insufficient balance" : `Place ${slip.length || ""} bet${slip.length === 1 ? "" : "s"}`}
+          {submitting ? "Placing..." : total > balance ? "Insufficient balance" : `Place ${slip.length || ""} bet${slip.length === 1 ? "" : "s"}`}
         </Button>
       </div>
     </div>

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { NumberGrid } from "@/components/NumberGrid";
 import { BetSlipDesktop, BetSlipMobile } from "@/components/BetSlip";
 import { CountdownTimer } from "@/components/CountdownTimer";
-import { useMarketStore } from "@/stores/marketStore";
+import { useMarkets } from "@/hooks/useGameData";
 import { useBetStore } from "@/stores/betStore";
 import { PANA_CHART, panaType } from "@/lib/panaChart";
 import type { BetType, SessionType } from "@/lib/types";
@@ -24,7 +24,8 @@ const QUICK_AMOUNTS = [10, 50, 100, 500, 1000];
 
 function BetPage() {
   const { marketId } = Route.useParams();
-  const market = useMarketStore((s) => s.markets.find((m) => m.id === marketId));
+  const { data: markets = [] } = useMarkets();
+  const market = markets.find((m) => m.id === marketId);
   const addToSlip = useBetStore((s) => s.addToSlip);
 
   const [session, setSession] = useState<SessionType>("OPEN");

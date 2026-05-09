@@ -6,7 +6,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultsTicker } from "@/components/ResultsTicker";
 import { ResultCard } from "@/components/ResultCard";
-import { useMarketStore } from "@/stores/marketStore";
+import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
+import { todayIST } from "@/lib/marketTime";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,11 +22,11 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const markets = useMarketStore((s) => s.markets);
-  const results = useMarketStore((s) => s.results);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
+  const { data: markets = [] } = useMarkets();
+  const { data: results = [] } = useResultsForDate(today);
 
-  const declaredToday = results.filter((r) => r.sessionDate === today && r.status === "DECLARED").length;
+  const declaredToday = results.filter((r) => r.status === "DECLARED").length;
   const openNow = markets.filter((m) => m.isOpen).length;
 
   return (
@@ -88,7 +89,7 @@ function HomePage() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {markets.map((m) => (
-            <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} />
+            <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} />
           ))}
         </div>
       </section>
