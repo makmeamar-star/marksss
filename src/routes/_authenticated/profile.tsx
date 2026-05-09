@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ function ProfilePage() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [phone, setPhone] = useState(user?.phone ?? "");
+  const [savingPhone, setSavingPhone] = useState(false);
   const [twoFA, setTwoFA] = useState(false);
   const [notifResults, setNotifResults] = useState(true);
   const [notifWins, setNotifWins] = useState(true);
@@ -61,7 +63,13 @@ function ProfilePage() {
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91…" />
           </div>
         </div>
-        <Button variant="outline" onClick={() => toast.success("Profile updated")}>Save changes</Button>
+        <Button variant="outline" disabled={savingPhone} onClick={async () => {
+          setSavingPhone(true);
+          const { error } = await supabase.from("profiles").update({ phone }).eq("user_id", user.id);
+          setSavingPhone(false);
+          if (error) return toast.error(error.message);
+          toast.success("Profile updated");
+        }}>{savingPhone ? "Saving…" : "Save changes"}</Button>
       </section>
 
       {/* KYC */}
@@ -87,7 +95,14 @@ function ProfilePage() {
           </div>
           <Switch checked={twoFA} onCheckedChange={(v) => { setTwoFA(v); toast.success(v ? "2FA enabled" : "2FA disabled"); }} />
         </div>
-        <Button variant="outline" onClick={() => toast.success("Password reset email sent (mock)")}>Change password</Button>
+        <Button variant="outline" onClick={async () => {
+          if (!user.email) return toast.error("No email on file");
+          const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+            redirectTo: `${window.location.origin}/reset-password`,
+          });
+          if (error) return toast.error(error.message);
+          toast.success("Password reset email sent");
+        }}>Change password</Button>
       </section>
 
       {/* Preferences */}
