@@ -132,8 +132,8 @@ export const adjustBalance = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await ensureAdmin(supabase, userId);
     const { data: out, error } = await supabase.rpc("admin_adjust_balance", {
-      _user_id: data.userId, _delta: data.delta, _reason: data.reason,
-    });
+      _user_id: data.userId as string, _delta: data.delta as number, _reason: data.reason as string,
+    } as any);
     if (error) throw new Error(error.message);
     return out as { success: boolean; before: number; after: number };
   });
