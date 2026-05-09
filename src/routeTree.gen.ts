@@ -23,6 +23,7 @@ import { Route as AdminWithdrawalsRouteImport } from './routes/admin/withdrawals
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminMarketsRouteImport } from './routes/admin/markets'
 import { Route as AdminDepositsRouteImport } from './routes/admin/deposits'
+import { Route as AdminBroadcastsRouteImport } from './routes/admin/broadcasts'
 import { Route as AdminBetsRouteImport } from './routes/admin/bets'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -107,6 +108,11 @@ const AdminMarketsRoute = AdminMarketsRouteImport.update({
 const AdminDepositsRoute = AdminDepositsRouteImport.update({
   id: '/deposits',
   path: '/deposits',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBroadcastsRoute = AdminBroadcastsRouteImport.update({
+  id: '/broadcasts',
+  path: '/broadcasts',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminBetsRoute = AdminBetsRouteImport.update({
@@ -212,6 +218,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
+  '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -242,6 +249,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
+  '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -275,6 +283,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
+  '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -308,6 +317,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/wallet'
     | '/admin/bets'
+    | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/markets'
     | '/admin/users'
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/wallet'
     | '/admin/bets'
+    | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/markets'
     | '/admin/users'
@@ -370,6 +381,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/wallet'
     | '/admin/bets'
+    | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/markets'
     | '/admin/users'
@@ -500,6 +512,13 @@ declare module '@tanstack/react-router' {
       path: '/deposits'
       fullPath: '/admin/deposits'
       preLoaderRoute: typeof AdminDepositsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/broadcasts': {
+      id: '/admin/broadcasts'
+      path: '/broadcasts'
+      fullPath: '/admin/broadcasts'
+      preLoaderRoute: typeof AdminBroadcastsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/bets': {
@@ -641,6 +660,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminBetsRoute: typeof AdminBetsRoute
+  AdminBroadcastsRoute: typeof AdminBroadcastsRoute
   AdminDepositsRoute: typeof AdminDepositsRoute
   AdminMarketsRoute: typeof AdminMarketsRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -656,6 +676,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminBetsRoute: AdminBetsRoute,
+  AdminBroadcastsRoute: AdminBroadcastsRoute,
   AdminDepositsRoute: AdminDepositsRoute,
   AdminMarketsRoute: AdminMarketsRoute,
   AdminUsersRoute: AdminUsersRoute,
