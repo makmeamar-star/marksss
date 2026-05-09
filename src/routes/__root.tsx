@@ -111,6 +111,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const bootstrap = useAuthStore((s) => s.bootstrap);
+  const hydrated = useAuthStore((s) => s.hydrated);
+  useEffect(() => {
+    if (!hydrated) void bootstrap();
+  }, [hydrated, bootstrap]);
 
   return (
     <QueryClientProvider client={queryClient}>
