@@ -21,6 +21,7 @@ function MarketsPage() {
   const today = todayIST();
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
+  useEnsureFreshResults();
 
   return (
     <div className="min-h-screen">
