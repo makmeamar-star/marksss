@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/stores/authStore";
 
+const DEMO_EMAIL = "demo@sattaking.test";
+const DEMO_PASSWORD = "demo-player-2026";
+const DEMO_USERNAME = "demo_player";
+
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Login — SattaKing Pro" }] }),
   component: LoginPage,
@@ -14,11 +18,13 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const login = useAuthStore((s) => s.login);
+  const register = useAuthStore((s) => s.register);
   const navigate = useNavigate();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [demoBusy, setDemoBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +41,28 @@ function LoginPage() {
       toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const demoLogin = async () => {
+    if (demoBusy || busy) return;
+    setDemoBusy(true);
+    try {
+      try {
+        await login(DEMO_EMAIL, DEMO_PASSWORD);
+      } catch {
+        try {
+          await register({ username: DEMO_USERNAME, email: DEMO_EMAIL, password: DEMO_PASSWORD });
+        } catch {
+          await login(DEMO_EMAIL, DEMO_PASSWORD);
+        }
+      }
+      toast.success("Welcome to the demo!");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Demo login failed");
+    } finally {
+      setDemoBusy(false);
     }
   };
 
@@ -92,8 +120,24 @@ function LoginPage() {
             <button type="button" className="text-primary hover:underline">Forgot password?</button>
           </div>
 
-          <Button type="submit" disabled={busy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
+          <Button type="submit" disabled={busy || demoBusy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
             {busy ? "Signing in…" : "Sign In"}
+          </Button>
+
+          <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground/70">
+            <span className="h-px flex-1 bg-border/60" />
+            or
+            <span className="h-px flex-1 bg-border/60" />
+          </div>
+
+          <Button
+            type="button"
+            onClick={demoLogin}
+            disabled={busy || demoBusy}
+            variant="outline"
+            className="w-full border-primary/40 text-primary hover:bg-primary/10"
+          >
+            {demoBusy ? "Loading demo…" : "Try Demo Account"}
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
