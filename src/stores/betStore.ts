@@ -39,6 +39,8 @@ export const useBetStore = create<BetState>()(
       slip: [],
       bets: [],
       transactions: [],
+      lastWin: null,
+      clearLastWin: () => set({ lastWin: null }),
 
       addToSlip: (b) =>
         set((s) => ({
