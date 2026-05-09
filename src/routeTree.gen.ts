@@ -32,6 +32,8 @@ import { Route as AdminResultsAutomationRunsRouteImport } from './routes/admin/r
 import { Route as AdminResultsAutomationAuditRouteImport } from './routes/admin/results.automation-audit'
 import { Route as AdminResultsAutomationRouteImport } from './routes/admin/results.automation'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
+import { Route as ApiPublicHooksScrapeResultsRouteImport } from './routes/api/public/hooks/scrape-results'
+import { Route as ApiPublicHooksBackfillResultsRouteImport } from './routes/api/public/hooks/backfill-results'
 import { Route as ApiPublicHooksAutoDeclareResultsRouteImport } from './routes/api/public/hooks/auto-declare-results'
 
 const ResultsRoute = ResultsRouteImport.update({
@@ -152,6 +154,18 @@ const AuthenticatedBetMarketIdRoute =
     path: '/bet/$marketId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const ApiPublicHooksScrapeResultsRoute =
+  ApiPublicHooksScrapeResultsRouteImport.update({
+    id: '/api/public/hooks/scrape-results',
+    path: '/api/public/hooks/scrape-results',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksBackfillResultsRoute =
+  ApiPublicHooksBackfillResultsRouteImport.update({
+    id: '/api/public/hooks/backfill-results',
+    path: '/api/public/hooks/backfill-results',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutoDeclareResultsRoute =
   ApiPublicHooksAutoDeclareResultsRouteImport.update({
     id: '/api/public/hooks/auto-declare-results',
@@ -183,6 +197,8 @@ export interface FileRoutesByFullPath {
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
+  '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -207,6 +223,8 @@ export interface FileRoutesByTo {
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
+  '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -234,6 +252,8 @@ export interface FileRoutesById {
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
+  '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -261,6 +281,8 @@ export interface FileRouteTypes {
     | '/admin/results/declare'
     | '/admin/results/history'
     | '/api/public/hooks/auto-declare-results'
+    | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/scrape-results'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -285,6 +307,8 @@ export interface FileRouteTypes {
     | '/admin/results/declare'
     | '/admin/results/history'
     | '/api/public/hooks/auto-declare-results'
+    | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/scrape-results'
   id:
     | '__root__'
     | '/'
@@ -311,6 +335,8 @@ export interface FileRouteTypes {
     | '/admin/results/declare'
     | '/admin/results/history'
     | '/api/public/hooks/auto-declare-results'
+    | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/scrape-results'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -323,6 +349,8 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResultsRoute: typeof ResultsRoute
   ApiPublicHooksAutoDeclareResultsRoute: typeof ApiPublicHooksAutoDeclareResultsRoute
+  ApiPublicHooksBackfillResultsRoute: typeof ApiPublicHooksBackfillResultsRoute
+  ApiPublicHooksScrapeResultsRoute: typeof ApiPublicHooksScrapeResultsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -488,6 +516,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBetMarketIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/hooks/scrape-results': {
+      id: '/api/public/hooks/scrape-results'
+      path: '/api/public/hooks/scrape-results'
+      fullPath: '/api/public/hooks/scrape-results'
+      preLoaderRoute: typeof ApiPublicHooksScrapeResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/backfill-results': {
+      id: '/api/public/hooks/backfill-results'
+      path: '/api/public/hooks/backfill-results'
+      fullPath: '/api/public/hooks/backfill-results'
+      preLoaderRoute: typeof ApiPublicHooksBackfillResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/auto-declare-results': {
       id: '/api/public/hooks/auto-declare-results'
       path: '/api/public/hooks/auto-declare-results'
@@ -556,7 +598,19 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResultsRoute: ResultsRoute,
   ApiPublicHooksAutoDeclareResultsRoute: ApiPublicHooksAutoDeclareResultsRoute,
+  ApiPublicHooksBackfillResultsRoute: ApiPublicHooksBackfillResultsRoute,
+  ApiPublicHooksScrapeResultsRoute: ApiPublicHooksScrapeResultsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
