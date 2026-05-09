@@ -154,8 +154,8 @@ export const setUserStatus = createServerFn({ method: "POST" })
       throw new Error("You cannot suspend your own account.");
     }
     const { data: out, error } = await supabase.rpc("admin_set_user_status", {
-      _user_id: data.userId, _status: data.status, _reason: data.reason,
-    });
+      _user_id: data.userId as string, _status: data.status as string, _reason: data.reason as string,
+    } as any);
     if (error) throw new Error(error.message);
     return out as { success: boolean; status: string };
   });
