@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminWithdrawalsRouteImport } from './routes/admin/withdrawals'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminMonitoringRouteImport } from './routes/admin/monitoring'
 import { Route as AdminMarketsRouteImport } from './routes/admin/markets'
 import { Route as AdminDepositsRouteImport } from './routes/admin/deposits'
 import { Route as AdminBroadcastsRouteImport } from './routes/admin/broadcasts'
@@ -99,6 +100,11 @@ const AdminWithdrawalsRoute = AdminWithdrawalsRouteImport.update({
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
+  id: '/monitoring',
+  path: '/monitoring',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminMarketsRoute = AdminMarketsRouteImport.update({
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin/': typeof AdminIndexRoute
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin': typeof AdminIndexRoute
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/markets': typeof AdminMarketsRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin/': typeof AdminIndexRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/markets'
+    | '/admin/monitoring'
     | '/admin/users'
     | '/admin/withdrawals'
     | '/admin/'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/markets'
+    | '/admin/monitoring'
     | '/admin/users'
     | '/admin/withdrawals'
     | '/admin'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/markets'
+    | '/admin/monitoring'
     | '/admin/users'
     | '/admin/withdrawals'
     | '/admin/'
@@ -512,6 +524,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/monitoring': {
+      id: '/admin/monitoring'
+      path: '/monitoring'
+      fullPath: '/admin/monitoring'
+      preLoaderRoute: typeof AdminMonitoringRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/markets': {
@@ -684,6 +703,7 @@ interface AdminRouteChildren {
   AdminBroadcastsRoute: typeof AdminBroadcastsRoute
   AdminDepositsRoute: typeof AdminDepositsRoute
   AdminMarketsRoute: typeof AdminMarketsRoute
+  AdminMonitoringRoute: typeof AdminMonitoringRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminWithdrawalsRoute: typeof AdminWithdrawalsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -700,6 +720,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBroadcastsRoute: AdminBroadcastsRoute,
   AdminDepositsRoute: AdminDepositsRoute,
   AdminMarketsRoute: AdminMarketsRoute,
+  AdminMonitoringRoute: AdminMonitoringRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminWithdrawalsRoute: AdminWithdrawalsRoute,
   AdminIndexRoute: AdminIndexRoute,
