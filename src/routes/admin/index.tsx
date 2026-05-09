@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Trophy, ArrowRight, Zap, Wallet, ArrowDownToLine } from "lucide-react";
+import { Trophy, ArrowRight, Zap, Wallet, ArrowDownToLine, History } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminHome,
@@ -17,6 +17,12 @@ const tiles = [
     icon: Zap,
     title: "Result Automation",
     desc: "Toggle automatic result declaration per market. Scheduler runs every minute.",
+  },
+  {
+    to: "/admin/results/automation-runs" as const,
+    icon: History,
+    title: "Automation Runs",
+    desc: "Audit log of recent auto-declared sessions, picks, and payouts.",
   },
   {
     to: "/admin/deposits" as const,
