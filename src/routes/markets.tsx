@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultCard } from "@/components/ResultCard";
 import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
+import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
 import { Button } from "@/components/ui/button";
 
