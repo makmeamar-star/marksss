@@ -13,6 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { ArrowDownToLine, ArrowUpToLine, QrCode, Wallet, Trash2, Plus, Copy } from "lucide-react";
+import { TransactionsLedger } from "@/components/TransactionsLedger";
 
 export const Route = createFileRoute("/_authenticated/wallet")({
   head: () => ({ meta: [{ title: "Wallet — SattaKing Pro" }] }),
@@ -206,70 +207,6 @@ function WithdrawForm() {
   );
 }
 
-function TransactionsTable() {
-  const user = useAuthStore((s) => s.user)!;
-  const txns = useWalletStore((s) => s.transactions).filter((t) => t.userId === user.id);
-  const [filter, setFilter] = useState<string>("ALL");
-  const filtered = filter === "ALL" ? txns : txns.filter((t) => t.type === filter);
-
-  return (
-    <div className="glass rounded-xl mt-4 overflow-hidden">
-      <div className="flex items-center justify-between gap-3 p-3 border-b border-border/60">
-        <h3 className="font-display text-lg font-bold">Transaction history</h3>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All types</SelectItem>
-            {Object.entries(TX_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-      {filtered.length === 0 ? (
-        <div className="py-12 text-center text-muted-foreground text-sm">No transactions yet.</div>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="text-right">Balance</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((t) => {
-              const isCredit = ["DEPOSIT", "BET_WIN", "BET_REFUND", "BONUS", "REFERRAL_BONUS", "ADMIN_CREDIT"].includes(t.type);
-              return (
-                <TableRow key={t.id}>
-                  <TableCell className="text-xs text-muted-foreground">{new Date(t.createdAt).toLocaleString()}</TableCell>
-                  <TableCell className="text-xs">{TX_LABEL[t.type]}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground max-w-[280px] truncate">{t.description}</TableCell>
-                  <TableCell className={`text-right font-mono ${isCredit ? "text-emerald-400" : "text-destructive"}`}>
-                    {isCredit ? "+" : "-"}₹{t.amount.toLocaleString("en-IN")}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-xs">₹{t.balanceAfter.toLocaleString("en-IN")}</TableCell>
-                  <TableCell><StatusPill status={t.status} /></TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      )}
-    </div>
-  );
-}
-
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    COMPLETED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-    PENDING: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    FAILED: "bg-destructive/15 text-destructive border-destructive/30",
-    CANCELLED: "bg-muted text-muted-foreground border-border",
-  };
-  return <Badge variant="outline" className={`${map[status] ?? ""} text-[10px]`}>{status}</Badge>;
-}
 
 function PaymentMethods() {
   const user = useAuthStore((s) => s.user)!;
