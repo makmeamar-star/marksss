@@ -133,7 +133,7 @@ function SidebarFooter({
   user, onLogout, hydrated,
 }: {
   user: ReturnType<typeof useAuthStore.getState>["user"];
-  onLogout: () => void;
+  onLogout: () => void | Promise<void>;
   hydrated: boolean;
 }) {
   if (!hydrated) return null;
