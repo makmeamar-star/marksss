@@ -48,11 +48,12 @@ export async function fetchDpbossPanel(slug: string): Promise<DpbossDayResult[]>
 export function parseDpbossPanel(html: string): DpbossDayResult[] {
   const out: DpbossDayResult[] = [];
 
-  // Strip everything before the first <tbody> and after the last </tbody>
+  // dpboss does not always close <tbody>. Anchor on <tbody> start and end at
+  // the next </table> instead.
   const tbodyStart = html.indexOf("<tbody>");
-  const tbodyEnd = html.lastIndexOf("</tbody>");
-  if (tbodyStart < 0 || tbodyEnd < 0) return out;
-  const body = html.slice(tbodyStart, tbodyEnd);
+  if (tbodyStart < 0) return out;
+  const tableEnd = html.indexOf("</table>", tbodyStart);
+  const body = html.slice(tbodyStart, tableEnd > 0 ? tableEnd : html.length);
 
   // Split into rows
   const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
