@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Trophy, ArrowRight, Zap, Wallet, ArrowDownToLine, History } from "lucide-react";
+import { Trophy, ArrowRight, Zap, Wallet, ArrowDownToLine, History, FileSearch } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminHome,
@@ -23,6 +23,12 @@ const tiles = [
     icon: History,
     title: "Automation Runs",
     desc: "Audit log of recent auto-declared sessions, picks, and payouts.",
+  },
+  {
+    to: "/admin/results/automation-audit" as const,
+    icon: FileSearch,
+    title: "Automation Audit",
+    desc: "Search and filter every AUTO_DECLARE event by market, date, or session.",
   },
   {
     to: "/admin/deposits" as const,
