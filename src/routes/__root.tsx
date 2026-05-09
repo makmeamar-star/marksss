@@ -83,6 +83,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "SattaKing Pro" },
+      { name: "twitter:description", content: "India's most trusted Matka platform" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/51eef299-37a0-4774-8a85-de00bab58807/id-preview-fd5b0a81--ef1d2cf5-c490-445a-ae0d-f01e7b09548a.lovable.app-1778294561514.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/51eef299-37a0-4774-8a85-de00bab58807/id-preview-fd5b0a81--ef1d2cf5-c490-445a-ae0d-f01e7b09548a.lovable.app-1778294561514.png" },
     ],
     links: [
       {
