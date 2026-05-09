@@ -10,6 +10,8 @@ import {
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuthStore } from "@/stores/authStore";
+import { ErrorMonitor } from "@/components/ErrorMonitor";
+import { reportError } from "@/lib/errorReporter";
 
 import appCss from "../styles.css?url";
 
