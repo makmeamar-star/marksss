@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResultsRouteImport } from './routes/results'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as LoginRouteImport } from './routes/login'
@@ -42,6 +43,11 @@ import { Route as ApiPublicHooksAutoDeclareResultsRouteImport } from './routes/a
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/my-bets': typeof AuthenticatedMyBetsRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/my-bets': typeof AuthenticatedMyBetsRoute
@@ -259,6 +267,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/my-bets': typeof AuthenticatedMyBetsRoute
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/markets'
     | '/register'
+    | '/reset-password'
     | '/results'
     | '/dashboard'
     | '/my-bets'
@@ -320,6 +330,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/markets'
     | '/register'
+    | '/reset-password'
     | '/results'
     | '/dashboard'
     | '/my-bets'
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/markets'
     | '/register'
+    | '/reset-password'
     | '/results'
     | '/_authenticated/dashboard'
     | '/_authenticated/my-bets'
@@ -383,6 +395,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MarketsRoute: typeof MarketsRoute
   RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ResultsRoute: typeof ResultsRoute
   ApiPublicHooksAutoDeclareResultsRoute: typeof ApiPublicHooksAutoDeclareResultsRoute
   ApiPublicHooksBackfillResultsRoute: typeof ApiPublicHooksBackfillResultsRoute
@@ -396,6 +409,13 @@ declare module '@tanstack/react-router' {
       path: '/results'
       fullPath: '/results'
       preLoaderRoute: typeof ResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -659,6 +679,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MarketsRoute: MarketsRoute,
   RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ResultsRoute: ResultsRoute,
   ApiPublicHooksAutoDeclareResultsRoute: ApiPublicHooksAutoDeclareResultsRoute,
   ApiPublicHooksBackfillResultsRoute: ApiPublicHooksBackfillResultsRoute,
