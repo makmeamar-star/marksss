@@ -18,11 +18,13 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const login = useAuthStore((s) => s.login);
+  const register = useAuthStore((s) => s.register);
   const navigate = useNavigate();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [demoBusy, setDemoBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
