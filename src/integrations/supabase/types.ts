@@ -575,7 +575,7 @@ export type Database = {
         }
         Returns: Json
       }
-      ensure_demo_admin: { Args: never; Returns: undefined }
+      ensure_demo_admin: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
