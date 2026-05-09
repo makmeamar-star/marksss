@@ -16,7 +16,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ChartsRouteImport } from './routes/charts'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedMyBetsRouteImport } from './routes/_authenticated/my-bets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
 
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
@@ -52,11 +54,22 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedMyBetsRoute = AuthenticatedMyBetsRouteImport.update({
+  id: '/my-bets',
+  path: '/my-bets',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedBetMarketIdRoute =
+  AuthenticatedBetMarketIdRouteImport.update({
+    id: '/bet/$marketId',
+    path: '/bet/$marketId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +79,8 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/results': typeof ResultsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/my-bets': typeof AuthenticatedMyBetsRoute
+  '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +90,8 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/results': typeof ResultsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/my-bets': typeof AuthenticatedMyBetsRoute
+  '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +103,8 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/results': typeof ResultsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/my-bets': typeof AuthenticatedMyBetsRoute
+  '/_authenticated/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +116,8 @@ export interface FileRouteTypes {
     | '/register'
     | '/results'
     | '/dashboard'
+    | '/my-bets'
+    | '/bet/$marketId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +127,8 @@ export interface FileRouteTypes {
     | '/register'
     | '/results'
     | '/dashboard'
+    | '/my-bets'
+    | '/bet/$marketId'
   id:
     | '__root__'
     | '/'
@@ -116,6 +139,8 @@ export interface FileRouteTypes {
     | '/register'
     | '/results'
     | '/_authenticated/dashboard'
+    | '/_authenticated/my-bets'
+    | '/_authenticated/bet/$marketId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -179,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/my-bets': {
+      id: '/_authenticated/my-bets'
+      path: '/my-bets'
+      fullPath: '/my-bets'
+      preLoaderRoute: typeof AuthenticatedMyBetsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -186,15 +218,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/bet/$marketId': {
+      id: '/_authenticated/bet/$marketId'
+      path: '/bet/$marketId'
+      fullPath: '/bet/$marketId'
+      preLoaderRoute: typeof AuthenticatedBetMarketIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedMyBetsRoute: typeof AuthenticatedMyBetsRoute
+  AuthenticatedBetMarketIdRoute: typeof AuthenticatedBetMarketIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedMyBetsRoute: AuthenticatedMyBetsRoute,
+  AuthenticatedBetMarketIdRoute: AuthenticatedBetMarketIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
