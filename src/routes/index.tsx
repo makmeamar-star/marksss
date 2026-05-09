@@ -69,11 +69,11 @@ function HomePage() {
               </Button>
             </div>
 
-            {/* Live counters */}
+            {/* Live counters (real numbers from today's markets) */}
             <div className="grid grid-cols-3 gap-4 mt-14 max-w-xl mx-auto">
-              <Stat icon={<Users className="h-4 w-4" />} label="Active Players" value="48,219" />
-              <Stat icon={<Trophy className="h-4 w-4" />} label="Today's Winners" value="1,847" />
-              <Stat icon={<TrendingUp className="h-4 w-4" />} label="Markets" value={String(markets.length)} />
+              <Stat icon={<TrendingUp className="h-4 w-4" />} label="Active Markets" value={String(markets.length)} />
+              <Stat icon={<Trophy className="h-4 w-4" />} label="Declared Today" value={String(declaredToday)} />
+              <Stat icon={<Users className="h-4 w-4" />} label="Open Now" value={String(openNow)} />
             </div>
           </motion.div>
         </div>
