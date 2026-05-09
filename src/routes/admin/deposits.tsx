@@ -113,7 +113,7 @@ function Row({ req }: { req: any }) {
 
   const approve = async () => {
     setBusy("approve");
-    const { error } = await supabase.rpc("approve_deposit", { _request_id: req.id, _note: null });
+    const { error } = await supabase.rpc("approve_deposit", { _request_id: req.id, _note: undefined });
     setBusy(null);
     if (error) { toast.error(error.message); return; }
     toast.success("Deposit approved");
