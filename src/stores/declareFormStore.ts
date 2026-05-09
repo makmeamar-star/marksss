@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { SessionType } from "@/lib/types";
 
 interface DeclareFormState {
@@ -31,6 +31,13 @@ export const useDeclareForm = create<DeclareFormState>()(
       prefill: (m, s) => set({ marketId: m, session: s, pana: "" }),
       reset: () => set({ date: today(), marketId: null, session: "OPEN", pana: "" }),
     }),
-    { name: "skp-declare-form", storage: undefined as never }
+    {
+      name: "skp-declare-form",
+      storage: createJSONStorage(() =>
+        typeof window === "undefined"
+          ? (undefined as unknown as Storage)
+          : window.sessionStorage
+      ),
+    }
   )
 );

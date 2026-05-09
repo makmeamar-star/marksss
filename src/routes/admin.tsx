@@ -1,13 +1,156 @@
-import { createFileRoute } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  redirect,
+  useRouterState,
+} from "@tanstack/react-router";
+import {
+  LayoutDashboard, Trophy, Users, Wallet, Megaphone, BarChart3, Crown, LogOut, Menu,
+  ListChecks, Store, ArrowLeftRight, History,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuthStore } from "@/stores/authStore";
+import { LiveClock } from "@/components/admin/LiveClock";
 
 export const Route = createFileRoute("/admin")({
+  beforeLoad: () => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = localStorage.getItem("skp-auth");
+      const parsed = raw ? JSON.parse(raw) : null;
+      const role = parsed?.state?.user?.role;
+      if (!parsed?.state?.user) throw redirect({ to: "/login" });
+      if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
+        throw redirect({ to: "/login" });
+      }
+    } catch (e) {
+      if (e instanceof Error && "to" in e) throw e;
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({ meta: [{ title: "Admin — SattaKing Pro" }] }),
-  component: () => (
-    <div className="container mx-auto px-4 py-24 text-center">
-      <h1 className="font-display text-5xl font-bold">Admin Panel</h1>
-      <p className="text-muted-foreground mt-3 max-w-lg mx-auto">
-        Full admin console — markets, results management with the settlement engine, users, deposits/withdrawals, broadcasts, and reports — arrives in Phase 4.
-      </p>
-    </div>
-  ),
+  component: AdminLayout,
 });
+
+const NAV = [
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/admin/markets", label: "Markets", icon: Store },
+  { to: "/admin/results/declare", label: "Declare Results", icon: Trophy },
+  { to: "/admin/results/history", label: "Result History", icon: History },
+  { to: "/admin/bets", label: "Bets", icon: ListChecks },
+  { to: "/admin/users", label: "Users", icon: Users },
+  { to: "/admin/deposits", label: "Deposits", icon: Wallet },
+  { to: "/admin/withdrawals", label: "Withdrawals", icon: ArrowLeftRight },
+  { to: "/admin/broadcasts", label: "Broadcasts", icon: Megaphone },
+  { to: "/admin/reports", label: "Reports", icon: BarChart3 },
+] as const;
+
+function AdminLayout() {
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
+  return (
+    <div className="min-h-screen bg-background flex">
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-border/60 bg-sidebar">
+        <SidebarHeader />
+        <SidebarNav />
+        <SidebarFooter user={user} onLogout={logout} hydrated={hydrated} />
+      </aside>
+
+      <div className="flex-1 min-w-0 flex flex-col">
+        <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border/60 bg-background/85 backdrop-blur px-4 h-14">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="bg-sidebar border-border/60 p-0 w-72">
+              <SidebarHeader />
+              <SidebarNav />
+              <SidebarFooter user={user} onLogout={logout} hydrated={hydrated} />
+            </SheetContent>
+          </Sheet>
+          <span className="font-display font-bold text-lg">
+            Satta<span className="text-primary">King</span> · Admin
+          </span>
+          <LiveClock compact />
+        </header>
+
+        <main className="flex-1 pb-12">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function SidebarHeader() {
+  return (
+    <Link to="/admin" className="flex items-center gap-2 px-5 h-16 border-b border-border/60">
+      <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-gold text-background">
+        <Crown className="h-5 w-5" />
+      </span>
+      <div className="leading-tight">
+        <div className="font-display text-lg font-bold">Satta<span className="text-primary">King</span> Pro</div>
+        <div className="text-[10px] uppercase tracking-[0.25em] text-primary -mt-0.5">Admin Console</div>
+      </div>
+    </Link>
+  );
+}
+
+function SidebarNav() {
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  return (
+    <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
+      {NAV.map((n) => {
+        const active = "exact" in n && n.exact
+          ? path === n.to
+          : path === n.to || path.startsWith(n.to + "/");
+        const Icon = n.icon;
+        return (
+          <Link
+            key={n.to}
+            to={n.to}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors
+              ${active
+                ? "bg-primary/15 text-primary border border-primary/30"
+                : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"}`}
+          >
+            <Icon className="h-4 w-4" />
+            <span className="flex-1">{n.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function SidebarFooter({
+  user, onLogout, hydrated,
+}: {
+  user: ReturnType<typeof useAuthStore.getState>["user"];
+  onLogout: () => void;
+  hydrated: boolean;
+}) {
+  if (!hydrated) return null;
+  return (
+    <div className="border-t border-border/60 p-3 space-y-2">
+      <div className="flex items-center gap-2 px-1">
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/20 text-primary text-sm font-bold">
+          {(user?.username ?? "?").slice(0, 1).toUpperCase()}
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold truncate">{user?.username}</div>
+          <div className="text-[11px] text-muted-foreground truncate">{user?.email}</div>
+        </div>
+        <Button size="icon" variant="ghost" onClick={onLogout} title="Logout">
+          <LogOut className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
