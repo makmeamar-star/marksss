@@ -91,6 +91,47 @@ function ScrapePage() {
         </p>
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-5">
+        <StatTile label="Last run" value={lastRunAt ? timeAgo(lastRunAt) : "Never"} />
+        <StatTile label="OK (24h)" value={okCount} tone="success" />
+        <StatTile label="Skipped" value={skippedCount} />
+        <StatTile label="Not yet" value={notYetCount} />
+        <StatTile label="Errors (24h)" value={errorCount} tone={errorCount > 0 ? "error" : "muted"} />
+      </div>
+
+      <Card className="p-5">
+        <div className="font-display text-lg font-bold mb-3">Per-market latest status</div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-muted-foreground border-b">
+                <th className="py-2">Market</th>
+                <th>Session</th>
+                <th>Status</th>
+                <th>Pana</th>
+                <th>Source</th>
+                <th>Last attempt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {perMarketRows.map((r: any) => (
+                <tr key={`${r.market_id}-${r.session}`} className="border-b border-border/40">
+                  <td className="py-2 font-medium">{r.market_id}</td>
+                  <td>{r.session}</td>
+                  <td><StatusBadge status={r.status} /></td>
+                  <td>{r.pana ?? "—"}</td>
+                  <td className="text-xs text-muted-foreground">{r.source}</td>
+                  <td className="text-xs text-muted-foreground">{timeAgo(r.run_at)}</td>
+                </tr>
+              ))}
+              {!perMarketRows.length && (
+                <tr><td colSpan={6} className="py-6 text-center text-muted-foreground">No attempts yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
       <Card className="p-5 space-y-4">
         <div className="font-display text-lg font-bold">Live scrape (today)</div>
         <p className="text-sm text-muted-foreground">
