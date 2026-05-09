@@ -26,7 +26,7 @@ function ResultsPage() {
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(date);
   const { data: history = [] } = useResultsRange(14);
-  const { data: latestPerMarket = {} } = useLatestResultsPerMarket();
+  const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
   const isToday = date === today;
 
   return (
@@ -59,6 +59,9 @@ function ResultsPage() {
               result={results.find((r) => r.marketId === m.id && r.sessionDate === date)}
               previousResult={latestPerMarket[m.id]}
               showPreviousFallback={isToday}
+              previousLoading={isToday && prevLoading}
+              previousError={isToday && prevError}
+              onRetryPrevious={() => refetchPrev()}
             />
           ))}
         </div>
