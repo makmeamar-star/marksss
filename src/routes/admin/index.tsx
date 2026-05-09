@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Trophy, ArrowRight, Zap, Wallet, ArrowDownToLine, History, FileSearch, Store } from "lucide-react";
+import { Trophy, ArrowRight, Zap, Wallet, ArrowDownToLine, History, FileSearch, Store, Globe } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminHome,
