@@ -5,7 +5,10 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
+import { useBetStore } from "@/stores/betStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { WinCelebration } from "@/components/WinCelebration";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: () => {
@@ -38,6 +41,11 @@ const NAV = [
 function AuthLayout() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const lastWin = useBetStore((s) => s.lastWin);
+  const clearLastWin = useBetStore((s) => s.clearLastWin);
+  const unread = useNotificationStore((s) =>
+    user ? s.notifications.filter((n) => n.userId === user.id && !n.read).length : 0
+  );
 
   // hydration-safe re-render after persist mounts
   const [hydrated, setHydrated] = useState(false);
@@ -48,7 +56,7 @@ function AuthLayout() {
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-border/60 bg-sidebar">
         <SidebarHeader />
-        <SidebarNav />
+        <SidebarNav unread={unread} />
         <SidebarFooter user={user} onLogout={logout} hydrated={hydrated} />
       </aside>
 
@@ -62,7 +70,7 @@ function AuthLayout() {
             </SheetTrigger>
             <SheetContent side="left" className="bg-sidebar border-border/60 p-0 w-72">
               <SidebarHeader />
-              <SidebarNav />
+              <SidebarNav unread={unread} />
               <SidebarFooter user={user} onLogout={logout} hydrated={hydrated} />
             </SheetContent>
           </Sheet>
@@ -75,6 +83,7 @@ function AuthLayout() {
         <main className="flex-1 pb-20 lg:pb-8">
           <Outlet />
         </main>
+        <WinCelebration amount={lastWin} onClose={clearLastWin} />
 
         {/* Mobile bottom nav */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur grid grid-cols-5">
@@ -101,13 +110,14 @@ function SidebarHeader() {
   );
 }
 
-function SidebarNav() {
+function SidebarNav({ unread }: { unread: number }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   return (
     <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
       {NAV.map((n) => {
         const active = path === n.to || path.startsWith(n.to + "/");
         const Icon = n.icon;
+        const isBell = n.to === "/notifications";
         return (
           <Link
             key={n.to}
@@ -117,7 +127,13 @@ function SidebarNav() {
                 ? "bg-primary/15 text-primary border border-primary/30"
                 : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"}`}
           >
-            <Icon className="h-4 w-4" /> {n.label}
+            <Icon className="h-4 w-4" />
+            <span className="flex-1">{n.label}</span>
+            {isBell && unread > 0 && (
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-primary text-background">
+                {unread}
+              </span>
+            )}
           </Link>
         );
       })}

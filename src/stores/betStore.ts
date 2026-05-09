@@ -19,12 +19,14 @@ interface BetState {
   slip: PendingBet[];
   bets: Bet[];
   transactions: Transaction[];
+  lastWin: number | null;
 
   addToSlip: (b: Omit<PendingBet, "id">) => void;
   removeFromSlip: (id: string) => void;
   clearSlip: () => void;
 
   placeAll: () => { ok: boolean; error?: string; placed: number };
+  clearLastWin: () => void;
 
   betsForUser: (userId: string) => Bet[];
 }
@@ -37,6 +39,8 @@ export const useBetStore = create<BetState>()(
       slip: [],
       bets: [],
       transactions: [],
+      lastWin: null,
+      clearLastWin: () => set({ lastWin: null }),
 
       addToSlip: (b) =>
         set((s) => ({

@@ -4,11 +4,15 @@ import { useEffect, useState } from "react";
 export function ResultsTicker() {
   const results = useMarketStore((s) => s.results);
   const markets = useMarketStore((s) => s.markets);
-  const [, force] = useState(0);
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    const t = setInterval(() => force((x) => x + 1), 30000);
+    setMounted(true);
+    const t = setInterval(() => setMounted((x) => !x || true), 30000);
     return () => clearInterval(t);
   }, []);
+  if (!mounted) {
+    return <div className="border-y border-border/60 bg-surface/60 h-9" suppressHydrationWarning />;
+  }
 
   const today = new Date().toISOString().slice(0, 10);
   const items = markets.map((m) => {
