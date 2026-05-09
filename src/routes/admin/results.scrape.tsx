@@ -22,12 +22,34 @@ function ScrapePage() {
         .from("result_scrape_log")
         .select("*")
         .order("run_at", { ascending: false })
-        .limit(100);
+        .limit(200);
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
     refetchInterval: 10_000,
   });
+
+  const all = logs.data ?? [];
+  const lastRunAt = all[0]?.run_at ?? null;
+  const last24h = all.filter(
+    (r: any) => Date.now() - new Date(r.run_at).getTime() < 24 * 3600 * 1000,
+  );
+  const okCount = last24h.filter((r: any) => r.status === "OK").length;
+  const skippedCount = last24h.filter((r: any) => r.status === "SKIPPED_DECLARED").length;
+  const notYetCount = last24h.filter((r: any) => r.status === "NOT_YET").length;
+  const errorCount = last24h.filter((r: any) =>
+    ["RPC_ERROR", "FETCH_ERROR", "INVALID_PANA"].includes(r.status),
+  ).length;
+
+  // Latest attempt per (market, session)
+  const perMarket = new Map<string, any>();
+  for (const r of all) {
+    const k = `${r.market_id}|${r.session}`;
+    if (!perMarket.has(k)) perMarket.set(k, r);
+  }
+  const perMarketRows = Array.from(perMarket.values()).sort(
+    (a, b) => a.market_id.localeCompare(b.market_id) || a.session.localeCompare(b.session),
+  );
 
   const runLive = useMutation({
     mutationFn: async () => {
