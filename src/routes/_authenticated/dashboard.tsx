@@ -38,6 +38,9 @@ function Dashboard() {
           <Button asChild variant="outline" className="border-primary/40 text-primary hover:bg-primary/10">
             <Link to="/wallet">Add Funds</Link>
           </Button>
+          <Button asChild variant="outline" className="border-saffron/50 text-saffron hover:bg-saffron/10">
+            <Link to="/rewards">Daily Rewards</Link>
+          </Button>
           <Button asChild className="bg-gradient-gold text-background font-bold hover:opacity-90">
             <Link to="/markets">Place a Bet <ArrowUpRight className="ml-1 h-4 w-4" /></Link>
           </Button>
