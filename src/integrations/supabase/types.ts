@@ -1446,7 +1446,33 @@ export type Database = {
         Args: { _delta: number; _reason: string; _user_id: string }
         Returns: Json
       }
+      admin_bulk_user_status: {
+        Args: { _status: string; _user_ids: string[] }
+        Returns: number
+      }
       admin_delete_market: { Args: { _market_id: string }; Returns: Json }
+      admin_exposure_heatmap: {
+        Args: never
+        Returns: {
+          bet_count: number
+          bet_number: string
+          bet_type: string
+          market_id: string
+          total_liability: number
+          total_stake: number
+        }[]
+      }
+      admin_fraud_signals: {
+        Args: never
+        Returns: {
+          detail: Json
+          severity: string
+          signal: string
+          user_id: string
+          username: string
+        }[]
+      }
+      admin_risk_summary: { Args: never; Returns: Json }
       admin_set_user_status: {
         Args: { _reason: string; _status: string; _user_id: string }
         Returns: Json
