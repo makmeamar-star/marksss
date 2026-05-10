@@ -54,7 +54,7 @@ export function ResultCard({
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className={`glass rounded-xl p-5 transition-shadow ${declared ? "ring-gold" : "hover:border-primary/40"}`}
+      className={`glass mandala-corner rounded-xl p-5 transition-shadow ${declared ? "ring-gold" : "hover:border-primary/40"}`}
     >
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>
@@ -107,11 +107,11 @@ export function ResultCard({
                 </>
               ) : (
                 <>
-                  <span className="font-mono text-primary text-xl md:text-2xl text-glow-gold">{openText ?? "***"}</span>
+                  <span className="font-mono text-primary text-xl md:text-2xl text-glow-diya">{openText ?? "***"}</span>
                   <span className="text-muted-foreground mx-1">·</span>
                   <NumberReveal value={result?.jodi} size="lg" />
                   <span className="text-muted-foreground mx-1">·</span>
-                  <span className="font-mono text-primary text-xl md:text-2xl text-glow-gold">{closeText ?? "***"}</span>
+                  <span className="font-mono text-primary text-xl md:text-2xl text-glow-diya">{closeText ?? "***"}</span>
                 </>
               )}
             </div>
