@@ -1,52 +1,101 @@
-## Goal
-Expand the platform from 8 markets to **100+ active Matka markets**, each fully wired into the existing scraper, automation, and admin systems.
+## SattaKing Pro — v2 Plan
 
-## Approach
-Seed a curated list of well-known dpboss markets (Kalyan family, Mumbai family, Milan, Rajdhani, Sridevi, Madhuri, Supreme, Time variants, Padmavati, Mahalaxmi, Navratan, Balaji, Rajshree, Karnataka, Goa, Worli, etc.) — covering morning, day, evening, night sessions across the full 24h schedule. Each market gets:
+Focus: stronger Indian visual identity, more engaging/addictive game loops, daily-return hooks, and admin-controlled deposit/withdrawal payment channels (QR / UPI / Bank).
 
-1. A row in `markets` (id slug, display name, open/close/result times, days, default min/max bet, default payouts, ACTIVE).
-2. A `market_source_map` row pointing at its dpboss panel-chart slug (so the existing scraper picks it up).
-3. A `market_automation` row (RANDOM mode, both sessions disabled by default — admin can flip on per market).
-4. A 90-day backfill via the existing backfill hook (real dpboss data where available, per-row randomized fillers elsewhere — same logic as the recent fix).
+---
 
-Total target: **~110 markets** to comfortably exceed 100 active.
+### 1. Indian-themed visual refresh
 
-## Plan
+- **Color & motifs**: layer saffron / deep maroon / royal-gold accents on the existing dark surface; add subtle paisley, mandala and rangoli SVG patterns as section dividers and card backgrounds (low-opacity, semantic tokens only).
+- **Hero & headers**: festival-aware hero on `/` (Diwali/Holi/Navratri swap-in via a single config flag). Animated diya/coin shower behind the live results ticker.
+- **Iconography**: replace generic icons in market cards with custom Indian-style chips (Kalyan, Milan, Rajdhani families get distinct emblem colors).
+- **Typography**: add a display font with Devanagari support for headings; keep Inter for body. Hindi/Marathi labels alongside English on key CTAs (toggle in profile).
+- **Sound & micro-interactions**: optional shehnai chime on win, dholak hit on bet placed, coin-clink on deposit approval. Mute toggle persisted per user.
 
-### Step 1 — Seed markets (single migration / data insert)
-Insert ~110 rows into `markets`, `market_source_map`, `market_automation` in one transaction. IDs use kebab-case slugs that match dpboss URLs (e.g. `sridevi`, `sridevi-night`, `madhur-night`, `kalyan-morning`, `supreme-day`, `mumbai-morning`, `padmavati-day`, `mahalaxmi-night`, `karnataka-day`, etc.).
+All colors / gradients added as tokens in `src/styles.css`; no hardcoded hex in components.
 
-Time bands (so the homepage stays readable):
-- **05:00–09:00** Morning markets (Kalyan Morning, Mumbai Morning, Sridevi Morning, Padmavati Morning…)
-- **10:00–13:00** Late-morning (Time Bazar, Madhur Morning, Milan Morning…)
-- **13:00–17:00** Day (Kalyan, Rajdhani Day, Milan Day, Sridevi Day…)
-- **17:00–21:00** Evening (Main Bazar Day, Mumbai Main Day, Supreme Day…)
-- **21:00–00:30** Night (Main Mumbai, Rajdhani Night, Milan Night, Sridevi Night…)
+---
 
-Days: most run MON–SAT, a handful run all 7 days (Main Mumbai-style).
+### 2. More engaging & "addictive" game layer
 
-### Step 2 — Verify scraper picks them up
-Trigger the existing `/api/public/hooks/backfill-results` endpoint once. It iterates `market_source_map`, fetches dpboss panel charts for each slug, and fills 90 days of real history where the slug resolves. Slugs that 404 on dpboss simply log NOT_FOUND and fall back to per-row randomized fillers (already-built path).
+New gameplay surfaces, all built on top of existing markets/results:
 
-### Step 3 — Verify admin pages
-- `/admin/markets` lists all 110 with edit/toggle/delete controls (already supports this).
-- `/admin/results/declare`, `/results/automation`, `/results/scrape`, `/results/history` all read from the same `markets` table and will surface every market automatically.
-- Public `/markets` and homepage cards render the new set.
+- **Quick Play (instant rounds)**: 3-min and 5-min single-digit mini-markets that auto-declare from `pana_chart`. Always-on, surfaces a live countdown ring on the home page.
+- **Starline (12 rounds/day)** and **Gali-Disawar style** boards: extra market families with their own time bands; reuse the existing automation + scrape pipeline.
+- **Jackpot of the Day**: one curated market highlighted with boosted payout banner; rotates daily.
+- **Lucky Number Spinner**: free daily spin → small bonus credit or free-bet token (one per user per day).
+- **Scratch card on first deposit of the day**: reveals cashback %.
+- **Combo / parlay slip**: pick multiple markets in one slip with a multiplier.
+- **Leaderboards**: daily / weekly top winners, biggest single hit, longest streak — visible on home and in profile.
+- **Achievements & levels**: bronze→diamond tiers based on play volume, unlocks cosmetic chip skins.
+- **Trending & "Hot numbers"**: per-market panel showing most-played digits/panas today (drives FOMO without revealing results).
 
-### Step 4 — Sanity SQL check
-Confirm `SELECT count(*) FROM markets WHERE status='ACTIVE'` ≥ 100 and `SELECT count(*) FROM market_results WHERE session_date >= current_date - 90` shows full population.
+### 3. Daily-return hooks
 
-## Technical Notes
-- One `supabase--migration` only adds nothing schema-wise (tables exist). The bulk insert is data, but since it touches three related tables atomically and conditionally upserts (`ON CONFLICT DO NOTHING`), a single migration is the safest container — no app code changes required.
-- No edits to scraper, automation cron, RPCs, or UI — they're already market-agnostic.
-- dpboss slugs that don't exist will silently no-op; no crash. Markets with no dpboss source can still be declared manually by admins.
-- Default payouts copied from existing markets (single 9, jodi 90, sp 150, dp 300, tp 600, half-sangam 1000, full-sangam 10000).
+- **Login streak**: 7-day calendar with escalating rewards (₹5 → free spin → cashback token).
+- **Daily missions**: e.g. "place 3 bets on different markets", "try a Jodi", "open Starline". Progress bar + reward.
+- **Push/web notifications**: market-opening reminders (favourited markets only), result-declared, win celebration, streak-about-to-break nudge at 8pm.
+- **Favourites & "My markets"**: pin markets; home reorders to show pinned first with their next session countdown.
+- **Result recap card**: each morning, a shareable card of yesterday's wins/losses + today's schedule.
+- **Referral program**: share code → bonus on referee's first deposit; visible progress bar.
 
-## Files Touched
-- One new migration file (data insert only, no schema)
-- No `src/` code changes
+### 4. Admin-controlled payment channels (deposit & withdrawal)
 
-## Out of Scope
-- Custom payouts per market (admin can edit later in `/admin/markets`)
-- Enabling auto-declare for every market (kept off — admin opts in)
-- Adding non-dpboss sources (worldsatta, etc.) — can be a follow-up
+Replace the hardcoded UPI/QR with a fully admin-managed list:
+
+- **Admin → Payments**: new page to manage deposit channels:
+  - **UPI IDs** (label, vpa, active toggle, daily cap, priority)
+  - **Bank accounts** (holder, account no, IFSC, bank name, branch, active, priority)
+  - **QR codes** (upload image to storage, linked to a UPI id or standalone, active)
+  - Per-channel min/max amount, instructions text, and on/off switch.
+- **Rotation strategy**: round-robin or weighted, configurable. User-facing deposit screen picks the next active channel automatically (avoids exposing all VPAs at once).
+- **Withdrawal payout methods**: admin-defined list of allowed user destination types (UPI only / UPI+Bank), min/max, processing window text, and per-method fee %.
+- **User deposit flow update**: shows the chosen channel's QR + UPI + copy buttons + bank details if applicable, then the existing UTR + screenshot upload.
+- **User withdrawal flow update**: dynamic form fields based on admin-enabled methods; saved beneficiaries reused.
+- **Audit**: every channel add/edit/disable logged in `audit_log`.
+
+### 5. Supporting admin & ops upgrades
+
+- **Promotions admin**: configure streak rewards, daily missions, jackpot-of-the-day market, festival theme flag.
+- **Notification composer**: schedule broadcasts tied to streak/missions.
+- **Analytics tab**: DAU, retention (D1/D7/D30), bets per user, deposit funnel, channel-wise deposit success rate.
+
+---
+
+### Technical sketch (for reference)
+
+New tables (all admin-RLS write, public read where noted):
+- `payment_channels` — type (`UPI`|`BANK`|`QR`), label, details jsonb, active, priority, min_amount, max_amount, daily_cap, instructions.
+- `withdrawal_methods` — type, active, min, max, fee_pct, instructions.
+- `quick_markets` — short-cycle markets (period_minutes, next_draw_at) + a cron that declares them.
+- `user_streaks` — user_id, current_streak, last_claim_date, longest_streak.
+- `daily_missions` + `user_mission_progress` — definitions + per-user progress, reset daily.
+- `rewards_ledger` — bonus credits, free spins, scratch tokens.
+- `referrals` — referrer_id, referee_id, status, reward_amount.
+- `favourites` — user_id, market_id.
+- `leaderboard_snapshots` — pre-aggregated daily/weekly tops.
+- `app_themes` — active theme key + festival schedule (read by clients).
+
+Edge / server functions:
+- `claim_daily_streak`, `spin_daily_wheel`, `redeem_scratch`, `complete_mission` (all SECURITY DEFINER, balance-safe).
+- `pick_active_deposit_channel` (rotation logic).
+- `auto_declare_quick_market` (cron every minute).
+- `recompute_leaderboards` (cron hourly).
+
+Frontend:
+- New routes: `/play/quick`, `/play/starline`, `/rewards`, `/leaderboard`, `/referrals`, `/admin/payments`, `/admin/promotions`, `/admin/analytics`.
+- Components: `StreakCalendar`, `MissionList`, `SpinWheel`, `ScratchCard`, `LeaderboardTable`, `FavouriteToggle`, `ChannelPicker`, `QrPaymentCard`.
+- All visuals theme-token driven; festival flag swaps a CSS class on `<html>`.
+
+---
+
+### Suggested rollout order
+
+1. Admin-controlled deposit/withdrawal channels (highest user-trust impact).
+2. Indian visual refresh + festival theme flag.
+3. Daily streak + missions + spin wheel (retention base).
+4. Quick Play + Starline markets (engagement depth).
+5. Leaderboards, achievements, referrals.
+6. Analytics dashboard.
+
+Want me to adjust scope, drop any module, or start with a specific phase?
