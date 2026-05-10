@@ -39,7 +39,7 @@ type UserMission = {
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 function RewardsPage() {
-  const refreshUser = useAuthStore((s) => s.refreshUser);
+  const refreshUser = useAuthStore((s) => s.refreshProfile);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState<Streak | null>(null);
   const [missions, setMissions] = useState<Mission[]>([]);
