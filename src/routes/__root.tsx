@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuthStore } from "@/stores/authStore";
 import { ErrorMonitor } from "@/components/ErrorMonitor";
+import { AgeGate } from "@/components/AgeGate";
 import { reportError } from "@/lib/errorReporter";
 import "@/integrations/supabase/server-fn-fetch.client";
 
@@ -133,6 +134,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ErrorMonitor />
       <Outlet />
+      <AgeGate />
       <Toaster theme="dark" position="top-right" richColors />
     </QueryClientProvider>
   );

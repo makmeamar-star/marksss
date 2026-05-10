@@ -40,6 +40,17 @@ export function SiteFooter() {
             <li><Link to="/register" className="hover:text-primary">Register</Link></li>
           </ul>
         </div>
+
+        <div>
+          <h4 className="font-display text-sm uppercase tracking-widest text-foreground mb-3">Trust</h4>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li><Link to="/about" className="hover:text-primary">About</Link></li>
+            <li><Link to="/responsible-gaming" className="hover:text-primary">Responsible Gaming</Link></li>
+            <li><Link to="/terms" className="hover:text-primary">Terms</Link></li>
+            <li><Link to="/privacy" className="hover:text-primary">Privacy</Link></li>
+            <li><Link to="/refund-policy" className="hover:text-primary">Refunds</Link></li>
+          </ul>
+        </div>
       </div>
       <div className="border-t border-border/60 py-4 text-center text-xs text-muted-foreground">
         © {new Date().getFullYear()} SattaKing Pro · Prototype build
