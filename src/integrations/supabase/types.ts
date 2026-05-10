@@ -448,6 +448,54 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_channels: {
+        Row: {
+          active: boolean
+          created_at: string
+          daily_cap: number | null
+          details: Json
+          id: string
+          instructions: string | null
+          label: string
+          max_amount: number
+          min_amount: number
+          priority: number
+          qr_image_url: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          daily_cap?: number | null
+          details?: Json
+          id?: string
+          instructions?: string | null
+          label: string
+          max_amount?: number
+          min_amount?: number
+          priority?: number
+          qr_image_url?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          daily_cap?: number | null
+          details?: Json
+          id?: string
+          instructions?: string | null
+          label?: string
+          max_amount?: number
+          min_amount?: number
+          priority?: number
+          qr_image_url?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           balance: number
@@ -625,6 +673,48 @@ export type Database = {
           status?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      withdrawal_methods: {
+        Row: {
+          active: boolean
+          created_at: string
+          fee_pct: number
+          id: string
+          instructions: string | null
+          label: string
+          max_amount: number
+          min_amount: number
+          priority: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          fee_pct?: number
+          id?: string
+          instructions?: string | null
+          label: string
+          max_amount?: number
+          min_amount?: number
+          priority?: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          fee_pct?: number
+          id?: string
+          instructions?: string | null
+          label?: string
+          max_amount?: number
+          min_amount?: number
+          priority?: number
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
