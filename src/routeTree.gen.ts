@@ -34,12 +34,16 @@ import { Route as AdminDepositsRouteImport } from './routes/admin/deposits'
 import { Route as AdminBroadcastsRouteImport } from './routes/admin/broadcasts'
 import { Route as AdminBetsRouteImport } from './routes/admin/bets'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedStarlineRouteImport } from './routes/_authenticated/starline'
 import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticated/rewards'
+import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyBetsRouteImport } from './routes/_authenticated/my-bets'
+import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
 import { Route as AdminResultsScrapeRouteImport } from './routes/admin/results.scrape'
 import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
 import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.declare'
@@ -179,9 +183,19 @@ const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedStarlineRoute = AuthenticatedStarlineRouteImport.update({
+  id: '/starline',
+  path: '/starline',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedRewardsRoute = AuthenticatedRewardsRouteImport.update({
   id: '/rewards',
   path: '/rewards',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedReferralsRoute = AuthenticatedReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -200,6 +214,12 @@ const AuthenticatedMyBetsRoute = AuthenticatedMyBetsRouteImport.update({
   path: '/my-bets',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedLeaderboardRoute =
+  AuthenticatedLeaderboardRouteImport.update({
+    id: '/leaderboard',
+    path: '/leaderboard',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
   id: '/kyc',
   path: '/kyc',
@@ -210,6 +230,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAchievementsRoute =
+  AuthenticatedAchievementsRouteImport.update({
+    id: '/achievements',
+    path: '/achievements',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AdminResultsScrapeRoute = AdminResultsScrapeRouteImport.update({
   id: '/results/scrape',
   path: '/results/scrape',
@@ -304,12 +330,16 @@ export interface FileRoutesByFullPath {
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
   '/terms': typeof TermsRoute
+  '/achievements': typeof AuthenticatedAchievementsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
+  '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/my-bets': typeof AuthenticatedMyBetsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/referrals': typeof AuthenticatedReferralsRoute
   '/rewards': typeof AuthenticatedRewardsRoute
+  '/starline': typeof AuthenticatedStarlineRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
@@ -349,12 +379,16 @@ export interface FileRoutesByTo {
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
   '/terms': typeof TermsRoute
+  '/achievements': typeof AuthenticatedAchievementsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
+  '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/my-bets': typeof AuthenticatedMyBetsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/referrals': typeof AuthenticatedReferralsRoute
   '/rewards': typeof AuthenticatedRewardsRoute
+  '/starline': typeof AuthenticatedStarlineRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
@@ -397,12 +431,16 @@ export interface FileRoutesById {
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
+  '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/_authenticated/my-bets': typeof AuthenticatedMyBetsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/rewards': typeof AuthenticatedRewardsRoute
+  '/_authenticated/starline': typeof AuthenticatedStarlineRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
@@ -445,12 +483,16 @@ export interface FileRouteTypes {
     | '/responsible-gaming'
     | '/results'
     | '/terms'
+    | '/achievements'
     | '/dashboard'
     | '/kyc'
+    | '/leaderboard'
     | '/my-bets'
     | '/notifications'
     | '/profile'
+    | '/referrals'
     | '/rewards'
+    | '/starline'
     | '/wallet'
     | '/admin/bets'
     | '/admin/broadcasts'
@@ -490,12 +532,16 @@ export interface FileRouteTypes {
     | '/responsible-gaming'
     | '/results'
     | '/terms'
+    | '/achievements'
     | '/dashboard'
     | '/kyc'
+    | '/leaderboard'
     | '/my-bets'
     | '/notifications'
     | '/profile'
+    | '/referrals'
     | '/rewards'
+    | '/starline'
     | '/wallet'
     | '/admin/bets'
     | '/admin/broadcasts'
@@ -537,12 +583,16 @@ export interface FileRouteTypes {
     | '/responsible-gaming'
     | '/results'
     | '/terms'
+    | '/_authenticated/achievements'
     | '/_authenticated/dashboard'
     | '/_authenticated/kyc'
+    | '/_authenticated/leaderboard'
     | '/_authenticated/my-bets'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
+    | '/_authenticated/referrals'
     | '/_authenticated/rewards'
+    | '/_authenticated/starline'
     | '/_authenticated/wallet'
     | '/admin/bets'
     | '/admin/broadcasts'
@@ -769,11 +819,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWalletRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/starline': {
+      id: '/_authenticated/starline'
+      path: '/starline'
+      fullPath: '/starline'
+      preLoaderRoute: typeof AuthenticatedStarlineRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/rewards': {
       id: '/_authenticated/rewards'
       path: '/rewards'
       fullPath: '/rewards'
       preLoaderRoute: typeof AuthenticatedRewardsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/referrals': {
+      id: '/_authenticated/referrals'
+      path: '/referrals'
+      fullPath: '/referrals'
+      preLoaderRoute: typeof AuthenticatedReferralsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/profile': {
@@ -797,6 +861,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyBetsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/leaderboard': {
+      id: '/_authenticated/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof AuthenticatedLeaderboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/kyc': {
       id: '/_authenticated/kyc'
       path: '/kyc'
@@ -809,6 +880,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/achievements': {
+      id: '/_authenticated/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AuthenticatedAchievementsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/admin/results/scrape': {
@@ -913,12 +991,16 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAchievementsRoute: typeof AuthenticatedAchievementsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
+  AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
   AuthenticatedMyBetsRoute: typeof AuthenticatedMyBetsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedRewardsRoute: typeof AuthenticatedRewardsRoute
+  AuthenticatedStarlineRoute: typeof AuthenticatedStarlineRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedBetMarketIdRoute: typeof AuthenticatedBetMarketIdRoute
   AuthenticatedPlayQuickRoute: typeof AuthenticatedPlayQuickRoute
@@ -926,12 +1008,16 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAchievementsRoute: AuthenticatedAchievementsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
+  AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
   AuthenticatedMyBetsRoute: AuthenticatedMyBetsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedRewardsRoute: AuthenticatedRewardsRoute,
+  AuthenticatedStarlineRoute: AuthenticatedStarlineRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedBetMarketIdRoute: AuthenticatedBetMarketIdRoute,
   AuthenticatedPlayQuickRoute: AuthenticatedPlayQuickRoute,

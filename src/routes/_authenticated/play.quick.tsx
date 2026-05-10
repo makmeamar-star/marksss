@@ -65,8 +65,8 @@ function QuickPlay() {
 
   async function load() {
     const [{ data: open }, { data: rec }, { data: auth }] = await Promise.all([
-      supabase.from("quick_rounds").select("*").eq("status", "OPEN").order("closes_at", { ascending: false }).limit(1).maybeSingle(),
-      supabase.from("quick_rounds").select("*").eq("status", "DECLARED").order("declared_at", { ascending: false }).limit(10),
+      supabase.from("quick_rounds").select("*").eq("status", "OPEN").eq("category", "QUICK").order("closes_at", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("quick_rounds").select("*").eq("status", "DECLARED").eq("category", "QUICK").order("declared_at", { ascending: false }).limit(10),
       supabase.auth.getUser(),
     ]);
     setRound(open as Round | null);

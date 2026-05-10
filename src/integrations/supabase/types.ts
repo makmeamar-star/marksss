@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          active: boolean
+          code: string
+          description: string
+          icon: string
+          reward_amount: number
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          description: string
+          icon?: string
+          reward_amount?: number
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          description?: string
+          icon?: string
+          reward_amount?: number
+          sort_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -659,6 +689,8 @@ export type Database = {
           kyc_status: string
           locked_balance: number
           phone: string | null
+          referral_code: string | null
+          referred_by: string | null
           status: string
           total_bet: number
           total_deposit: number
@@ -677,6 +709,8 @@ export type Database = {
           kyc_status?: string
           locked_balance?: number
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           status?: string
           total_bet?: number
           total_deposit?: number
@@ -695,6 +729,8 @@ export type Database = {
           kyc_status?: string
           locked_balance?: number
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           status?: string
           total_bet?: number
           total_deposit?: number
@@ -838,6 +874,7 @@ export type Database = {
       }
       quick_rounds: {
         Row: {
+          category: string
           closes_at: string
           declared_at: string | null
           id: string
@@ -848,6 +885,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          category?: string
           closes_at: string
           declared_at?: string | null
           id?: string
@@ -858,6 +896,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          category?: string
           closes_at?: string
           declared_at?: string | null
           id?: string
@@ -866,6 +905,39 @@ export type Database = {
           result_digit?: number | null
           round_no?: number
           status?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          code: string
+          first_deposit_at: string | null
+          id: string
+          lifetime_commission: number
+          referee_id: string
+          referrer_id: string
+          signup_at: string
+          signup_bonus_paid: number
+        }
+        Insert: {
+          code: string
+          first_deposit_at?: string | null
+          id?: string
+          lifetime_commission?: number
+          referee_id: string
+          referrer_id: string
+          signup_at?: string
+          signup_bonus_paid?: number
+        }
+        Update: {
+          code?: string
+          first_deposit_at?: string | null
+          id?: string
+          lifetime_commission?: number
+          referee_id?: string
+          referrer_id?: string
+          signup_at?: string
+          signup_bonus_paid?: number
         }
         Relationships: []
       }
@@ -1042,6 +1114,38 @@ export type Database = {
           title?: string
         }
         Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          code: string
+          id: string
+          reward_paid: number
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          id?: string
+          reward_paid?: number
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          id?: string
+          reward_paid?: number
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_code_fkey"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       user_consents: {
         Row: {
@@ -1309,6 +1413,16 @@ export type Database = {
       }
     }
     Views: {
+      leaderboard_winnings: {
+        Row: {
+          month_won: number | null
+          today_won: number | null
+          user_id: string | null
+          username: string | null
+          week_won: number | null
+        }
+        Relationships: []
+      }
       result_scrape_latest: {
         Row: {
           error: string | null
@@ -1324,6 +1438,10 @@ export type Database = {
       }
     }
     Functions: {
+      _unlock_achievement: {
+        Args: { _code: string; _uid: string }
+        Returns: undefined
+      }
       admin_adjust_balance: {
         Args: { _delta: number; _reason: string; _user_id: string }
         Returns: Json
@@ -1333,6 +1451,7 @@ export type Database = {
         Args: { _reason: string; _status: string; _user_id: string }
         Returns: Json
       }
+      apply_referral_code: { Args: { _code: string }; Returns: Json }
       approve_deposit: {
         Args: { _note?: string; _request_id: string }
         Returns: Json
@@ -1367,6 +1486,8 @@ export type Database = {
         }
         Returns: Json
       }
+      ensure_starline_rounds: { Args: never; Returns: Json }
+      gen_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
