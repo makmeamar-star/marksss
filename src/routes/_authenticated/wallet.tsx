@@ -56,6 +56,11 @@ function WalletPage() {
         <KpiCard label="Total Won" value={`₹${user.totalWin.toLocaleString("en-IN")}`} positive />
       </div>
 
+      <div className="grid md:grid-cols-2 gap-4">
+        <PromoRedeemCard userId={user.id} />
+        <CashbackCard userId={user.id} />
+      </div>
+
       <Tabs defaultValue="deposit">
         <TabsList className="bg-surface border border-border/60">
           <TabsTrigger value="deposit"><ArrowDownToLine className="h-4 w-4 mr-1" /> Deposit</TabsTrigger>
