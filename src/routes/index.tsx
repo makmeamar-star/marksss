@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultsTicker } from "@/components/ResultsTicker";
 import { ResultCard } from "@/components/ResultCard";
+import { RangoliDivider } from "@/components/RangoliDivider";
 import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
@@ -34,12 +35,14 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <div className="h-1 w-full bg-tricolour opacity-80" aria-hidden />
       <SiteHeader />
       <ResultsTicker />
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-radial-spotlight">
         <div className="absolute inset-0 particles-bg opacity-40 pointer-events-none" />
+        <div className="absolute inset-0 bg-mandala-dots opacity-[0.07] pointer-events-none" />
         <div className="container mx-auto px-4 py-20 md:py-28 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -48,20 +51,25 @@ function HomePage() {
             className="max-w-3xl mx-auto text-center"
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs uppercase tracking-widest text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Live Now
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Live Now</span>
+              <span className="font-devanagari normal-case tracking-normal text-primary/80">· अभी लाइव</span>
             </span>
             <h1 className="font-display text-5xl md:text-7xl font-bold mt-6 leading-tight">
               India's Most Trusted
               <br />
-              <span className="bg-gradient-gold bg-clip-text text-transparent text-glow-gold">
+              <span className="bg-gradient-india bg-clip-text text-transparent text-glow-diya">
                 Matka Platform
               </span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mt-6 max-w-2xl mx-auto">
+            <p className="font-devanagari text-base md:text-lg text-saffron mt-3">
+              भरोसा · रफ़्तार · असली नतीजे
+            </p>
+            <p className="text-lg md:text-xl text-muted-foreground mt-4 max-w-2xl mx-auto">
               Play smart. Win big. Instant results across every major market — Kalyan, Main Mumbai, Milan, Rajdhani and more.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
-              <Button asChild size="lg" className="bg-gradient-gold text-background font-bold shadow-[0_0_40px_-8px_var(--primary)] hover:opacity-90">
+              <Button asChild size="lg" className="bg-gradient-india text-background font-bold shadow-[0_0_40px_-8px_var(--saffron)] hover:opacity-90">
                 <Link to="/register">Play Now <ArrowRight className="ml-1 h-4 w-4" /></Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10">
@@ -81,6 +89,7 @@ function HomePage() {
 
       {/* LIVE RESULTS */}
       <section className="container mx-auto px-4 py-16">
+        <RangoliDivider label="आज के नतीजे · Today" className="mb-10" />
         <div className="flex items-end justify-between mb-8">
           <div>
             <h2 className="font-display text-3xl md:text-4xl font-bold">Today's Live Results</h2>
