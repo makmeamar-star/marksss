@@ -607,6 +607,83 @@ export type Database = {
         }
         Relationships: []
       }
+      quick_bets: {
+        Row: {
+          amount: number
+          created_at: string
+          digit: number
+          id: string
+          round_id: string
+          settled_at: string | null
+          status: string
+          user_id: string
+          win_amount: number
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          digit: number
+          id?: string
+          round_id: string
+          settled_at?: string | null
+          status?: string
+          user_id: string
+          win_amount?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          digit?: number
+          id?: string
+          round_id?: string
+          settled_at?: string | null
+          status?: string
+          user_id?: string
+          win_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quick_bets_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "quick_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quick_rounds: {
+        Row: {
+          closes_at: string
+          declared_at: string | null
+          id: string
+          opens_at: string
+          payout_multiplier: number
+          result_digit: number | null
+          round_no: number
+          status: string
+        }
+        Insert: {
+          closes_at: string
+          declared_at?: string | null
+          id?: string
+          opens_at?: string
+          payout_multiplier?: number
+          result_digit?: number | null
+          round_no?: number
+          status?: string
+        }
+        Update: {
+          closes_at?: string
+          declared_at?: string | null
+          id?: string
+          opens_at?: string
+          payout_multiplier?: number
+          result_digit?: number | null
+          round_no?: number
+          status?: string
+        }
+        Relationships: []
+      }
       result_scrape_log: {
         Row: {
           error: string | null
@@ -973,6 +1050,10 @@ export type Database = {
         Args: { _items: Json; _market_id: string; _session_date: string }
         Returns: Json
       }
+      place_quick_bet: {
+        Args: { p_amount: number; p_digit: number; p_round_id: string }
+        Returns: Json
+      }
       reject_deposit: {
         Args: { _reason: string; _request_id: string }
         Returns: Json
@@ -992,6 +1073,7 @@ export type Database = {
         }
         Returns: Json
       }
+      tick_quick_play: { Args: never; Returns: Json }
       validate_pana: {
         Args: { _pana: string }
         Returns: {
