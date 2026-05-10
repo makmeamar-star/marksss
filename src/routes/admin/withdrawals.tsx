@@ -152,3 +152,24 @@ function Row({ req }: { req: any }) {
     </>
   );
 }
+
+function SlaBadge({ dueAt, status }: { dueAt: string | null; status: string }) {
+  if (!dueAt) return <span className="text-xs text-muted-foreground">—</span>;
+  if (status !== "PENDING") return <span className="text-xs text-muted-foreground">done</span>;
+  const ms = new Date(dueAt).getTime() - Date.now();
+  const mins = Math.round(ms / 60000);
+  const breach = ms < 0;
+  const warn = ms >= 0 && ms < 30 * 60000;
+  const cls = breach
+    ? "bg-destructive/20 text-destructive border-destructive/40"
+    : warn
+      ? "bg-amber-500/20 text-amber-400 border-amber-500/40"
+      : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+  const label = breach
+    ? `breached ${Math.abs(mins)}m`
+    : mins < 60
+      ? `${mins}m left`
+      : `${Math.floor(mins / 60)}h ${mins % 60}m`;
+  return <span className={`px-2 py-0.5 rounded border text-[10px] uppercase tracking-wider whitespace-nowrap ${cls}`}>{label}</span>;
+}
+
