@@ -49,6 +49,7 @@ import { Route as AdminResultsAutomationRouteImport } from './routes/admin/resul
 import { Route as AuthenticatedSettingsLimitsRouteImport } from './routes/_authenticated/settings.limits'
 import { Route as AuthenticatedPlayQuickRouteImport } from './routes/_authenticated/play.quick'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
+import { Route as ApiPublicPaymentsUtrCallbackRouteImport } from './routes/api/public/payments/utr-callback'
 import { Route as ApiPublicHooksScrapeResultsRouteImport } from './routes/api/public/hooks/scrape-results'
 import { Route as ApiPublicHooksHealthCheckRouteImport } from './routes/api/public/hooks/health-check'
 import { Route as ApiPublicHooksBackfillResultsRouteImport } from './routes/api/public/hooks/backfill-results'
@@ -258,6 +259,12 @@ const AuthenticatedBetMarketIdRoute =
     path: '/bet/$marketId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const ApiPublicPaymentsUtrCallbackRoute =
+  ApiPublicPaymentsUtrCallbackRouteImport.update({
+    id: '/api/public/payments/utr-callback',
+    path: '/api/public/payments/utr-callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksScrapeResultsRoute =
   ApiPublicHooksScrapeResultsRouteImport.update({
     id: '/api/public/hooks/scrape-results',
@@ -327,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
+  '/api/public/payments/utr-callback': typeof ApiPublicPaymentsUtrCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -371,6 +379,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
+  '/api/public/payments/utr-callback': typeof ApiPublicPaymentsUtrCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -418,6 +427,7 @@ export interface FileRoutesById {
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
+  '/api/public/payments/utr-callback': typeof ApiPublicPaymentsUtrCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -465,6 +475,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
+    | '/api/public/payments/utr-callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -509,6 +520,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
+    | '/api/public/payments/utr-callback'
   id:
     | '__root__'
     | '/'
@@ -555,6 +567,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
+    | '/api/public/payments/utr-callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -576,6 +589,7 @@ export interface RootRouteChildren {
   ApiPublicHooksBackfillResultsRoute: typeof ApiPublicHooksBackfillResultsRoute
   ApiPublicHooksHealthCheckRoute: typeof ApiPublicHooksHealthCheckRoute
   ApiPublicHooksScrapeResultsRoute: typeof ApiPublicHooksScrapeResultsRoute
+  ApiPublicPaymentsUtrCallbackRoute: typeof ApiPublicPaymentsUtrCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -860,6 +874,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBetMarketIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/payments/utr-callback': {
+      id: '/api/public/payments/utr-callback'
+      path: '/api/public/payments/utr-callback'
+      fullPath: '/api/public/payments/utr-callback'
+      preLoaderRoute: typeof ApiPublicPaymentsUtrCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/scrape-results': {
       id: '/api/public/hooks/scrape-results'
       path: '/api/public/hooks/scrape-results'
@@ -980,6 +1001,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksBackfillResultsRoute: ApiPublicHooksBackfillResultsRoute,
   ApiPublicHooksHealthCheckRoute: ApiPublicHooksHealthCheckRoute,
   ApiPublicHooksScrapeResultsRoute: ApiPublicHooksScrapeResultsRoute,
+  ApiPublicPaymentsUtrCallbackRoute: ApiPublicPaymentsUtrCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

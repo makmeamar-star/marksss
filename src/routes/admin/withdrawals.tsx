@@ -65,6 +65,7 @@ function AdminWithdrawalsPage() {
               <thead className="text-muted-foreground text-xs uppercase tracking-wider">
                 <tr>
                   <th className="text-left p-2">When</th>
+                  <th className="text-left p-2">SLA</th>
                   <th className="text-left p-2">User</th>
                   <th className="text-right p-2">Amount</th>
                   <th className="text-left p-2">Method</th>
@@ -115,6 +116,7 @@ function Row({ req }: { req: any }) {
     <>
       <tr className="border-t border-border/40">
         <td className="p-2 text-xs text-muted-foreground whitespace-nowrap">{new Date(req.created_at).toLocaleString()}</td>
+        <td className="p-2"><SlaBadge dueAt={req.sla_due_at} status={req.status} /></td>
         <td className="p-2 text-xs font-mono">{req.user_id.slice(0, 8)}…</td>
         <td className="p-2 text-right font-mono">₹{Number(req.amount).toLocaleString("en-IN")}</td>
         <td className="p-2"><span className="px-2 py-0.5 rounded border border-border/60 text-xs">{req.method}</span></td>
@@ -150,3 +152,24 @@ function Row({ req }: { req: any }) {
     </>
   );
 }
+
+function SlaBadge({ dueAt, status }: { dueAt: string | null; status: string }) {
+  if (!dueAt) return <span className="text-xs text-muted-foreground">—</span>;
+  if (status !== "PENDING") return <span className="text-xs text-muted-foreground">done</span>;
+  const ms = new Date(dueAt).getTime() - Date.now();
+  const mins = Math.round(ms / 60000);
+  const breach = ms < 0;
+  const warn = ms >= 0 && ms < 30 * 60000;
+  const cls = breach
+    ? "bg-destructive/20 text-destructive border-destructive/40"
+    : warn
+      ? "bg-amber-500/20 text-amber-400 border-amber-500/40"
+      : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+  const label = breach
+    ? `breached ${Math.abs(mins)}m`
+    : mins < 60
+      ? `${mins}m left`
+      : `${Math.floor(mins / 60)}h ${mins % 60}m`;
+  return <span className={`px-2 py-0.5 rounded border text-[10px] uppercase tracking-wider whitespace-nowrap ${cls}`}>{label}</span>;
+}
+

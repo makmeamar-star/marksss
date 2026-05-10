@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/authStore";
+import { PromoRedeemCard, CashbackCard } from "@/components/wallet/PromoCashback";
 
 export const Route = createFileRoute("/_authenticated/wallet")({
   head: () => ({ meta: [{ title: "Wallet — SattaKing Pro" }] }),
@@ -53,6 +54,11 @@ function WalletPage() {
         <KpiCard label="Lifetime Deposits" value={`₹${user.totalDeposit.toLocaleString("en-IN")}`} />
         <KpiCard label="Lifetime Withdrawals" value={`₹${user.totalWithdraw.toLocaleString("en-IN")}`} />
         <KpiCard label="Total Won" value={`₹${user.totalWin.toLocaleString("en-IN")}`} positive />
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <PromoRedeemCard userId={user.id} />
+        <CashbackCard userId={user.id} />
       </div>
 
       <Tabs defaultValue="deposit">
