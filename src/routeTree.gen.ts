@@ -39,6 +39,7 @@ import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.
 import { Route as AdminResultsAutomationRunsRouteImport } from './routes/admin/results.automation-runs'
 import { Route as AdminResultsAutomationAuditRouteImport } from './routes/admin/results.automation-audit'
 import { Route as AdminResultsAutomationRouteImport } from './routes/admin/results.automation'
+import { Route as AuthenticatedPlayQuickRouteImport } from './routes/_authenticated/play.quick'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
 import { Route as ApiPublicHooksScrapeResultsRouteImport } from './routes/api/public/hooks/scrape-results'
 import { Route as ApiPublicHooksHealthCheckRouteImport } from './routes/api/public/hooks/health-check'
@@ -197,6 +198,11 @@ const AdminResultsAutomationRoute = AdminResultsAutomationRouteImport.update({
   path: '/results/automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AuthenticatedPlayQuickRoute = AuthenticatedPlayQuickRouteImport.update({
+  id: '/play/quick',
+  path: '/play/quick',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedBetMarketIdRoute =
   AuthenticatedBetMarketIdRouteImport.update({
     id: '/bet/$marketId',
@@ -253,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin/': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/play/quick': typeof AuthenticatedPlayQuickRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/play/quick': typeof AuthenticatedPlayQuickRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -326,6 +334,7 @@ export interface FileRoutesById {
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin/': typeof AdminIndexRoute
   '/_authenticated/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/_authenticated/play/quick': typeof AuthenticatedPlayQuickRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -364,6 +373,7 @@ export interface FileRouteTypes {
     | '/admin/withdrawals'
     | '/admin/'
     | '/bet/$marketId'
+    | '/play/quick'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/admin/withdrawals'
     | '/admin'
     | '/bet/$marketId'
+    | '/play/quick'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -436,6 +447,7 @@ export interface FileRouteTypes {
     | '/admin/withdrawals'
     | '/admin/'
     | '/_authenticated/bet/$marketId'
+    | '/_authenticated/play/quick'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -676,6 +688,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResultsAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_authenticated/play/quick': {
+      id: '/_authenticated/play/quick'
+      path: '/play/quick'
+      fullPath: '/play/quick'
+      preLoaderRoute: typeof AuthenticatedPlayQuickRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/bet/$marketId': {
       id: '/_authenticated/bet/$marketId'
       path: '/bet/$marketId'
@@ -722,6 +741,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRewardsRoute: typeof AuthenticatedRewardsRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedBetMarketIdRoute: typeof AuthenticatedBetMarketIdRoute
+  AuthenticatedPlayQuickRoute: typeof AuthenticatedPlayQuickRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -732,6 +752,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRewardsRoute: AuthenticatedRewardsRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedBetMarketIdRoute: AuthenticatedBetMarketIdRoute,
+  AuthenticatedPlayQuickRoute: AuthenticatedPlayQuickRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -794,3 +815,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
