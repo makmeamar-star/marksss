@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Store, Receipt, BarChart3, Wallet, Bell, User, LogOut, Crown, Trophy, Menu, Gift,
+  LayoutDashboard, Store, Receipt, BarChart3, Wallet, Bell, User, LogOut, Crown, Trophy, Menu, Gift, Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_authenticated")({
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/markets", label: "Markets", icon: Store },
+  { to: "/play/quick", label: "Quick Play", icon: Zap },
   { to: "/my-bets", label: "My Bets", icon: Receipt },
   { to: "/results", label: "Results", icon: Trophy },
   { to: "/charts", label: "Charts", icon: BarChart3 },
