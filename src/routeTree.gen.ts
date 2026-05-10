@@ -37,6 +37,7 @@ import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyBetsRouteImport } from './routes/_authenticated/my-bets'
+import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AdminResultsScrapeRouteImport } from './routes/admin/results.scrape'
 import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
@@ -192,6 +193,11 @@ const AuthenticatedMyBetsRoute = AuthenticatedMyBetsRouteImport.update({
   path: '/my-bets',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -286,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/results': typeof ResultsRoute
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/my-bets': typeof AuthenticatedMyBetsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   '/results': typeof ResultsRoute
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/my-bets': typeof AuthenticatedMyBetsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -373,6 +381,7 @@ export interface FileRoutesById {
   '/results': typeof ResultsRoute
   '/terms': typeof TermsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/my-bets': typeof AuthenticatedMyBetsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -418,6 +427,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/terms'
     | '/dashboard'
+    | '/kyc'
     | '/my-bets'
     | '/notifications'
     | '/profile'
@@ -460,6 +470,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/terms'
     | '/dashboard'
+    | '/kyc'
     | '/my-bets'
     | '/notifications'
     | '/profile'
@@ -504,6 +515,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/terms'
     | '/_authenticated/dashboard'
+    | '/_authenticated/kyc'
     | '/_authenticated/my-bets'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
@@ -752,6 +764,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyBetsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/kyc': {
+      id: '/_authenticated/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof AuthenticatedKycRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -855,6 +874,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMyBetsRoute: typeof AuthenticatedMyBetsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -867,6 +887,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMyBetsRoute: AuthenticatedMyBetsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
