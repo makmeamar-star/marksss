@@ -116,6 +116,7 @@ function Row({ req }: { req: any }) {
     <>
       <tr className="border-t border-border/40">
         <td className="p-2 text-xs text-muted-foreground whitespace-nowrap">{new Date(req.created_at).toLocaleString()}</td>
+        <td className="p-2"><SlaBadge dueAt={req.sla_due_at} status={req.status} /></td>
         <td className="p-2 text-xs font-mono">{req.user_id.slice(0, 8)}…</td>
         <td className="p-2 text-right font-mono">₹{Number(req.amount).toLocaleString("en-IN")}</td>
         <td className="p-2"><span className="px-2 py-0.5 rounded border border-border/60 text-xs">{req.method}</span></td>
