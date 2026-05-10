@@ -29,6 +29,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminMonitoringRouteImport } from './routes/admin/monitoring'
 import { Route as AdminMarketsRouteImport } from './routes/admin/markets'
+import { Route as AdminKycRouteImport } from './routes/admin/kyc'
 import { Route as AdminDepositsRouteImport } from './routes/admin/deposits'
 import { Route as AdminBroadcastsRouteImport } from './routes/admin/broadcasts'
 import { Route as AdminBetsRouteImport } from './routes/admin/bets'
@@ -150,6 +151,11 @@ const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
 const AdminMarketsRoute = AdminMarketsRouteImport.update({
   id: '/markets',
   path: '/markets',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminKycRoute = AdminKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDepositsRoute = AdminDepositsRouteImport.update({
@@ -301,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/kyc': typeof AdminKycRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -344,6 +351,7 @@ export interface FileRoutesByTo {
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/kyc': typeof AdminKycRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -390,6 +398,7 @@ export interface FileRoutesById {
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/kyc': typeof AdminKycRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -436,6 +445,7 @@ export interface FileRouteTypes {
     | '/admin/bets'
     | '/admin/broadcasts'
     | '/admin/deposits'
+    | '/admin/kyc'
     | '/admin/markets'
     | '/admin/monitoring'
     | '/admin/payments'
@@ -479,6 +489,7 @@ export interface FileRouteTypes {
     | '/admin/bets'
     | '/admin/broadcasts'
     | '/admin/deposits'
+    | '/admin/kyc'
     | '/admin/markets'
     | '/admin/monitoring'
     | '/admin/payments'
@@ -524,6 +535,7 @@ export interface FileRouteTypes {
     | '/admin/bets'
     | '/admin/broadcasts'
     | '/admin/deposits'
+    | '/admin/kyc'
     | '/admin/markets'
     | '/admin/monitoring'
     | '/admin/payments'
@@ -706,6 +718,13 @@ declare module '@tanstack/react-router' {
       path: '/markets'
       fullPath: '/admin/markets'
       preLoaderRoute: typeof AdminMarketsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/kyc': {
+      id: '/admin/kyc'
+      path: '/kyc'
+      fullPath: '/admin/kyc'
+      preLoaderRoute: typeof AdminKycRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/deposits': {
@@ -906,6 +925,7 @@ interface AdminRouteChildren {
   AdminBetsRoute: typeof AdminBetsRoute
   AdminBroadcastsRoute: typeof AdminBroadcastsRoute
   AdminDepositsRoute: typeof AdminDepositsRoute
+  AdminKycRoute: typeof AdminKycRoute
   AdminMarketsRoute: typeof AdminMarketsRoute
   AdminMonitoringRoute: typeof AdminMonitoringRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
@@ -924,6 +944,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBetsRoute: AdminBetsRoute,
   AdminBroadcastsRoute: AdminBroadcastsRoute,
   AdminDepositsRoute: AdminDepositsRoute,
+  AdminKycRoute: AdminKycRoute,
   AdminMarketsRoute: AdminMarketsRoute,
   AdminMonitoringRoute: AdminMonitoringRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
