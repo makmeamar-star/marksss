@@ -283,6 +283,60 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_submissions: {
+        Row: {
+          address: string | null
+          created_at: string
+          dob: string | null
+          doc_urls: string[]
+          full_name: string | null
+          id: string
+          pan_masked: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          reviewer_notes: string | null
+          selfie_url: string | null
+          status: string
+          tier: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          dob?: string | null
+          doc_urls?: string[]
+          full_name?: string | null
+          id?: string
+          pan_masked?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_notes?: string | null
+          selfie_url?: string | null
+          status?: string
+          tier?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          dob?: string | null
+          doc_urls?: string[]
+          full_name?: string | null
+          id?: string
+          pan_masked?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_notes?: string | null
+          selfie_url?: string | null
+          status?: string
+          tier?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       market_automation: {
         Row: {
           close_enabled: boolean
@@ -684,6 +738,51 @@ export type Database = {
         }
         Relationships: []
       }
+      result_proof: {
+        Row: {
+          client_seed: string | null
+          created_at: string
+          id: string
+          market_id: string | null
+          nonce: number | null
+          result: string
+          revealed_at: string | null
+          round_id: string | null
+          server_seed: string | null
+          server_seed_hash: string
+          session: string | null
+          session_date: string | null
+        }
+        Insert: {
+          client_seed?: string | null
+          created_at?: string
+          id?: string
+          market_id?: string | null
+          nonce?: number | null
+          result: string
+          revealed_at?: string | null
+          round_id?: string | null
+          server_seed?: string | null
+          server_seed_hash: string
+          session?: string | null
+          session_date?: string | null
+        }
+        Update: {
+          client_seed?: string | null
+          created_at?: string
+          id?: string
+          market_id?: string | null
+          nonce?: number | null
+          result?: string
+          revealed_at?: string | null
+          round_id?: string | null
+          server_seed?: string | null
+          server_seed_hash?: string
+          session?: string | null
+          session_date?: string | null
+        }
+        Relationships: []
+      }
       result_scrape_log: {
         Row: {
           error: string | null
@@ -747,6 +846,36 @@ export type Database = {
         }
         Relationships: []
       }
+      self_exclusions: {
+        Row: {
+          active: boolean
+          created_at: string
+          ends_at: string | null
+          id: string
+          kind: string
+          starts_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind: string
+          starts_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          starts_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       system_alerts: {
         Row: {
           context: Json | null
@@ -780,6 +909,69 @@ export type Database = {
           severity?: string
           source?: string
           title?: string
+        }
+        Relationships: []
+      }
+      user_consents: {
+        Row: {
+          accepted: boolean
+          consent_type: string
+          created_at: string
+          id: string
+          ip: string | null
+          user_agent: string | null
+          user_id: string
+          version: string
+        }
+        Insert: {
+          accepted?: boolean
+          consent_type: string
+          created_at?: string
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          user_id: string
+          version: string
+        }
+        Update: {
+          accepted?: boolean
+          consent_type?: string
+          created_at?: string
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      user_limits: {
+        Row: {
+          daily_bet_limit: number | null
+          daily_deposit_limit: number | null
+          reality_check_minutes: number | null
+          session_minutes_limit: number | null
+          updated_at: string
+          user_id: string
+          weekly_bet_limit: number | null
+        }
+        Insert: {
+          daily_bet_limit?: number | null
+          daily_deposit_limit?: number | null
+          reality_check_minutes?: number | null
+          session_minutes_limit?: number | null
+          updated_at?: string
+          user_id: string
+          weekly_bet_limit?: number | null
+        }
+        Update: {
+          daily_bet_limit?: number | null
+          daily_deposit_limit?: number | null
+          reality_check_minutes?: number | null
+          session_minutes_limit?: number | null
+          updated_at?: string
+          user_id?: string
+          weekly_bet_limit?: number | null
         }
         Relationships: []
       }
@@ -1046,6 +1238,10 @@ export type Database = {
         Returns: Json
       }
       is_admin: { Args: never; Returns: boolean }
+      log_consent: {
+        Args: { _type: string; _ua?: string; _version: string }
+        Returns: string
+      }
       place_bets: {
         Args: { _items: Json; _market_id: string; _session_date: string }
         Returns: Json
@@ -1062,8 +1258,110 @@ export type Database = {
         Args: { _reason: string; _request_id: string }
         Returns: Json
       }
+      review_kyc: {
+        Args: { _decision: string; _kyc_id: string; _notes?: string }
+        Returns: {
+          address: string | null
+          created_at: string
+          dob: string | null
+          doc_urls: string[]
+          full_name: string | null
+          id: string
+          pan_masked: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          reviewer_notes: string | null
+          selfie_url: string | null
+          status: string
+          tier: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "kyc_submissions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       run_due_auto_declarations: { Args: never; Returns: Json }
+      set_user_limits: {
+        Args: {
+          _daily_bet?: number
+          _daily_deposit?: number
+          _reality_check_min?: number
+          _session_min?: number
+          _weekly_bet?: number
+        }
+        Returns: {
+          daily_bet_limit: number | null
+          daily_deposit_limit: number | null
+          reality_check_minutes: number | null
+          session_minutes_limit: number | null
+          updated_at: string
+          user_id: string
+          weekly_bet_limit: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_limits"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       spin_daily_wheel: { Args: never; Returns: Json }
+      start_self_exclusion: {
+        Args: { _kind: string }
+        Returns: {
+          active: boolean
+          created_at: string
+          ends_at: string | null
+          id: string
+          kind: string
+          starts_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "self_exclusions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_kyc: {
+        Args: {
+          _address: string
+          _dob: string
+          _doc_urls: string[]
+          _full_name: string
+          _pan_masked: string
+          _selfie_url: string
+          _tier: number
+        }
+        Returns: {
+          address: string | null
+          created_at: string
+          dob: string | null
+          doc_urls: string[]
+          full_name: string | null
+          id: string
+          pan_masked: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          reviewer_notes: string | null
+          selfie_url: string | null
+          status: string
+          tier: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "kyc_submissions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       system_auto_declare: {
         Args: {
           _market_id: string
