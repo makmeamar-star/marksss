@@ -133,6 +133,36 @@ export type Database = {
           },
         ]
       }
+      cashback_runs: {
+        Row: {
+          cashback_amount: number
+          created_at: string
+          id: string
+          loss_amount: number
+          rate: number
+          run_date: string
+          user_id: string
+        }
+        Insert: {
+          cashback_amount: number
+          created_at?: string
+          id?: string
+          loss_amount: number
+          rate: number
+          run_date?: string
+          user_id: string
+        }
+        Update: {
+          cashback_amount?: number
+          created_at?: string
+          id?: string
+          loss_amount?: number
+          rate?: number
+          run_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_errors: {
         Row: {
           app_version: string | null
@@ -244,7 +274,9 @@ export type Database = {
       deposit_requests: {
         Row: {
           amount: number
+          auto_verified: boolean
           created_at: string
+          expected_payee: string | null
           id: string
           method: string
           processed_at: string | null
@@ -257,7 +289,9 @@ export type Database = {
         }
         Insert: {
           amount: number
+          auto_verified?: boolean
           created_at?: string
+          expected_payee?: string | null
           id?: string
           method: string
           processed_at?: string | null
@@ -270,7 +304,9 @@ export type Database = {
         }
         Update: {
           amount?: number
+          auto_verified?: boolean
           created_at?: string
+          expected_payee?: string | null
           id?: string
           method?: string
           processed_at?: string | null
@@ -616,9 +652,12 @@ export type Database = {
       profiles: {
         Row: {
           balance: number
+          bonus_balance: number
+          cashback_total: number
           created_at: string
           email: string | null
           kyc_status: string
+          locked_balance: number
           phone: string | null
           status: string
           total_bet: number
@@ -631,9 +670,12 @@ export type Database = {
         }
         Insert: {
           balance?: number
+          bonus_balance?: number
+          cashback_total?: number
           created_at?: string
           email?: string | null
           kyc_status?: string
+          locked_balance?: number
           phone?: string | null
           status?: string
           total_bet?: number
@@ -646,9 +688,12 @@ export type Database = {
         }
         Update: {
           balance?: number
+          bonus_balance?: number
+          cashback_total?: number
           created_at?: string
           email?: string | null
           kyc_status?: string
+          locked_balance?: number
           phone?: string | null
           status?: string
           total_bet?: number
@@ -660,6 +705,92 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      promo_codes: {
+        Row: {
+          active: boolean
+          bonus_amount: number
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          max_redemptions: number | null
+          min_deposit: number
+          per_user_limit: number
+          redemptions_count: number
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bonus_amount: number
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          max_redemptions?: number | null
+          min_deposit?: number
+          per_user_limit?: number
+          redemptions_count?: number
+          starts_at?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bonus_amount?: number
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          max_redemptions?: number | null
+          min_deposit?: number
+          per_user_limit?: number
+          redemptions_count?: number
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      promo_redemptions: {
+        Row: {
+          bonus_amount: number
+          code: string
+          created_at: string
+          id: string
+          promo_id: string
+          user_id: string
+        }
+        Insert: {
+          bonus_amount: number
+          code: string
+          created_at?: string
+          id?: string
+          promo_id: string
+          user_id: string
+        }
+        Update: {
+          bonus_amount?: number
+          code?: string
+          created_at?: string
+          id?: string
+          promo_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_redemptions_promo_id_fkey"
+            columns: ["promo_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quick_bets: {
         Row: {
@@ -1138,9 +1269,11 @@ export type Database = {
           created_at: string
           id: string
           method: string
+          priority: number
           processed_at: string | null
           processed_by: string | null
           reject_reason: string | null
+          sla_due_at: string | null
           status: string
           user_id: string
         }
@@ -1150,9 +1283,11 @@ export type Database = {
           created_at?: string
           id?: string
           method: string
+          priority?: number
           processed_at?: string | null
           processed_by?: string | null
           reject_reason?: string | null
+          sla_due_at?: string | null
           status?: string
           user_id: string
         }
@@ -1162,9 +1297,11 @@ export type Database = {
           created_at?: string
           id?: string
           method?: string
+          priority?: number
           processed_at?: string | null
           processed_by?: string | null
           reject_reason?: string | null
+          sla_due_at?: string | null
           status?: string
           user_id?: string
         }
@@ -1202,6 +1339,10 @@ export type Database = {
       }
       approve_withdrawal: {
         Args: { _note?: string; _request_id: string }
+        Returns: Json
+      }
+      auto_approve_deposit_by_utr: {
+        Args: { _amount: number; _payee?: string; _utr: string }
         Returns: Json
       }
       claim_daily_streak: { Args: never; Returns: Json }
@@ -1250,6 +1391,7 @@ export type Database = {
         Args: { p_amount: number; p_digit: number; p_round_id: string }
         Returns: Json
       }
+      redeem_promo_code: { Args: { _code: string }; Returns: Json }
       reject_deposit: {
         Args: { _reason: string; _request_id: string }
         Returns: Json
@@ -1284,6 +1426,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      run_daily_cashback: { Args: { _rate?: number }; Returns: Json }
       run_due_auto_declarations: { Args: never; Returns: Json }
       set_user_limits: {
         Args: {
