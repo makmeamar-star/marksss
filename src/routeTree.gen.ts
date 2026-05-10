@@ -9,13 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ResultsRouteImport } from './routes/results'
+import { Route as ResponsibleGamingRouteImport } from './routes/responsible-gaming'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ChartsRouteImport } from './routes/charts'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -24,6 +29,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminMonitoringRouteImport } from './routes/admin/monitoring'
 import { Route as AdminMarketsRouteImport } from './routes/admin/markets'
+import { Route as AdminKycRouteImport } from './routes/admin/kyc'
 import { Route as AdminDepositsRouteImport } from './routes/admin/deposits'
 import { Route as AdminBroadcastsRouteImport } from './routes/admin/broadcasts'
 import { Route as AdminBetsRouteImport } from './routes/admin/bets'
@@ -32,6 +38,7 @@ import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyBetsRouteImport } from './routes/_authenticated/my-bets'
+import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AdminResultsScrapeRouteImport } from './routes/admin/results.scrape'
 import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
@@ -39,6 +46,7 @@ import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.
 import { Route as AdminResultsAutomationRunsRouteImport } from './routes/admin/results.automation-runs'
 import { Route as AdminResultsAutomationAuditRouteImport } from './routes/admin/results.automation-audit'
 import { Route as AdminResultsAutomationRouteImport } from './routes/admin/results.automation'
+import { Route as AuthenticatedSettingsLimitsRouteImport } from './routes/_authenticated/settings.limits'
 import { Route as AuthenticatedPlayQuickRouteImport } from './routes/_authenticated/play.quick'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
 import { Route as ApiPublicHooksScrapeResultsRouteImport } from './routes/api/public/hooks/scrape-results'
@@ -46,9 +54,19 @@ import { Route as ApiPublicHooksHealthCheckRouteImport } from './routes/api/publ
 import { Route as ApiPublicHooksBackfillResultsRouteImport } from './routes/api/public/hooks/backfill-results'
 import { Route as ApiPublicHooksAutoDeclareResultsRouteImport } from './routes/api/public/hooks/auto-declare-results'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResponsibleGamingRoute = ResponsibleGamingRouteImport.update({
+  id: '/responsible-gaming',
+  path: '/responsible-gaming',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -59,6 +77,16 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundPolicyRoute = RefundPolicyRouteImport.update({
+  id: '/refund-policy',
+  path: '/refund-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketsRoute = MarketsRouteImport.update({
@@ -79,6 +107,11 @@ const ChartsRoute = ChartsRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -118,6 +151,11 @@ const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
 const AdminMarketsRoute = AdminMarketsRouteImport.update({
   id: '/markets',
   path: '/markets',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminKycRoute = AdminKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDepositsRoute = AdminDepositsRouteImport.update({
@@ -161,6 +199,11 @@ const AuthenticatedMyBetsRoute = AuthenticatedMyBetsRouteImport.update({
   path: '/my-bets',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -198,6 +241,12 @@ const AdminResultsAutomationRoute = AdminResultsAutomationRouteImport.update({
   path: '/results/automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AuthenticatedSettingsLimitsRoute =
+  AuthenticatedSettingsLimitsRouteImport.update({
+    id: '/settings/limits',
+    path: '/settings/limits',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPlayQuickRoute = AuthenticatedPlayQuickRouteImport.update({
   id: '/play/quick',
   path: '/play/quick',
@@ -236,14 +285,20 @@ const ApiPublicHooksAutoDeclareResultsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/charts': typeof ChartsRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
+  '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/my-bets': typeof AuthenticatedMyBetsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -252,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/kyc': typeof AdminKycRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -260,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/play/quick': typeof AuthenticatedPlayQuickRoute
+  '/settings/limits': typeof AuthenticatedSettingsLimitsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -273,13 +330,19 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/charts': typeof ChartsRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
+  '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/my-bets': typeof AuthenticatedMyBetsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -288,6 +351,7 @@ export interface FileRoutesByTo {
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/kyc': typeof AdminKycRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -296,6 +360,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/play/quick': typeof AuthenticatedPlayQuickRoute
+  '/settings/limits': typeof AuthenticatedSettingsLimitsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -311,14 +376,20 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/charts': typeof ChartsRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
+  '/terms': typeof TermsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/my-bets': typeof AuthenticatedMyBetsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -327,6 +398,7 @@ export interface FileRoutesById {
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/kyc': typeof AdminKycRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -335,6 +407,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/_authenticated/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/_authenticated/play/quick': typeof AuthenticatedPlayQuickRoute
+  '/_authenticated/settings/limits': typeof AuthenticatedSettingsLimitsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -350,14 +423,20 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/admin'
     | '/charts'
     | '/login'
     | '/markets'
+    | '/privacy'
+    | '/refund-policy'
     | '/register'
     | '/reset-password'
+    | '/responsible-gaming'
     | '/results'
+    | '/terms'
     | '/dashboard'
+    | '/kyc'
     | '/my-bets'
     | '/notifications'
     | '/profile'
@@ -366,6 +445,7 @@ export interface FileRouteTypes {
     | '/admin/bets'
     | '/admin/broadcasts'
     | '/admin/deposits'
+    | '/admin/kyc'
     | '/admin/markets'
     | '/admin/monitoring'
     | '/admin/payments'
@@ -374,6 +454,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/bet/$marketId'
     | '/play/quick'
+    | '/settings/limits'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -387,13 +468,19 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/charts'
     | '/login'
     | '/markets'
+    | '/privacy'
+    | '/refund-policy'
     | '/register'
     | '/reset-password'
+    | '/responsible-gaming'
     | '/results'
+    | '/terms'
     | '/dashboard'
+    | '/kyc'
     | '/my-bets'
     | '/notifications'
     | '/profile'
@@ -402,6 +489,7 @@ export interface FileRouteTypes {
     | '/admin/bets'
     | '/admin/broadcasts'
     | '/admin/deposits'
+    | '/admin/kyc'
     | '/admin/markets'
     | '/admin/monitoring'
     | '/admin/payments'
@@ -410,6 +498,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bet/$marketId'
     | '/play/quick'
+    | '/settings/limits'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -424,14 +513,20 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/about'
     | '/admin'
     | '/charts'
     | '/login'
     | '/markets'
+    | '/privacy'
+    | '/refund-policy'
     | '/register'
     | '/reset-password'
+    | '/responsible-gaming'
     | '/results'
+    | '/terms'
     | '/_authenticated/dashboard'
+    | '/_authenticated/kyc'
     | '/_authenticated/my-bets'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
@@ -440,6 +535,7 @@ export interface FileRouteTypes {
     | '/admin/bets'
     | '/admin/broadcasts'
     | '/admin/deposits'
+    | '/admin/kyc'
     | '/admin/markets'
     | '/admin/monitoring'
     | '/admin/payments'
@@ -448,6 +544,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/_authenticated/bet/$marketId'
     | '/_authenticated/play/quick'
+    | '/_authenticated/settings/limits'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -463,13 +560,18 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
   ChartsRoute: typeof ChartsRoute
   LoginRoute: typeof LoginRoute
   MarketsRoute: typeof MarketsRoute
+  PrivacyRoute: typeof PrivacyRoute
+  RefundPolicyRoute: typeof RefundPolicyRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ResponsibleGamingRoute: typeof ResponsibleGamingRoute
   ResultsRoute: typeof ResultsRoute
+  TermsRoute: typeof TermsRoute
   ApiPublicHooksAutoDeclareResultsRoute: typeof ApiPublicHooksAutoDeclareResultsRoute
   ApiPublicHooksBackfillResultsRoute: typeof ApiPublicHooksBackfillResultsRoute
   ApiPublicHooksHealthCheckRoute: typeof ApiPublicHooksHealthCheckRoute
@@ -478,11 +580,25 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/results': {
       id: '/results'
       path: '/results'
       fullPath: '/results'
       preLoaderRoute: typeof ResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/responsible-gaming': {
+      id: '/responsible-gaming'
+      path: '/responsible-gaming'
+      fullPath: '/responsible-gaming'
+      preLoaderRoute: typeof ResponsibleGamingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -497,6 +613,20 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund-policy': {
+      id: '/refund-policy'
+      path: '/refund-policy'
+      fullPath: '/refund-policy'
+      preLoaderRoute: typeof RefundPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/markets': {
@@ -525,6 +655,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -583,6 +720,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMarketsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/kyc': {
+      id: '/admin/kyc'
+      path: '/kyc'
+      fullPath: '/admin/kyc'
+      preLoaderRoute: typeof AdminKycRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/deposits': {
       id: '/admin/deposits'
       path: '/deposits'
@@ -639,6 +783,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyBetsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/kyc': {
+      id: '/_authenticated/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof AuthenticatedKycRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -688,6 +839,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResultsAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_authenticated/settings/limits': {
+      id: '/_authenticated/settings/limits'
+      path: '/settings/limits'
+      fullPath: '/settings/limits'
+      preLoaderRoute: typeof AuthenticatedSettingsLimitsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/play/quick': {
       id: '/_authenticated/play/quick'
       path: '/play/quick'
@@ -735,6 +893,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMyBetsRoute: typeof AuthenticatedMyBetsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -742,10 +901,12 @@ interface AuthenticatedRouteChildren {
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedBetMarketIdRoute: typeof AuthenticatedBetMarketIdRoute
   AuthenticatedPlayQuickRoute: typeof AuthenticatedPlayQuickRoute
+  AuthenticatedSettingsLimitsRoute: typeof AuthenticatedSettingsLimitsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMyBetsRoute: AuthenticatedMyBetsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
@@ -753,6 +914,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedBetMarketIdRoute: AuthenticatedBetMarketIdRoute,
   AuthenticatedPlayQuickRoute: AuthenticatedPlayQuickRoute,
+  AuthenticatedSettingsLimitsRoute: AuthenticatedSettingsLimitsRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -763,6 +925,7 @@ interface AdminRouteChildren {
   AdminBetsRoute: typeof AdminBetsRoute
   AdminBroadcastsRoute: typeof AdminBroadcastsRoute
   AdminDepositsRoute: typeof AdminDepositsRoute
+  AdminKycRoute: typeof AdminKycRoute
   AdminMarketsRoute: typeof AdminMarketsRoute
   AdminMonitoringRoute: typeof AdminMonitoringRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
@@ -781,6 +944,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBetsRoute: AdminBetsRoute,
   AdminBroadcastsRoute: AdminBroadcastsRoute,
   AdminDepositsRoute: AdminDepositsRoute,
+  AdminKycRoute: AdminKycRoute,
   AdminMarketsRoute: AdminMarketsRoute,
   AdminMonitoringRoute: AdminMonitoringRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
@@ -800,13 +964,18 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
   ChartsRoute: ChartsRoute,
   LoginRoute: LoginRoute,
   MarketsRoute: MarketsRoute,
+  PrivacyRoute: PrivacyRoute,
+  RefundPolicyRoute: RefundPolicyRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ResponsibleGamingRoute: ResponsibleGamingRoute,
   ResultsRoute: ResultsRoute,
+  TermsRoute: TermsRoute,
   ApiPublicHooksAutoDeclareResultsRoute: ApiPublicHooksAutoDeclareResultsRoute,
   ApiPublicHooksBackfillResultsRoute: ApiPublicHooksBackfillResultsRoute,
   ApiPublicHooksHealthCheckRoute: ApiPublicHooksHealthCheckRoute,
@@ -815,13 +984,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
