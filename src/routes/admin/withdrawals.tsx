@@ -65,6 +65,7 @@ function AdminWithdrawalsPage() {
               <thead className="text-muted-foreground text-xs uppercase tracking-wider">
                 <tr>
                   <th className="text-left p-2">When</th>
+                  <th className="text-left p-2">SLA</th>
                   <th className="text-left p-2">User</th>
                   <th className="text-right p-2">Amount</th>
                   <th className="text-left p-2">Method</th>
