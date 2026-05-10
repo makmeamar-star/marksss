@@ -178,6 +178,69 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_missions: {
+        Row: {
+          code: string
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          reward_amount: number
+          sort_order: number
+          target: number
+          title: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          reward_amount?: number
+          sort_order?: number
+          target?: number
+          title: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          reward_amount?: number
+          sort_order?: number
+          target?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      daily_spins: {
+        Row: {
+          id: string
+          prize_amount: number
+          prize_label: string
+          spin_date: string
+          spun_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          prize_amount: number
+          prize_label: string
+          spin_date?: string
+          spun_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          prize_amount?: number
+          prize_label?: string
+          spin_date?: string
+          spun_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       deposit_requests: {
         Row: {
           amount: number
@@ -580,6 +643,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rewards_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          meta: Json | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       system_alerts: {
         Row: {
           context: Json | null
@@ -616,6 +706,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_missions: {
+        Row: {
+          claimed_at: string | null
+          id: string
+          mission_code: string
+          mission_date: string
+          progress: number
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          id?: string
+          mission_code: string
+          mission_date?: string
+          progress?: number
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          id?: string
+          mission_code?: string
+          mission_date?: string
+          progress?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -633,6 +750,33 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          current_streak: number
+          last_claim_date: string | null
+          longest_streak: number
+          total_claimed: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          last_claim_date?: string | null
+          longest_streak?: number
+          total_claimed?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          last_claim_date?: string | null
+          longest_streak?: number
+          total_claimed?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -791,6 +935,8 @@ export type Database = {
         Args: { _note?: string; _request_id: string }
         Returns: Json
       }
+      claim_daily_streak: { Args: never; Returns: Json }
+      claim_mission: { Args: { p_code: string }; Returns: Json }
       correct_result: {
         Args: {
           _market_id: string
@@ -818,6 +964,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_mission: {
+        Args: { p_amount?: number; p_code: string }
+        Returns: Json
+      }
       is_admin: { Args: never; Returns: boolean }
       place_bets: {
         Args: { _items: Json; _market_id: string; _session_date: string }
@@ -832,6 +982,7 @@ export type Database = {
         Returns: Json
       }
       run_due_auto_declarations: { Args: never; Returns: Json }
+      spin_daily_wheel: { Args: never; Returns: Json }
       system_auto_declare: {
         Args: {
           _market_id: string
