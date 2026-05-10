@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Store, Receipt, BarChart3, Wallet, Bell, User, LogOut, Crown, Trophy, Menu, Gift, Zap,
+  LayoutDashboard, Store, Receipt, BarChart3, Wallet, Bell, User, LogOut, Crown, Trophy, Menu, Gift, Zap, ShieldCheck, SlidersHorizontal,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,6 +33,8 @@ const NAV = [
   { to: "/wallet", label: "Wallet", icon: Wallet },
   { to: "/rewards", label: "Rewards", icon: Gift },
   { to: "/notifications", label: "Notifications", icon: Bell },
+  { to: "/kyc", label: "Verify ID", icon: ShieldCheck },
+  { to: "/settings/limits", label: "Play Limits", icon: SlidersHorizontal },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
