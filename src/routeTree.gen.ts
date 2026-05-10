@@ -35,6 +35,7 @@ import { Route as AdminBroadcastsRouteImport } from './routes/admin/broadcasts'
 import { Route as AdminBetsRouteImport } from './routes/admin/bets'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticated/rewards'
+import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyBetsRouteImport } from './routes/_authenticated/my-bets'
@@ -185,6 +186,11 @@ const AuthenticatedRewardsRoute = AuthenticatedRewardsRouteImport.update({
   path: '/rewards',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedReferralsRoute = AuthenticatedReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -317,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/my-bets': typeof AuthenticatedMyBetsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/referrals': typeof AuthenticatedReferralsRoute
   '/rewards': typeof AuthenticatedRewardsRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
@@ -363,6 +370,7 @@ export interface FileRoutesByTo {
   '/my-bets': typeof AuthenticatedMyBetsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/referrals': typeof AuthenticatedReferralsRoute
   '/rewards': typeof AuthenticatedRewardsRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   '/_authenticated/my-bets': typeof AuthenticatedMyBetsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/rewards': typeof AuthenticatedRewardsRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
@@ -461,6 +470,7 @@ export interface FileRouteTypes {
     | '/my-bets'
     | '/notifications'
     | '/profile'
+    | '/referrals'
     | '/rewards'
     | '/wallet'
     | '/admin/bets'
@@ -507,6 +517,7 @@ export interface FileRouteTypes {
     | '/my-bets'
     | '/notifications'
     | '/profile'
+    | '/referrals'
     | '/rewards'
     | '/wallet'
     | '/admin/bets'
@@ -555,6 +566,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-bets'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
+    | '/_authenticated/referrals'
     | '/_authenticated/rewards'
     | '/_authenticated/wallet'
     | '/admin/bets'
@@ -789,6 +801,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRewardsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/referrals': {
+      id: '/_authenticated/referrals'
+      path: '/referrals'
+      fullPath: '/referrals'
+      preLoaderRoute: typeof AuthenticatedReferralsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -939,6 +958,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMyBetsRoute: typeof AuthenticatedMyBetsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedRewardsRoute: typeof AuthenticatedRewardsRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedBetMarketIdRoute: typeof AuthenticatedBetMarketIdRoute
@@ -953,6 +973,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMyBetsRoute: AuthenticatedMyBetsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedRewardsRoute: AuthenticatedRewardsRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedBetMarketIdRoute: AuthenticatedBetMarketIdRoute,
