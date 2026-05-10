@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowDownToLine, ArrowUpToLine, Wallet, History, Loader2, Copy, QrCode } from "lucide-react";
+import { ArrowDownToLine, ArrowUpToLine, History, Loader2, Copy, QrCode, Banknote, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,8 +17,6 @@ export const Route = createFileRoute("/_authenticated/wallet")({
   head: () => ({ meta: [{ title: "Wallet — SattaKing Pro" }] }),
   component: WalletPage,
 });
-
-const DEMO_UPI = "sattakingpro@upi";
 
 function WalletPage() {
   const user = useAuthStore((s) => s.user);
