@@ -51,6 +51,7 @@ const NAV = [
   { to: "/admin/payments", label: "Payment Channels", icon: CreditCard },
   { to: "/admin/kyc", label: "KYC Review", icon: ShieldCheck },
   { to: "/admin/broadcasts", label: "Broadcasts", icon: Megaphone },
+  { to: "/admin/risk", label: "Risk & Ops", icon: ShieldAlert },
   { to: "/admin/monitoring", label: "Monitoring", icon: ShieldAlert },
 ] as const;
 
