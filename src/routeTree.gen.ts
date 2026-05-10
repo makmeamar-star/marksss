@@ -42,6 +42,7 @@ import { Route as AuthenticatedMyBetsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
 import { Route as AdminResultsScrapeRouteImport } from './routes/admin/results.scrape'
 import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
 import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.declare'
@@ -223,6 +224,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAchievementsRoute =
+  AuthenticatedAchievementsRouteImport.update({
+    id: '/achievements',
+    path: '/achievements',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AdminResultsScrapeRoute = AdminResultsScrapeRouteImport.update({
   id: '/results/scrape',
   path: '/results/scrape',
@@ -317,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
   '/terms': typeof TermsRoute
+  '/achievements': typeof AuthenticatedAchievementsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
@@ -364,6 +372,7 @@ export interface FileRoutesByTo {
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
   '/terms': typeof TermsRoute
+  '/achievements': typeof AuthenticatedAchievementsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
@@ -414,6 +423,7 @@ export interface FileRoutesById {
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
@@ -464,6 +474,7 @@ export interface FileRouteTypes {
     | '/responsible-gaming'
     | '/results'
     | '/terms'
+    | '/achievements'
     | '/dashboard'
     | '/kyc'
     | '/leaderboard'
@@ -511,6 +522,7 @@ export interface FileRouteTypes {
     | '/responsible-gaming'
     | '/results'
     | '/terms'
+    | '/achievements'
     | '/dashboard'
     | '/kyc'
     | '/leaderboard'
@@ -560,6 +572,7 @@ export interface FileRouteTypes {
     | '/responsible-gaming'
     | '/results'
     | '/terms'
+    | '/_authenticated/achievements'
     | '/_authenticated/dashboard'
     | '/_authenticated/kyc'
     | '/_authenticated/leaderboard'
@@ -850,6 +863,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/achievements': {
+      id: '/_authenticated/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AuthenticatedAchievementsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/admin/results/scrape': {
       id: '/admin/results/scrape'
       path: '/results/scrape'
@@ -952,6 +972,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAchievementsRoute: typeof AuthenticatedAchievementsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
@@ -967,6 +988,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAchievementsRoute: AuthenticatedAchievementsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
