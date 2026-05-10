@@ -54,7 +54,7 @@ export function NumberReveal({ value, size = "md", spinOnChange = true }: Props)
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.15 }}
-        className={`font-mono font-bold tracking-wider ${sizeCls} ${spinning ? "text-primary" : "text-primary text-glow-gold"}`}
+        className={`font-mono font-bold tracking-wider ${sizeCls} ${spinning ? "text-primary" : "text-primary text-glow-diya"}`}
       >
         {display}
       </motion.span>
