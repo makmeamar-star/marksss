@@ -44,6 +44,7 @@ import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.
 import { Route as AdminResultsAutomationRunsRouteImport } from './routes/admin/results.automation-runs'
 import { Route as AdminResultsAutomationAuditRouteImport } from './routes/admin/results.automation-audit'
 import { Route as AdminResultsAutomationRouteImport } from './routes/admin/results.automation'
+import { Route as AuthenticatedSettingsLimitsRouteImport } from './routes/_authenticated/settings.limits'
 import { Route as AuthenticatedPlayQuickRouteImport } from './routes/_authenticated/play.quick'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
 import { Route as ApiPublicHooksScrapeResultsRouteImport } from './routes/api/public/hooks/scrape-results'
@@ -228,6 +229,12 @@ const AdminResultsAutomationRoute = AdminResultsAutomationRouteImport.update({
   path: '/results/automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AuthenticatedSettingsLimitsRoute =
+  AuthenticatedSettingsLimitsRouteImport.update({
+    id: '/settings/limits',
+    path: '/settings/limits',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPlayQuickRoute = AuthenticatedPlayQuickRouteImport.update({
   id: '/play/quick',
   path: '/play/quick',
@@ -295,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/play/quick': typeof AuthenticatedPlayQuickRoute
+  '/settings/limits': typeof AuthenticatedSettingsLimitsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -336,6 +344,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/play/quick': typeof AuthenticatedPlayQuickRoute
+  '/settings/limits': typeof AuthenticatedSettingsLimitsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -380,6 +389,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/_authenticated/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
   '/_authenticated/play/quick': typeof AuthenticatedPlayQuickRoute
+  '/_authenticated/settings/limits': typeof AuthenticatedSettingsLimitsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/bet/$marketId'
     | '/play/quick'
+    | '/settings/limits'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bet/$marketId'
     | '/play/quick'
+    | '/settings/limits'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -508,6 +520,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/_authenticated/bet/$marketId'
     | '/_authenticated/play/quick'
+    | '/_authenticated/settings/limits'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -788,6 +801,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResultsAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_authenticated/settings/limits': {
+      id: '/_authenticated/settings/limits'
+      path: '/settings/limits'
+      fullPath: '/settings/limits'
+      preLoaderRoute: typeof AuthenticatedSettingsLimitsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/play/quick': {
       id: '/_authenticated/play/quick'
       path: '/play/quick'
@@ -842,6 +862,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedBetMarketIdRoute: typeof AuthenticatedBetMarketIdRoute
   AuthenticatedPlayQuickRoute: typeof AuthenticatedPlayQuickRoute
+  AuthenticatedSettingsLimitsRoute: typeof AuthenticatedSettingsLimitsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -853,6 +874,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedBetMarketIdRoute: AuthenticatedBetMarketIdRoute,
   AuthenticatedPlayQuickRoute: AuthenticatedPlayQuickRoute,
+  AuthenticatedSettingsLimitsRoute: AuthenticatedSettingsLimitsRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -920,3 +942,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
