@@ -54,10 +54,10 @@ function LimitsPage() {
   const save = async () => {
     setSaving(true);
     const { error } = await supabase.rpc("set_user_limits", {
-      _daily_bet: dailyBet ? Number(dailyBet) : null,
-      _weekly_bet: weeklyBet ? Number(weeklyBet) : null,
-      _daily_deposit: dailyDeposit ? Number(dailyDeposit) : null,
-      _session_min: sessionMin ? Number(sessionMin) : null,
+      _daily_bet: dailyBet ? Number(dailyBet) : undefined,
+      _weekly_bet: weeklyBet ? Number(weeklyBet) : undefined,
+      _daily_deposit: dailyDeposit ? Number(dailyDeposit) : undefined,
+      _session_min: sessionMin ? Number(sessionMin) : undefined,
       _reality_check_min: 30,
     });
     setSaving(false);
