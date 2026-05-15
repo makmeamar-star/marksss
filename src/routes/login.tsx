@@ -23,17 +23,13 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const login = useAuthStore((s) => s.login);
-  const register = useAuthStore((s) => s.register);
-  const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const navigate = useNavigate();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [demoBusy, setDemoBusy] = useState(false);
-  const [adminBusy, setAdminBusy] = useState(false);
 
-  const anyBusy = busy || demoBusy || adminBusy;
+  const anyBusy = busy;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,53 +46,6 @@ function LoginPage() {
       toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
       setBusy(false);
-    }
-  };
-
-  const ensureSignedIn = async (
-    email: string,
-    password: string,
-    username: string,
-  ) => {
-    try {
-      await login(email, password);
-    } catch {
-      try {
-        await register({ username, email, password });
-      } catch {
-        await login(email, password);
-      }
-    }
-  };
-
-  const demoLogin = async () => {
-    if (anyBusy) return;
-    setDemoBusy(true);
-    try {
-      await ensureSignedIn(DEMO_EMAIL, DEMO_PASSWORD, DEMO_USERNAME);
-      toast.success("Welcome to the demo!");
-      navigate({ to: "/dashboard" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Demo login failed");
-    } finally {
-      setDemoBusy(false);
-    }
-  };
-
-  const demoAdminLogin = async () => {
-    if (anyBusy) return;
-    setAdminBusy(true);
-    try {
-      await ensureSignedIn(DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD, DEMO_ADMIN_USERNAME);
-      // Promote to admin via server-side edge function (no public RPC needed).
-      await supabase.functions.invoke("ensure-demo-admin");
-      await refreshProfile();
-      toast.success("Welcome, admin!");
-      navigate({ to: "/admin" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Admin demo login failed");
-    } finally {
-      setAdminBusy(false);
     }
   };
 
