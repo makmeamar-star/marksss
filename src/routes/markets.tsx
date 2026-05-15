@@ -36,6 +36,22 @@ function normalize(s: string) {
   return s.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
+function highlightMatch(label: string, query: string) {
+  const q = query.trim();
+  if (!q) return label;
+  const idx = label.toLowerCase().indexOf(q.toLowerCase());
+  if (idx < 0) return label;
+  return (
+    <>
+      {label.slice(0, idx)}
+      <mark className="bg-transparent text-primary font-semibold">
+        {label.slice(idx, idx + q.length)}
+      </mark>
+      {label.slice(idx + q.length)}
+    </>
+  );
+}
+
 function MarketsPage() {
   const today = todayIST();
   const { data: markets = [] } = useMarkets();
