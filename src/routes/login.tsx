@@ -75,6 +75,7 @@ function LoginPage() {
     }
     setBusy(true);
     try {
+      applyRemember(remember);
       await login(identifier, password);
       toast.success(`Welcome back!`);
       navigate({ to: "/dashboard" });
