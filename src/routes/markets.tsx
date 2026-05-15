@@ -54,7 +54,7 @@ function MarketsPage() {
     if (qInput === q) return;
     const t = window.setTimeout(() => {
       navigate({
-        search: (prev) => ({ ...prev, q: qInput }),
+        search: (prev: z.infer<typeof searchSchema>) => ({ ...prev, q: qInput }),
         replace: true,
       });
     }, 120);
@@ -62,7 +62,10 @@ function MarketsPage() {
   }, [qInput, q, navigate]);
 
   const setStatus = (next: "all" | "open" | "closed") => {
-    navigate({ search: (prev) => ({ ...prev, status: next }), replace: true });
+    navigate({
+      search: (prev: z.infer<typeof searchSchema>) => ({ ...prev, status: next }),
+      replace: true,
+    });
   };
 
   // Filtered list: by status, then by query (matches name + displayName).
