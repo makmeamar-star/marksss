@@ -31,6 +31,7 @@ export function SiteHeader() {
             <Link
               key={l.to}
               to={l.to}
+              preload="intent"
               className="px-3 py-2 text-sm text-muted-foreground hover:text-primary transition-colors"
               activeProps={{ className: "px-3 py-2 text-sm text-primary font-semibold" }}
               activeOptions={{ exact: l.to === "/" }}
