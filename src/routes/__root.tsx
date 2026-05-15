@@ -15,6 +15,7 @@ import { AgeGate } from "@/components/AgeGate";
 import { reportError } from "@/lib/errorReporter";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useQueryCachePersistence } from "@/components/PersistedQueryProvider";
+import { BottomNav } from "@/components/BottomNav";
 
 import appCss from "../styles.css?url";
 
