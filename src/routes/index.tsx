@@ -221,3 +221,15 @@ function QuickStat({ label, value, accent }: { label: string; value: string; acc
     </div>
   );
 }
+
+function ScheduleRow({ m }: { m: { id: string; displayName: string; openTime: string; closeTime: string; resultTime: string; days: string[] } }) {
+  return (
+    <tr className="border-t border-border/50">
+      <td className="px-4 py-3 font-display font-semibold">{m.displayName}</td>
+      <td className="px-4 py-3 text-center font-mono">{m.openTime}</td>
+      <td className="px-4 py-3 text-center font-mono">{m.closeTime}</td>
+      <td className="px-4 py-3 text-center font-mono text-primary">{m.resultTime}</td>
+      <td className="px-4 py-3 text-center text-xs text-muted-foreground">{m.days.length === 7 ? "All days" : m.days.join(" ")}</td>
+    </tr>
+  );
+}
