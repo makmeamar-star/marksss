@@ -15,14 +15,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuthStore } from "@/stores/authStore";
 import { LiveClock } from "@/components/admin/LiveClock";
 import { requireAdmin } from "@/lib/adminGuard.functions";
+import { ShieldX } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async ({ location }) => {
-    if (typeof window === "undefined") {
-      // Don't render admin shell during SSR/prerender; loader will also fail
-      // server-side (no auth header) and the errorComponent shows nothing.
-      return;
-    }
+    if (typeof window === "undefined") return;
     const { supabase } = await import("@/integrations/supabase/client");
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
@@ -35,23 +33,42 @@ export const Route = createFileRoute("/admin")({
       .eq("role", "admin")
       .maybeSingle();
     if (!roleRow) {
-      throw redirect({ to: "/dashboard" });
+      // Non-admin authenticated user — surface 403 then bounce to /login.
+      toast.error("403 — Admin access required", {
+        description: "You don't have permission to view this page.",
+      });
+      try { await supabase.auth.signOut(); } catch { /* noop */ }
+      throw redirect({ to: "/login", search: { error: "forbidden" } as never });
     }
   },
-  // Server-side defence in depth — verifies the admin role with the user's
-  // bearer token. On SSR/prerender there's no token, so this throws and the
-  // errorComponent renders an empty placeholder (NOT the admin shell).
   loader: () => requireAdmin(),
-  errorComponent: () => {
-    if (typeof window !== "undefined") {
-      // Client-side error means session/role check failed — bounce to login.
-      window.location.replace("/login");
-    }
-    return null;
-  },
+  errorComponent: () => <Forbidden403 />,
   head: () => ({ meta: [{ title: "Admin — SattaKing Pro" }] }),
   component: AdminLayout,
 });
+
+function Forbidden403() {
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (typeof window !== "undefined") window.location.replace("/login");
+    }, 1500);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div className="min-h-screen grid place-items-center bg-background px-6">
+      <div className="max-w-md text-center space-y-4">
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-destructive/15 text-destructive">
+          <ShieldX className="h-8 w-8" />
+        </div>
+        <h1 className="text-3xl font-display font-bold">403 — Forbidden</h1>
+        <p className="text-muted-foreground">
+          Admin access required. Redirecting to the login page…
+        </p>
+        <Button onClick={() => window.location.replace("/login")}>Go to Login</Button>
+      </div>
+    </div>
+  );
+}
 
 const NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
