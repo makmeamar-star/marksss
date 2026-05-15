@@ -100,9 +100,14 @@ async function networkFirstHTML(request) {
   } catch {
     const cached = await cache.match(request);
     if (cached) return cached;
-    const fallback = await cache.match("/");
-    if (fallback) return fallback;
     const precache = await caches.open(PRECACHE);
+    // Try the requested path from the precache (covers cold-start navigations
+    // like first-ever visit to /results while offline).
+    const url = new URL(request.url);
+    const precachedPath = await precache.match(url.pathname);
+    if (precachedPath) return precachedPath;
+    const fallback = await cache.match("/") || await precache.match("/");
+    if (fallback) return fallback;
     const offline = await precache.match(OFFLINE_URL);
     if (offline) return offline;
     return new Response("Offline", { status: 503, headers: { "content-type": "text/plain" } });
