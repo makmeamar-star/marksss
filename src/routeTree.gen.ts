@@ -58,6 +58,7 @@ import { Route as AuthenticatedJodiMarketIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
 import { Route as ApiPublicPaymentsUtrCallbackRouteImport } from './routes/api/public/payments/utr-callback'
 import { Route as ApiPublicHooksScrapeResultsRouteImport } from './routes/api/public/hooks/scrape-results'
+import { Route as ApiPublicHooksProcessScrapeQueueRouteImport } from './routes/api/public/hooks/process-scrape-queue'
 import { Route as ApiPublicHooksHealthCheckRouteImport } from './routes/api/public/hooks/health-check'
 import { Route as ApiPublicHooksDispatchResultPushRouteImport } from './routes/api/public/hooks/dispatch-result-push'
 import { Route as ApiPublicHooksBackfillResultsRouteImport } from './routes/api/public/hooks/backfill-results'
@@ -318,6 +319,12 @@ const ApiPublicHooksScrapeResultsRoute =
     path: '/api/public/hooks/scrape-results',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksProcessScrapeQueueRoute =
+  ApiPublicHooksProcessScrapeQueueRouteImport.update({
+    id: '/api/public/hooks/process-scrape-queue',
+    path: '/api/public/hooks/process-scrape-queue',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksHealthCheckRoute =
   ApiPublicHooksHealthCheckRouteImport.update({
     id: '/api/public/hooks/health-check',
@@ -401,6 +408,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/dispatch-result-push': typeof ApiPublicHooksDispatchResultPushRoute
   '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
+  '/api/public/hooks/process-scrape-queue': typeof ApiPublicHooksProcessScrapeQueueRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
   '/api/public/payments/utr-callback': typeof ApiPublicPaymentsUtrCallbackRoute
 }
@@ -455,6 +463,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/dispatch-result-push': typeof ApiPublicHooksDispatchResultPushRoute
   '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
+  '/api/public/hooks/process-scrape-queue': typeof ApiPublicHooksProcessScrapeQueueRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
   '/api/public/payments/utr-callback': typeof ApiPublicPaymentsUtrCallbackRoute
 }
@@ -512,6 +521,7 @@ export interface FileRoutesById {
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/dispatch-result-push': typeof ApiPublicHooksDispatchResultPushRoute
   '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
+  '/api/public/hooks/process-scrape-queue': typeof ApiPublicHooksProcessScrapeQueueRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
   '/api/public/payments/utr-callback': typeof ApiPublicPaymentsUtrCallbackRoute
 }
@@ -569,6 +579,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/dispatch-result-push'
     | '/api/public/hooks/health-check'
+    | '/api/public/hooks/process-scrape-queue'
     | '/api/public/hooks/scrape-results'
     | '/api/public/payments/utr-callback'
   fileRoutesByTo: FileRoutesByTo
@@ -623,6 +634,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/dispatch-result-push'
     | '/api/public/hooks/health-check'
+    | '/api/public/hooks/process-scrape-queue'
     | '/api/public/hooks/scrape-results'
     | '/api/public/payments/utr-callback'
   id:
@@ -679,6 +691,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/dispatch-result-push'
     | '/api/public/hooks/health-check'
+    | '/api/public/hooks/process-scrape-queue'
     | '/api/public/hooks/scrape-results'
     | '/api/public/payments/utr-callback'
   fileRoutesById: FileRoutesById
@@ -704,6 +717,7 @@ export interface RootRouteChildren {
   ApiPublicHooksBackfillResultsRoute: typeof ApiPublicHooksBackfillResultsRoute
   ApiPublicHooksDispatchResultPushRoute: typeof ApiPublicHooksDispatchResultPushRoute
   ApiPublicHooksHealthCheckRoute: typeof ApiPublicHooksHealthCheckRoute
+  ApiPublicHooksProcessScrapeQueueRoute: typeof ApiPublicHooksProcessScrapeQueueRoute
   ApiPublicHooksScrapeResultsRoute: typeof ApiPublicHooksScrapeResultsRoute
   ApiPublicPaymentsUtrCallbackRoute: typeof ApiPublicPaymentsUtrCallbackRoute
 }
@@ -1053,6 +1067,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksScrapeResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/process-scrape-queue': {
+      id: '/api/public/hooks/process-scrape-queue'
+      path: '/api/public/hooks/process-scrape-queue'
+      fullPath: '/api/public/hooks/process-scrape-queue'
+      preLoaderRoute: typeof ApiPublicHooksProcessScrapeQueueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/health-check': {
       id: '/api/public/hooks/health-check'
       path: '/api/public/hooks/health-check'
@@ -1195,6 +1216,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksBackfillResultsRoute: ApiPublicHooksBackfillResultsRoute,
   ApiPublicHooksDispatchResultPushRoute: ApiPublicHooksDispatchResultPushRoute,
   ApiPublicHooksHealthCheckRoute: ApiPublicHooksHealthCheckRoute,
+  ApiPublicHooksProcessScrapeQueueRoute: ApiPublicHooksProcessScrapeQueueRoute,
   ApiPublicHooksScrapeResultsRoute: ApiPublicHooksScrapeResultsRoute,
   ApiPublicPaymentsUtrCallbackRoute: ApiPublicPaymentsUtrCallbackRoute,
 }
