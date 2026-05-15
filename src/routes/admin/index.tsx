@@ -194,6 +194,62 @@ function AdminHome() {
   );
 }
 
+function DemoLoginToggle() {
+  const qc = useQueryClient();
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.from("app_settings").select("value").eq("key", "demo_login_enabled").maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const v = (data?.value as { enabled?: boolean } | null)?.enabled;
+        setEnabled(v ?? true);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const onToggle = async (next: boolean) => {
+    setBusy(true);
+    const prev = enabled;
+    setEnabled(next);
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert({ key: "demo_login_enabled", value: { enabled: next } }, { onConflict: "key" });
+    setBusy(false);
+    if (error) {
+      setEnabled(prev);
+      toast.error(error.message);
+      return;
+    }
+    toast.success(next ? "Demo login enabled" : "Demo login disabled");
+    qc.invalidateQueries({ queryKey: ["app_settings", "demo_login_enabled"] });
+  };
+
+  return (
+    <div className="rounded-2xl glass-gold p-4 sm:p-5 flex items-center justify-between gap-4">
+      <div className="flex items-start gap-3 min-w-0">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-gold text-background shrink-0">
+          <KeyRound className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <div className="font-display text-base font-bold">Demo login buttons</div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            When off, the Demo User and Demo Admin buttons are hidden from the public login page.
+          </p>
+        </div>
+      </div>
+      <Switch
+        checked={!!enabled}
+        disabled={busy || enabled === null}
+        onCheckedChange={onToggle}
+        aria-label="Toggle demo login"
+      />
+    </div>
+  );
+}
+
 function Kpi({
   icon: Icon, label, value, sub, tone,
 }: {
