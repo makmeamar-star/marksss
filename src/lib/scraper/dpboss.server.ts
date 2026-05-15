@@ -12,7 +12,7 @@
  * Pure functions. Worker-safe (no DOM, no Node-only deps).
  */
 
-const BASE = "https://dpboss.services/panel-chart-record";
+const BASE = "https://dpboss.boston/panel-chart-record";
 const TIMEOUT_MS = 8000;
 
 export interface DpbossDayResult {
