@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Crown, Sparkles, Trophy, Zap } from "lucide-react";
+import { Crown, Sparkles, Trophy, Zap, User, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/integrations/supabase/client";
+
+const DEMO_EMAIL = "player@sattaking.test";
+const DEMO_PASSWORD = "demo123";
+const DEMO_ADMIN_EMAIL = "admin@sattaking.test";
+const DEMO_ADMIN_PASSWORD = "admin123";
 
 
 
