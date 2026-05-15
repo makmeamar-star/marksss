@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Crown, Sparkles, Trophy, Zap } from "lucide-react";
+import { Crown, Sparkles, Trophy, Zap, User, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/integrations/supabase/client";
+
+const DEMO_EMAIL = "player@sattaking.test";
+const DEMO_PASSWORD = "demo123";
+const DEMO_ADMIN_EMAIL = "admin@sattaking.test";
+const DEMO_ADMIN_PASSWORD = "admin123";
 
 
 
@@ -24,6 +29,32 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   const anyBusy = busy;
+
+  const demoLogin = async () => {
+    setBusy(true);
+    try {
+      await login(DEMO_EMAIL, DEMO_PASSWORD);
+      toast.success("Welcome back, demo player!");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Demo login failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const demoAdminLogin = async () => {
+    setBusy(true);
+    try {
+      await login(DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD);
+      toast.success("Welcome back, demo admin!");
+      navigate({ to: "/admin" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Demo admin login failed");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +145,26 @@ function LoginPage() {
           <Button type="submit" disabled={anyBusy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
             {busy ? "Signing in…" : "Sign In"}
           </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Demo test accounts</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Button type="button" variant="outline" disabled={anyBusy} onClick={demoLogin} className="w-full">
+              <User className="mr-2 h-4 w-4" />
+              {busy ? "Loading…" : "Demo User"}
+            </Button>
+            <Button type="button" variant="outline" disabled={anyBusy} onClick={demoAdminLogin} className="w-full">
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              {busy ? "Loading…" : "Demo Admin"}
+            </Button>
+          </div>
 
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
