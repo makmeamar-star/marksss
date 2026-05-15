@@ -3,11 +3,16 @@
 // StaleWhileRevalidate for /assets/* and same-origin GETs.
 // IMPORTANT: never registered on Lovable preview hosts (see RootComponent guard).
 
-const VERSION = "v3";
+const VERSION = "v4";
 const RUNTIME = `runtime-${VERSION}`;
 const PRECACHE = `precache-${VERSION}`;
 const NAV_TIMEOUT_MS = 3000;
 const OFFLINE_URL = "/offline.html";
+
+// Key navigation routes precached at install so they render offline even if
+// the user hasn't visited them this session. The TanStack Query cache
+// (persisted in localStorage by PersistedQueryProvider) rehydrates the data.
+const PRECACHE_ROUTES = ["/", "/results", "/markets", "/charts", "/jodi"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -15,6 +20,16 @@ self.addEventListener("install", (event) => {
     try {
       await cache.add(new Request(OFFLINE_URL, { cache: "reload" }));
     } catch {}
+    // Best-effort precache of route HTML — failures (e.g. offline install)
+    // must not block activation.
+    await Promise.all(
+      PRECACHE_ROUTES.map(async (path) => {
+        try {
+          const res = await fetch(path, { cache: "reload", credentials: "same-origin" });
+          if (res && res.ok) await cache.put(path, res.clone());
+        } catch {}
+      })
+    );
     self.skipWaiting();
   })());
 });
@@ -85,9 +100,14 @@ async function networkFirstHTML(request) {
   } catch {
     const cached = await cache.match(request);
     if (cached) return cached;
-    const fallback = await cache.match("/");
-    if (fallback) return fallback;
     const precache = await caches.open(PRECACHE);
+    // Try the requested path from the precache (covers cold-start navigations
+    // like first-ever visit to /results while offline).
+    const url = new URL(request.url);
+    const precachedPath = await precache.match(url.pathname);
+    if (precachedPath) return precachedPath;
+    const fallback = await cache.match("/") || await precache.match("/");
+    if (fallback) return fallback;
     const offline = await precache.match(OFFLINE_URL);
     if (offline) return offline;
     return new Response("Offline", { status: 503, headers: { "content-type": "text/plain" } });
