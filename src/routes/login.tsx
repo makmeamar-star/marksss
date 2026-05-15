@@ -27,12 +27,24 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [remember, setRemember] = useState(true);
+
+  const applyRemember = (val: boolean) => {
+    if (typeof window === "undefined") return;
+    if (val) {
+      localStorage.removeItem("auth_remember_off");
+    } else {
+      localStorage.setItem("auth_remember_off", "1");
+      sessionStorage.setItem("auth_alive", "1");
+    }
+  };
 
   const anyBusy = busy;
 
   const demoLogin = async () => {
     setBusy(true);
     try {
+      applyRemember(remember);
       await login(DEMO_EMAIL, DEMO_PASSWORD);
       toast.success("Welcome back, demo player!");
       navigate({ to: "/dashboard" });
@@ -46,6 +58,7 @@ function LoginPage() {
   const demoAdminLogin = async () => {
     setBusy(true);
     try {
+      applyRemember(remember);
       await login(DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD);
       toast.success("Welcome back, demo admin!");
       navigate({ to: "/admin" });
@@ -64,6 +77,7 @@ function LoginPage() {
     }
     setBusy(true);
     try {
+      applyRemember(remember);
       await login(identifier, password);
       toast.success(`Welcome back!`);
       navigate({ to: "/dashboard" });
@@ -124,7 +138,7 @@ function LoginPage() {
           </div>
 
           <div className="flex items-center justify-between text-xs">
-            <label className="flex items-center gap-2 text-muted-foreground"><input type="checkbox" className="accent-[var(--primary)]" /> Remember me</label>
+            <label className="flex items-center gap-2 text-muted-foreground cursor-pointer select-none"><input type="checkbox" className="accent-[var(--primary)]" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me</label>
             <button
               type="button"
               className="text-primary hover:underline"

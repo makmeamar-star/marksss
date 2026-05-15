@@ -63,6 +63,17 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   bootstrap: async () => {
     if (typeof window === "undefined") return;
     try {
+      // Honor "Remember me": if user opted out and the tab session ended
+      // (sessionStorage cleared on browser close), sign out the persisted session.
+      const rememberOff = localStorage.getItem("auth_remember_off") === "1";
+      const tabAlive = sessionStorage.getItem("auth_alive") === "1";
+      if (rememberOff && !tabAlive) {
+        await supabase.auth.signOut();
+        localStorage.removeItem("auth_remember_off");
+      } else if (rememberOff) {
+        // keep the marker fresh for this tab lifetime
+        sessionStorage.setItem("auth_alive", "1");
+      }
       const { data } = await supabase.auth.getSession();
       const session = data.session;
       if (session) {
@@ -133,6 +144,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   logout: async () => {
     await supabase.auth.signOut();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("auth_remember_off");
+      sessionStorage.removeItem("auth_alive");
+    }
     set({ user: null });
   },
 
