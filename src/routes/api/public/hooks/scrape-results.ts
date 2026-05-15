@@ -31,11 +31,96 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
           return json({ ok: false, error: mapErr.message }, 500);
         }
 
+        // Load jodi-only flag per market (avoids per-row queries)
+        const { data: marketRows } = await supabase
+          .from("markets")
+          .select("id, is_jodi_only");
+        const jodiOnly = new Set<string>(
+          (marketRows ?? [])
+            .filter((m: any) => m.is_jodi_only)
+            .map((m: any) => m.id),
+        );
+
         const summary: any[] = [];
 
         const lookupDate = mapToRealDpbossDate(today);
 
         for (const m of maps ?? []) {
+          // ---- Jodi-only path: single observation per day, no OPEN/CLOSE ----
+          if (jodiOnly.has(m.market_id)) {
+            try {
+              const days = await fetchAllForMarket(m.source as SourceName, m.slug);
+              const todayRow = days.find((d) => d.date === lookupDate);
+              const jodi = todayRow?.jodi ?? null;
+              if (!jodi) {
+                await supabase.from("result_scrape_log").insert({
+                  market_id: m.market_id,
+                  session_date: today,
+                  session: "JODI",
+                  source: m.source,
+                  status: "NOT_YET",
+                });
+                continue;
+              }
+              const { data: rpc, error: rpcErr } = await supabase.rpc(
+                "record_jodi_observation_and_maybe_declare" as any,
+                {
+                  _market_id: m.market_id,
+                  _session_date: today,
+                  _source: m.source,
+                  _jodi: jodi,
+                },
+              );
+              if (rpcErr) {
+                await supabase.from("result_scrape_log").insert({
+                  market_id: m.market_id,
+                  session_date: today,
+                  session: "JODI",
+                  source: m.source,
+                  status: "RPC_ERROR",
+                  pana: jodi,
+                  error: rpcErr.message,
+                });
+                summary.push({ market: m.market_id, session: "JODI", error: rpcErr.message });
+              } else {
+                const rpcStatus = ((rpc as any)?.status as string) ?? "OK";
+                const logStatus =
+                  rpcStatus === "DECLARED"
+                    ? "OK"
+                    : rpcStatus === "SKIPPED_DECLARED"
+                      ? "SKIPPED_DECLARED"
+                      : rpcStatus === "MISMATCH"
+                        ? "MISMATCH"
+                        : "AWAITING_CONFIRMATION";
+                await supabase.from("result_scrape_log").insert({
+                  market_id: m.market_id,
+                  session_date: today,
+                  session: "JODI",
+                  source: m.source,
+                  status: logStatus,
+                  pana: jodi,
+                });
+                summary.push({ market: m.market_id, session: "JODI", jodi, status: logStatus });
+              }
+            } catch (e: any) {
+              const detail = {
+                name: e?.name ?? "Error",
+                message: String(e?.message ?? e),
+              };
+              await supabase.from("result_scrape_log").insert({
+                market_id: m.market_id,
+                session_date: today,
+                session: "JODI",
+                source: m.source,
+                status: "FETCH_ERROR",
+                error: JSON.stringify(detail).slice(0, 1000),
+              });
+              summary.push({ market: m.market_id, session: "JODI", error: detail.message });
+            }
+            continue;
+          }
+
+
           for (const session of ["OPEN", "CLOSE"] as const) {
             try {
               const days = await fetchAllForMarket(m.source as SourceName, m.slug);
