@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
   Trophy, Zap, Wallet, ArrowDownToLine, History, FileSearch, Store, Globe,
-  Users, TrendingUp, TrendingDown, Activity, AlertTriangle, ArrowRight,
+  Users, TrendingUp, TrendingDown, Activity, AlertTriangle, ArrowRight, KeyRound,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { getAdminOverview } from "@/lib/adminDashboard.functions";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -158,6 +160,11 @@ function AdminHome() {
         </div>
       </div>
 
+      {/* Demo login toggle */}
+      <div className="mt-8">
+        <DemoLoginToggle />
+      </div>
+
       {/* Quick links */}
       <div className="mt-8">
         <h2 className="font-display text-lg font-bold mb-3">Quick actions</h2>
@@ -183,6 +190,62 @@ function AdminHome() {
       {q.error && (
         <p className="mt-6 text-sm text-destructive">Failed to load overview: {(q.error as Error).message}</p>
       )}
+    </div>
+  );
+}
+
+function DemoLoginToggle() {
+  const qc = useQueryClient();
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.from("app_settings").select("value").eq("key", "demo_login_enabled").maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const v = (data?.value as { enabled?: boolean } | null)?.enabled;
+        setEnabled(v ?? true);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const onToggle = async (next: boolean) => {
+    setBusy(true);
+    const prev = enabled;
+    setEnabled(next);
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert({ key: "demo_login_enabled", value: { enabled: next } }, { onConflict: "key" });
+    setBusy(false);
+    if (error) {
+      setEnabled(prev);
+      toast.error(error.message);
+      return;
+    }
+    toast.success(next ? "Demo login enabled" : "Demo login disabled");
+    qc.invalidateQueries({ queryKey: ["app_settings", "demo_login_enabled"] });
+  };
+
+  return (
+    <div className="rounded-2xl glass-gold p-4 sm:p-5 flex items-center justify-between gap-4">
+      <div className="flex items-start gap-3 min-w-0">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-gold text-background shrink-0">
+          <KeyRound className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <div className="font-display text-base font-bold">Demo login buttons</div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            When off, the Demo User and Demo Admin buttons are hidden from the public login page.
+          </p>
+        </div>
+      </div>
+      <Switch
+        checked={!!enabled}
+        disabled={busy || enabled === null}
+        onCheckedChange={onToggle}
+        aria-label="Toggle demo login"
+      />
     </div>
   );
 }
