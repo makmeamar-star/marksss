@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultCard } from "@/components/ResultCard";
+import { StarMarketsSection } from "@/components/StarMarketsSection";
 import { RangoliDivider } from "@/components/RangoliDivider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
