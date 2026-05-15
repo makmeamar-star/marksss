@@ -108,6 +108,38 @@ function MarketsPage() {
   const isFiltering = qInput.trim().length > 0 || status !== "all";
   const { top, rest } = useMemo(() => splitTopMarkets(filtered), [filtered]);
 
+  // ---- Autocomplete suggestions for the search box ----
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+
+  const suggestions = useMemo(() => {
+    const needle = normalize(qInput);
+    if (!needle) return [];
+    const scored: Array<{ m: typeof markets[number]; score: number }> = [];
+    for (const m of markets) {
+      const display = normalize(m.displayName ?? "");
+      const name = normalize(m.name ?? "");
+      let score = -1;
+      if (display.startsWith(needle) || name.startsWith(needle)) score = 0;
+      else if (display.includes(needle) || name.includes(needle)) score = 1;
+      if (score >= 0) scored.push({ m, score });
+    }
+    scored.sort((a, b) => a.score - b.score);
+    return scored.slice(0, 8).map((s) => s.m);
+  }, [markets, qInput]);
+
+  // Reset highlight when the suggestion list changes.
+  useEffect(() => {
+    setActiveSuggestion(-1);
+  }, [qInput, suggestions.length]);
+
+  const pickSuggestion = (m: typeof markets[number]) => {
+    const label = m.displayName ?? m.name ?? "";
+    setQInput(label);
+    setSuggestOpen(false);
+    setActiveSuggestion(-1);
+  };
+
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
