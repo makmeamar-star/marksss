@@ -44,6 +44,7 @@ function LoginPage() {
   const demoLogin = async () => {
     setBusy(true);
     try {
+      applyRemember(remember);
       await login(DEMO_EMAIL, DEMO_PASSWORD);
       toast.success("Welcome back, demo player!");
       navigate({ to: "/dashboard" });
