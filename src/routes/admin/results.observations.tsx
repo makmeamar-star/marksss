@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Check, X, AlertTriangle, RefreshCw } from "lucide-react";
+import { ArrowLeft, Check, X, AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,19 @@ import {
 } from "@/lib/scraperObservations.functions";
 
 type SessionFilter = "ALL" | "OPEN" | "CLOSE" | "JODI";
+
+type ActionStatus = "pending" | "success" | "error";
+type ActionEntry = {
+  id: string;
+  groupKey: string;
+  market_name: string;
+  session: "OPEN" | "CLOSE" | "JODI";
+  kind: "approve" | "reject";
+  value?: string;
+  status: ActionStatus;
+  message?: string;
+  at: number;
+};
 
 export const Route = createFileRoute("/admin/results/observations")({
   component: ObservationsPage,
@@ -30,25 +43,61 @@ function ObservationsPage() {
     refetchInterval: 20_000,
   });
 
-  const approveMut = useMutation({
-    mutationFn: (vars: { marketId: string; sessionDate: string; session: "OPEN" | "CLOSE" | "JODI"; value: string }) =>
-      approveFn({ data: vars }),
-    onSuccess: () => {
-      toast.success("Result published");
-      qc.invalidateQueries({ queryKey: ["admin", "today-observations"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+  const [actions, setActions] = useState<ActionEntry[]>([]);
+  const upsertAction = (entry: ActionEntry) =>
+    setActions((prev) => {
+      const next = prev.filter((a) => a.id !== entry.id);
+      return [entry, ...next].slice(0, 20);
+    });
+  const updateAction = (id: string, patch: Partial<ActionEntry>) =>
+    setActions((prev) => prev.map((a) => (a.id === id ? { ...a, ...patch } : a)));
 
-  const rejectMut = useMutation({
-    mutationFn: (vars: { marketId: string; sessionDate: string; session: "OPEN" | "CLOSE" | "JODI" }) =>
-      rejectFn({ data: vars }),
-    onSuccess: () => {
-      toast.success("Observations rejected");
-      qc.invalidateQueries({ queryKey: ["admin", "today-observations"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+  const runApprove = (g: Group, value: string) => {
+    const id = `approve-${g.key}-${Date.now()}`;
+    upsertAction({
+      id,
+      groupKey: g.key,
+      market_name: g.market_name,
+      session: g.session,
+      kind: "approve",
+      value,
+      status: "pending",
+      at: Date.now(),
+    });
+    approveFn({ data: { marketId: g.market_id, sessionDate: g.session_date, session: g.session, value } })
+      .then(() => {
+        updateAction(id, { status: "success", message: `Published ${value}` });
+        toast.success(`Published ${g.market_name} ${g.session}: ${value}`);
+        qc.invalidateQueries({ queryKey: ["admin", "today-observations"] });
+      })
+      .catch((e: Error) => {
+        updateAction(id, { status: "error", message: e.message });
+        toast.error(e.message);
+      });
+  };
+
+  const runReject = (g: Group) => {
+    const id = `reject-${g.key}-${Date.now()}`;
+    upsertAction({
+      id,
+      groupKey: g.key,
+      market_name: g.market_name,
+      session: g.session,
+      kind: "reject",
+      status: "pending",
+      at: Date.now(),
+    });
+    rejectFn({ data: { marketId: g.market_id, sessionDate: g.session_date, session: g.session } })
+      .then(() => {
+        updateAction(id, { status: "success", message: "Observations rejected" });
+        toast.success(`Rejected ${g.market_name} ${g.session}`);
+        qc.invalidateQueries({ queryKey: ["admin", "today-observations"] });
+      })
+      .catch((e: Error) => {
+        updateAction(id, { status: "error", message: e.message });
+        toast.error(e.message);
+      });
+  };
 
   const allGroups = q.data?.groups ?? [];
   const [search, setSearch] = useState("");
@@ -68,6 +117,9 @@ function ObservationsPage() {
     }
     return true;
   });
+  const latestByGroup = new Map<string, ActionEntry>();
+  for (const a of actions) if (!latestByGroup.has(a.groupKey)) latestByGroup.set(a.groupKey, a);
+  const anyPending = actions.some((a) => a.status === "pending");
   const conflicts = groups.filter((g) => g.conflict).length;
 
   const sessionCounts: Record<SessionFilter, number> = {
@@ -153,31 +205,85 @@ function ObservationsPage() {
         </div>
       )}
 
+      {actions.length > 0 && (
+        <div className="mt-6 rounded-2xl glass-gold p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold">
+              Recent actions {anyPending && <Loader2 className="inline h-3 w-3 ml-1 animate-spin" />}
+            </h2>
+            <button
+              className="text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => setActions([])}
+            >
+              Clear log
+            </button>
+          </div>
+          <ul className="divide-y divide-border/40 text-sm">
+            {actions.map((a) => (
+              <li key={a.id} className="py-1.5 flex items-center gap-2 flex-wrap">
+                <StatusBadge status={a.status} />
+                <span className="font-medium truncate max-w-[180px]">{a.market_name}</span>
+                <span className="text-[10px] uppercase tracking-wide rounded px-1.5 py-0.5 bg-primary/15 text-primary font-mono">
+                  {a.session}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {a.kind === "approve" ? "Approve" : "Reject"}
+                  {a.value && (
+                    <span className="ml-1 font-mono text-foreground">{a.value}</span>
+                  )}
+                </span>
+                {a.message && (
+                  <span
+                    className={`text-xs ${a.status === "error" ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    — {a.message}
+                  </span>
+                )}
+                <span className="ml-auto text-[11px] text-muted-foreground">
+                  {new Date(a.at).toLocaleTimeString()}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="mt-6 grid gap-3">
-        {groups.map((g) => (
-          <GroupCard
-            key={g.key}
-            group={g}
-            onApprove={(value) =>
-              approveMut.mutate({
-                marketId: g.market_id,
-                sessionDate: g.session_date,
-                session: g.session,
-                value,
-              })
-            }
-            onReject={() =>
-              rejectMut.mutate({
-                marketId: g.market_id,
-                sessionDate: g.session_date,
-                session: g.session,
-              })
-            }
-            busy={approveMut.isPending || rejectMut.isPending}
-          />
-        ))}
+        {groups.map((g) => {
+          const last = latestByGroup.get(g.key);
+          return (
+            <GroupCard
+              key={g.key}
+              group={g}
+              lastAction={last}
+              onApprove={(value) => runApprove(g, value)}
+              onReject={() => runReject(g)}
+              busy={last?.status === "pending"}
+            />
+          );
+        })}
       </div>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: ActionStatus }) {
+  if (status === "pending")
+    return (
+      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" /> pending
+      </span>
+    );
+  if (status === "success")
+    return (
+      <span className="inline-flex items-center gap-1 text-xs text-emerald-400">
+        <Check className="h-3 w-3" /> success
+      </span>
+    );
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-destructive">
+      <X className="h-3 w-3" /> error
+    </span>
   );
 }
 
@@ -196,11 +302,13 @@ function GroupCard({
   onApprove,
   onReject,
   busy,
+  lastAction,
 }: {
   group: Group;
   onApprove: (value: string) => void;
   onReject: () => void;
   busy: boolean;
+  lastAction?: ActionEntry;
 }) {
   const distinct = [...new Set(group.sources.map((s) => s.pana))];
   const [picked, setPicked] = useState<string>(distinct[0] ?? "");
@@ -270,9 +378,31 @@ function GroupCard({
         </table>
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-2">
+      <div className="mt-3 flex items-center justify-between gap-2 flex-wrap">
+        <div className="text-xs">
+          {lastAction && (
+            <span
+              className={`inline-flex items-center gap-1.5 ${
+                lastAction.status === "error"
+                  ? "text-destructive"
+                  : lastAction.status === "success"
+                  ? "text-emerald-400"
+                  : "text-muted-foreground"
+              }`}
+            >
+              <StatusBadge status={lastAction.status} />
+              {lastAction.kind === "approve" ? "Approve" : "Reject"}
+              {lastAction.value && <span className="font-mono">{lastAction.value}</span>}
+              {lastAction.message && <span>· {lastAction.message}</span>}
+            </span>
+          )}
+        </div>
         <Button onClick={() => picked && onApprove(picked)} disabled={busy || !picked} size="sm">
-          <Check className="h-3.5 w-3.5 mr-1.5" />
+          {busy ? (
+            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+          ) : (
+            <Check className="h-3.5 w-3.5 mr-1.5" />
+          )}
           Approve & publish {picked && <span className="ml-1 font-mono">{picked}</span>}
         </Button>
       </div>
