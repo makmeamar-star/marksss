@@ -43,26 +43,6 @@ function ObservationsPage() {
     refetchInterval: 20_000,
   });
 
-  const approveMut = useMutation({
-    mutationFn: (vars: { marketId: string; sessionDate: string; session: "OPEN" | "CLOSE" | "JODI"; value: string }) =>
-      approveFn({ data: vars }),
-    onSuccess: () => {
-      toast.success("Result published");
-      qc.invalidateQueries({ queryKey: ["admin", "today-observations"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const rejectMut = useMutation({
-    mutationFn: (vars: { marketId: string; sessionDate: string; session: "OPEN" | "CLOSE" | "JODI" }) =>
-      rejectFn({ data: vars }),
-    onSuccess: () => {
-      toast.success("Observations rejected");
-      qc.invalidateQueries({ queryKey: ["admin", "today-observations"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
   const [actions, setActions] = useState<ActionEntry[]>([]);
   const upsertAction = (entry: ActionEntry) =>
     setActions((prev) => {
