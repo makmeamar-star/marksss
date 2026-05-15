@@ -172,7 +172,24 @@ function LoginPage() {
             {busy ? "Signing in…" : "Sign In"}
           </Button>
 
-          {demoEnabled && (
+          {demoEnabled === null ? (
+            <>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    <span className="inline-block h-3 w-24 animate-pulse rounded bg-muted" />
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+                <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+              </div>
+            </>
+          ) : demoEnabled ? (
             <>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -194,7 +211,7 @@ function LoginPage() {
                 </Button>
               </div>
             </>
-          )}
+          ) : null}
 
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
