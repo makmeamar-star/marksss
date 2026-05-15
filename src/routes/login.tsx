@@ -138,7 +138,7 @@ function LoginPage() {
           </div>
 
           <div className="flex items-center justify-between text-xs">
-            <label className="flex items-center gap-2 text-muted-foreground"><input type="checkbox" className="accent-[var(--primary)]" /> Remember me</label>
+            <label className="flex items-center gap-2 text-muted-foreground cursor-pointer select-none"><input type="checkbox" className="accent-[var(--primary)]" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me</label>
             <button
               type="button"
               className="text-primary hover:underline"
