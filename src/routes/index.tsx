@@ -44,11 +44,24 @@ function HomePage() {
   const declaredToday = results.filter((r) => r.status === "DECLARED").length;
   const openNow = markets.filter((m) => m.isOpen).length;
 
+  const { top: topMarkets, rest: restMarkets } = useMemo(() => splitTopMarkets(markets), [markets]);
+  const [showAll, setShowAll] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setShowAll(localStorage.getItem(HOME_STORAGE_KEY) === "1");
+  }, []);
+  const onShowAllChange = (v: boolean) => {
+    setShowAll(v);
+    if (typeof window !== "undefined") localStorage.setItem(HOME_STORAGE_KEY, v ? "1" : "0");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="h-1 w-full bg-tricolour opacity-80" aria-hidden />
       <SiteHeader />
-      <ResultsTicker />
+      <Suspense fallback={<TickerFallback />}>
+        <ResultsTicker />
+      </Suspense>
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-radial-spotlight">
