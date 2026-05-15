@@ -46,12 +46,20 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline-flex items-center text-xs text-success pulse-live">LIVE</span>
-          <Button asChild variant="ghost" size="sm" className="text-foreground">
-            <Link to="/login">Login</Link>
-          </Button>
-          <Button asChild size="sm" className="bg-gradient-gold text-background font-semibold hover:opacity-90">
-            <Link to="/register">Register</Link>
-          </Button>
+          {isAuthed ? (
+            <Button asChild size="sm" className="bg-gradient-gold text-background font-semibold hover:opacity-90">
+              <Link to="/dashboard">Dashboard</Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm" className="text-foreground">
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button asChild size="sm" className="bg-gradient-gold text-background font-semibold hover:opacity-90">
+                <Link to="/register">Register</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>
