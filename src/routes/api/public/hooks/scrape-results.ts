@@ -53,13 +53,18 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
                 continue;
               }
 
-              // Validate via RPC by attempting system_auto_declare
-              const { data: rpc, error: rpcErr } = await supabase.rpc("system_auto_declare", {
-                _market_id: m.market_id,
-                _session_date: today,
-                _session: session,
-                _pana: pana,
-              });
+              // Confirm-twice: record observation; only auto-declares once
+              // the same pana has been confirmed (>=2 sources or 2 spaced sightings).
+              const { data: rpc, error: rpcErr } = await supabase.rpc(
+                "record_observation_and_maybe_declare",
+                {
+                  _market_id: m.market_id,
+                  _session_date: today,
+                  _session: session,
+                  _source: m.source,
+                  _pana: pana,
+                },
+              );
 
               if (rpcErr) {
                 await supabase.from("result_scrape_log").insert({
@@ -73,16 +78,25 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
                 });
                 summary.push({ market: m.market_id, session, error: rpcErr.message });
               } else {
-                const status = (rpc as any)?.skipped ? "SKIPPED_DECLARED" : "OK";
+                const rpcStatus = ((rpc as any)?.status as string) ?? "OK";
+                // Map RPC status -> log status (kept compatible with existing values)
+                const logStatus =
+                  rpcStatus === "DECLARED"
+                    ? "OK"
+                    : rpcStatus === "SKIPPED_DECLARED"
+                      ? "SKIPPED_DECLARED"
+                      : rpcStatus === "MISMATCH"
+                        ? "MISMATCH"
+                        : "AWAITING_CONFIRMATION";
                 await supabase.from("result_scrape_log").insert({
                   market_id: m.market_id,
                   session_date: today,
                   session,
                   source: m.source,
-                  status,
+                  status: logStatus,
                   pana,
                 });
-                summary.push({ market: m.market_id, session, pana, status });
+                summary.push({ market: m.market_id, session, pana, status: logStatus });
               }
             } catch (e: any) {
               await supabase.from("result_scrape_log").insert({
