@@ -25,7 +25,7 @@ export function SiteHeader() {
 
         <nav className="hidden md:flex items-center gap-1">
           {[
-            { to: "/", label: "Home" },
+            { to: homeTo, label: "Home" },
             { to: "/markets", label: "Markets" },
             { to: "/jodi", label: "Jodi 00–99" },
             { to: "/results", label: "Results" },
