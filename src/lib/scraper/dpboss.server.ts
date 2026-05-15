@@ -14,6 +14,8 @@
 
 const BASE = "https://dpboss.boston/panel-chart-record";
 const TIMEOUT_MS = 8000;
+const MAX_ATTEMPTS = 3;
+const BASE_BACKOFF_MS = 400;
 
 export interface DpbossDayResult {
   date: string;          // YYYY-MM-DD
@@ -22,25 +24,118 @@ export interface DpbossDayResult {
   jodi: string | null;
 }
 
-/** Fetch and parse the entire panel chart for a market slug. */
+/** Error thrown after all retries are exhausted. Carries structured context. */
+export class DpbossFetchError extends Error {
+  readonly url: string;
+  readonly attempts: number;
+  readonly lastStatus?: number;
+  readonly cause?: unknown;
+  constructor(message: string, info: { url: string; attempts: number; lastStatus?: number; cause?: unknown }) {
+    super(message);
+    this.name = "DpbossFetchError";
+    this.url = info.url;
+    this.attempts = info.attempts;
+    this.lastStatus = info.lastStatus;
+    this.cause = info.cause;
+  }
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Whether to retry a given HTTP status (transient server / rate-limit). */
+function isRetryableStatus(status: number): boolean {
+  return status === 408 || status === 425 || status === 429 || (status >= 500 && status <= 599);
+}
+
+/** Fetch and parse the entire panel chart for a market slug, with retries. */
 export async function fetchDpbossPanel(slug: string): Promise<DpbossDayResult[]> {
   const url = `${BASE}/${encodeURIComponent(slug)}.php?full_chart`;
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  let lastStatus: number | undefined;
+  let lastErr: unknown;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const startedAt = Date.now();
+    try {
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          "user-agent":
+            "Mozilla/5.0 (compatible; SattaResultsBot/1.0; +https://matka.bharatkaal.online)",
+          accept: "text/html",
+          "cache-control": "no-cache",
+        },
+      });
+      lastStatus = res.status;
+
+      if (!res.ok) {
+        const bodySnippet = await safeReadSnippet(res);
+        const err = new Error(
+          `dpboss.boston ${res.status} ${res.statusText} for ${slug} (attempt ${attempt}/${MAX_ATTEMPTS}, ${Date.now() - startedAt}ms): ${bodySnippet}`,
+        );
+        if (attempt < MAX_ATTEMPTS && isRetryableStatus(res.status)) {
+          console.warn(`[dpboss] retryable ${res.status} for ${slug}, attempt ${attempt}`);
+          lastErr = err;
+          await sleep(BASE_BACKOFF_MS * 2 ** (attempt - 1));
+          continue;
+        }
+        throw new DpbossFetchError(err.message, { url, attempts: attempt, lastStatus, cause: err });
+      }
+
+      const html = await res.text();
+      if (!html || html.length < 200) {
+        const err = new Error(
+          `dpboss.boston returned empty/short body (${html?.length ?? 0} bytes) for ${slug} on attempt ${attempt}`,
+        );
+        if (attempt < MAX_ATTEMPTS) {
+          console.warn(`[dpboss] empty body for ${slug}, attempt ${attempt}`);
+          lastErr = err;
+          await sleep(BASE_BACKOFF_MS * 2 ** (attempt - 1));
+          continue;
+        }
+        throw new DpbossFetchError(err.message, { url, attempts: attempt, lastStatus, cause: err });
+      }
+      return parseDpbossPanel(html);
+    } catch (e: any) {
+      lastErr = e;
+      // Already a structured error → bubble.
+      if (e instanceof DpbossFetchError) throw e;
+
+      const aborted = e?.name === "AbortError";
+      const elapsed = Date.now() - startedAt;
+      const detail = aborted
+        ? `timeout after ${TIMEOUT_MS}ms`
+        : `${e?.name ?? "Error"}: ${e?.message ?? String(e)}`;
+      const msg = `dpboss.boston fetch failed for ${slug} (attempt ${attempt}/${MAX_ATTEMPTS}, ${elapsed}ms): ${detail}`;
+
+      if (attempt < MAX_ATTEMPTS) {
+        console.warn(`[dpboss] ${msg} — retrying`);
+        await sleep(BASE_BACKOFF_MS * 2 ** (attempt - 1));
+        continue;
+      }
+      console.error(`[dpboss] ${msg} — giving up`);
+      throw new DpbossFetchError(msg, { url, attempts: attempt, lastStatus, cause: e });
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  // Should be unreachable; satisfy TS.
+  throw new DpbossFetchError("dpboss.boston fetch exhausted retries", {
+    url,
+    attempts: MAX_ATTEMPTS,
+    lastStatus,
+    cause: lastErr,
+  });
+}
+
+async function safeReadSnippet(res: Response): Promise<string> {
   try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        "user-agent":
-          "Mozilla/5.0 (compatible; SattaResultsBot/1.0; +https://matka.bharatkaal.online)",
-        accept: "text/html",
-      },
-    });
-    if (!res.ok) throw new Error(`dpboss ${res.status}`);
-    const html = await res.text();
-    return parseDpbossPanel(html);
-  } finally {
-    clearTimeout(t);
+    const text = await res.text();
+    return text.slice(0, 200).replace(/\s+/g, " ").trim();
+  } catch {
+    return "<no-body>";
   }
 }
 

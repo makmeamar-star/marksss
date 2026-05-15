@@ -99,14 +99,26 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
                 summary.push({ market: m.market_id, session, pana, status: logStatus });
               }
             } catch (e: any) {
+              const detail = {
+                name: e?.name ?? "Error",
+                message: String(e?.message ?? e),
+                attempts: e?.attempts,
+                lastStatus: e?.lastStatus,
+                url: e?.url,
+              };
+              console.error(
+                `[scrape-results] FETCH_ERROR market=${m.market_id} session=${session} source=${m.source}`,
+                detail,
+              );
               await supabase.from("result_scrape_log").insert({
                 market_id: m.market_id,
                 session_date: today,
                 session,
                 source: m.source,
                 status: "FETCH_ERROR",
-                error: String(e?.message ?? e),
+                error: JSON.stringify(detail).slice(0, 1000),
               });
+              summary.push({ market: m.market_id, session, error: detail.message });
             }
           }
         }
