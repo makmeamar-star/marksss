@@ -112,6 +112,9 @@ function HomePage() {
         </div>
       </section>
 
+      {/* STAR MARKETS — pinned featured 4 */}
+      <StarMarketsSection />
+
       {/* LIVE RESULTS */}
       <section className="container mx-auto px-4 py-16">
         <RangoliDivider label="आज के नतीजे · Today" className="mb-10" />
