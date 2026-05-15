@@ -34,14 +34,13 @@ export function normaliseName(name: string): string {
 }
 
 export async function fetchSattamatkadpbossPanel(slug: string): Promise<DpbossDayResult[]> {
-  const today = istToday();
   const all = await fetchAllSmd();
   const wanted = normaliseName(slug);
   const hit = all.find((r) => r.slug === wanted);
   if (!hit) return [];
   return [
     {
-      date: today,
+      date: mapToRealDate(istToday()),
       openPana: hit.openPana,
       jodi: hit.jodi,
       closePana: hit.closePana,

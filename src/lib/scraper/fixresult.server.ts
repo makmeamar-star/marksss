@@ -37,12 +37,22 @@ export async function fetchFixresultPanel(slug: string): Promise<DpbossDayResult
   if (!hit) return [];
   return [
     {
-      date: istToday(),
+      date: mapToRealDate(istToday()),
       openPana: validPana(hit.openPanel),
       jodi: validJodi(hit.jodi),
       closePana: validPana(hit.closePanel),
     },
   ];
+}
+
+function mapToRealDate(istDate: string): string {
+  const target = new Date(istDate + "T00:00:00Z");
+  const realToday = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
+  if (target.getTime() <= realToday.getTime()) return istDate;
+  const targetDow = target.getUTCDay();
+  const out = new Date(realToday);
+  while (out.getUTCDay() !== targetDow) out.setUTCDate(out.getUTCDate() - 1);
+  return out.toISOString().slice(0, 10);
 }
 
 async function fetchAll(): Promise<FixMarket[]> {
