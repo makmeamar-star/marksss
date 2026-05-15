@@ -160,6 +160,11 @@ function AdminHome() {
         </div>
       </div>
 
+      {/* Demo login toggle */}
+      <div className="mt-8">
+        <DemoLoginToggle />
+      </div>
+
       {/* Quick links */}
       <div className="mt-8">
         <h2 className="font-display text-lg font-bold mb-3">Quick actions</h2>
