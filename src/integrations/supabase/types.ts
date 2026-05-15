@@ -1139,6 +1139,54 @@ export type Database = {
         }
         Relationships: []
       }
+      scrape_retry_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          market_id: string
+          max_attempts: number
+          next_attempt_at: string
+          session: string
+          session_date: string
+          slug: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          market_id: string
+          max_attempts?: number
+          next_attempt_at?: string
+          session: string
+          session_date: string
+          slug: string
+          source: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          market_id?: string
+          max_attempts?: number
+          next_attempt_at?: string
+          session?: string
+          session_date?: string
+          slug?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       self_exclusions: {
         Row: {
           active: boolean
@@ -1602,6 +1650,17 @@ export type Database = {
         }
         Returns: Json
       }
+      enqueue_scrape_retry: {
+        Args: {
+          _error: string
+          _market_id: string
+          _session: string
+          _session_date: string
+          _slug: string
+          _source: string
+        }
+        Returns: undefined
+      }
       ensure_starline_rounds: { Args: never; Returns: Json }
       find_missing_results: {
         Args: never
@@ -1772,6 +1831,10 @@ export type Database = {
         Returns: Json
       }
       tick_quick_play: { Args: never; Returns: Json }
+      update_scrape_retry_outcome: {
+        Args: { _error: string; _id: string; _success: boolean }
+        Returns: undefined
+      }
       validate_pana: {
         Args: { _pana: string }
         Returns: {
