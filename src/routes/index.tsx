@@ -187,37 +187,6 @@ function HomePage() {
         )}
       </section>
 
-      {/* SCHEDULE */}
-      <section className="container mx-auto px-4 py-12">
-        <h2 className="font-display text-3xl font-bold mb-6">Market Schedule</h2>
-        <div className="glass rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-surface/60 text-muted-foreground">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium uppercase text-xs tracking-wider">Market</th>
-                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Open</th>
-                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Close</th>
-                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Result</th>
-                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Days</th>
-                </tr>
-              </thead>
-              <tbody>
-                {markets.map((m) => (
-                  <tr key={m.id} className="border-t border-border/50">
-                    <td className="px-4 py-3 font-display font-semibold">{m.displayName}</td>
-                    <td className="px-4 py-3 text-center font-mono">{m.openTime}</td>
-                    <td className="px-4 py-3 text-center font-mono">{m.closeTime}</td>
-                    <td className="px-4 py-3 text-center font-mono text-primary">{m.resultTime}</td>
-                    <td className="px-4 py-3 text-center text-xs text-muted-foreground">{m.days.length === 7 ? "All days" : m.days.join(" ")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
       {/* QUICK STATS */}
       <section className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
