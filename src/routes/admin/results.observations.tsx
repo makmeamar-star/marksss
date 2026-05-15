@@ -302,11 +302,13 @@ function GroupCard({
   onApprove,
   onReject,
   busy,
+  lastAction,
 }: {
   group: Group;
   onApprove: (value: string) => void;
   onReject: () => void;
   busy: boolean;
+  lastAction?: ActionEntry;
 }) {
   const distinct = [...new Set(group.sources.map((s) => s.pana))];
   const [picked, setPicked] = useState<string>(distinct[0] ?? "");
