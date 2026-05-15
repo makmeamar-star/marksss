@@ -1,42 +1,38 @@
-# Promote real admin + demo login toggle
+## Goal
 
-## 1. Make `lafxnga@gmail.com` a real admin
-The user already exists (id `254b681e-…b5412bad36d6`, username `LAFXNGA`).
+Make `lafxnga@gmail.com` the sole admin. Revoke admin from everyone else.
 
-- On implementation, request the new password through the secure secret prompt (value never appears in chat). Secret name: `LAFXNGA_ADMIN_PASSWORD`.
-- Reset the auth password for that user via the Supabase Admin API using that secret.
-- Insert `('254b681e-…', 'admin')` into `public.user_roles` (idempotent — skip if already present).
-- Confirm in chat once done; you log in via the normal Sign In form with email `lafxnga@gmail.com` + the password you provided.
+## Current admins
 
-## 2. Toggle to show/hide demo login on the login page
-A single global flag, controlled from the admin dashboard, that turns the "Demo User" / "Demo Admin" buttons on or off for everyone.
+| Email | Username |
+|---|---|
+| lafxnga@gmail.com | LAFXNGA ✅ keep |
+| imamarmeena@gmail.com | meena_admin ❌ remove |
+| admin@sattaking.test | demo_admin ❌ remove |
+| owner@sattaking.app | owner ❌ remove |
 
-### Storage
-Reuse the existing `app_settings` table:
-- key: `demo_login_enabled`
-- value: `{ "enabled": true | false }`
-- Defaults to `true` if the row is missing (preserves current behavior).
+## Changes
 
-Add one RLS policy so unauthenticated visitors on `/login` can read this single key (everything else in `app_settings` stays admin-only):
-- `Anyone reads demo_login flag` — SELECT for `public` where `key = 'demo_login_enabled'`.
+1. Delete the 3 non-LAFXNGA rows from `user_roles` where `role = 'admin'`. The user accounts remain (they can still log in as regular users); only the admin privilege is revoked.
+2. `lafxnga@gmail.com` keeps the existing `admin` role, which already grants full control via existing RLS policies (`has_role(auth.uid(), 'admin')` on every admin-gated table).
 
-### Login page (`src/routes/login.tsx`)
-- On mount, fetch the flag once. While loading, hide the "Demo test accounts" divider and both buttons.
-- If `enabled === false`, do not render the divider, the two buttons, or the demo helper text.
-- If `enabled === true`, render exactly what's there today.
+## Heads-up about the Demo Admin button
 
-### Admin dashboard (`src/routes/admin/index.tsx`)
-- Add a "Demo login" card with:
-  - A `Switch` showing the current state (read from `app_settings`).
-  - Helper text: "When off, the Demo User and Demo Admin buttons are hidden from the public login page."
-- Toggling the switch upserts the row in `app_settings` (admin-only via existing RLS) and shows a toast.
+The login page has a "Demo Admin" quick-login that signs in as `admin@sattaking.test`. After this change, that account will no longer have admin powers — the button will log in as a normal user. Two options:
 
-## Technical details
+- **A. Leave it** — Demo Admin button just becomes a regular demo user. (Simplest.)
+- **B. Hide the Demo Admin button** entirely on the login page.
 
-- **Password reset**: server function (`createServerFn`) using `supabaseAdmin.auth.admin.updateUserById(userId, { password })`, reading `process.env.LAFXNGA_ADMIN_PASSWORD`. Run once at implementation time, then the secret can stay (or be removed) — the password lives in Supabase Auth.
-- **Role insert**: `INSERT INTO user_roles (user_id, role) VALUES ('254b681e-fe0f-4b17-816d-b5412bad36d6', 'admin') ON CONFLICT (user_id, role) DO NOTHING;`
-- **Migration**: only adds the public-read RLS policy on `app_settings` scoped to `key = 'demo_login_enabled'`. No schema changes.
-- **Client read**: simple `supabase.from('app_settings').select('value').eq('key','demo_login_enabled').maybeSingle()` in both the login page and the admin toggle card.
+I'll proceed with **option A** unless you say otherwise in the next message.
 
-## Out of scope
-- No changes to the demo accounts themselves or to the existing "Remember me" behavior.
+## Technical
+
+Single SQL statement via the data tool:
+
+```sql
+DELETE FROM public.user_roles
+WHERE role = 'admin'
+  AND user_id <> '254b681e-fe0f-4b17-816d-b5412bad36d6';
+```
+
+No schema changes, no code changes.
