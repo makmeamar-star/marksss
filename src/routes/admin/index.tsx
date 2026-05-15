@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Trophy, Zap, Wallet, ArrowDownToLine, History, FileSearch, Store, Globe,
-  Users, TrendingUp, TrendingDown, Activity, AlertTriangle, ArrowRight, KeyRound,
+  Users, TrendingUp, TrendingDown, Activity, AlertTriangle, ArrowRight, KeyRound, Eye,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { getAdminOverview } from "@/lib/adminDashboard.functions";

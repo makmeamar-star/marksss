@@ -48,6 +48,7 @@ import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/ky
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
 import { Route as AdminResultsScrapeRouteImport } from './routes/admin/results.scrape'
+import { Route as AdminResultsObservationsRouteImport } from './routes/admin/results.observations'
 import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
 import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.declare'
 import { Route as AdminResultsAutomationRunsRouteImport } from './routes/admin/results.automation-runs'
@@ -264,6 +265,12 @@ const AdminResultsScrapeRoute = AdminResultsScrapeRouteImport.update({
   path: '/results/scrape',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminResultsObservationsRoute =
+  AdminResultsObservationsRouteImport.update({
+    id: '/results/observations',
+    path: '/results/observations',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminResultsHistoryRoute = AdminResultsHistoryRouteImport.update({
   id: '/results/history',
   path: '/results/history',
@@ -416,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/admin/results/observations': typeof AdminResultsObservationsRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/alert-missing-results': typeof ApiPublicHooksAlertMissingResultsRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
@@ -473,6 +481,7 @@ export interface FileRoutesByTo {
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/admin/results/observations': typeof AdminResultsObservationsRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/alert-missing-results': typeof ApiPublicHooksAlertMissingResultsRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
@@ -533,6 +542,7 @@ export interface FileRoutesById {
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/admin/results/observations': typeof AdminResultsObservationsRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/alert-missing-results': typeof ApiPublicHooksAlertMissingResultsRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
@@ -593,6 +603,7 @@ export interface FileRouteTypes {
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
     | '/admin/results/history'
+    | '/admin/results/observations'
     | '/admin/results/scrape'
     | '/api/public/hooks/alert-missing-results'
     | '/api/public/hooks/auto-declare-results'
@@ -650,6 +661,7 @@ export interface FileRouteTypes {
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
     | '/admin/results/history'
+    | '/admin/results/observations'
     | '/admin/results/scrape'
     | '/api/public/hooks/alert-missing-results'
     | '/api/public/hooks/auto-declare-results'
@@ -709,6 +721,7 @@ export interface FileRouteTypes {
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
     | '/admin/results/history'
+    | '/admin/results/observations'
     | '/admin/results/scrape'
     | '/api/public/hooks/alert-missing-results'
     | '/api/public/hooks/auto-declare-results'
@@ -1022,6 +1035,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResultsScrapeRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/results/observations': {
+      id: '/admin/results/observations'
+      path: '/results/observations'
+      fullPath: '/admin/results/observations'
+      preLoaderRoute: typeof AdminResultsObservationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/results/history': {
       id: '/admin/results/history'
       path: '/results/history'
@@ -1209,6 +1229,7 @@ interface AdminRouteChildren {
   AdminResultsAutomationRunsRoute: typeof AdminResultsAutomationRunsRoute
   AdminResultsDeclareRoute: typeof AdminResultsDeclareRoute
   AdminResultsHistoryRoute: typeof AdminResultsHistoryRoute
+  AdminResultsObservationsRoute: typeof AdminResultsObservationsRoute
   AdminResultsScrapeRoute: typeof AdminResultsScrapeRoute
 }
 
@@ -1230,6 +1251,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminResultsAutomationRunsRoute: AdminResultsAutomationRunsRoute,
   AdminResultsDeclareRoute: AdminResultsDeclareRoute,
   AdminResultsHistoryRoute: AdminResultsHistoryRoute,
+  AdminResultsObservationsRoute: AdminResultsObservationsRoute,
   AdminResultsScrapeRoute: AdminResultsScrapeRoute,
 }
 
