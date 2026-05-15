@@ -585,6 +585,7 @@ export type Database = {
           days: string[]
           display_name: string
           id: string
+          is_jodi_only: boolean
           max_bet: number
           min_bet: number
           name: string
@@ -600,6 +601,7 @@ export type Database = {
           days: string[]
           display_name: string
           id: string
+          is_jodi_only?: boolean
           max_bet?: number
           min_bet?: number
           name: string
@@ -615,6 +617,7 @@ export type Database = {
           days?: string[]
           display_name?: string
           id?: string
+          is_jodi_only?: boolean
           max_bet?: number
           min_bet?: number
           name?: string
@@ -1734,6 +1737,15 @@ export type Database = {
         Args: { p_amount: number; p_digit: number; p_round_id: string }
         Returns: Json
       }
+      record_jodi_observation_and_maybe_declare: {
+        Args: {
+          _jodi: string
+          _market_id: string
+          _session_date: string
+          _source: string
+        }
+        Returns: Json
+      }
       record_observation_and_maybe_declare: {
         Args: {
           _market_id: string
@@ -1865,6 +1877,10 @@ export type Database = {
           _session: string
           _session_date: string
         }
+        Returns: Json
+      }
+      system_auto_declare_jodi: {
+        Args: { _jodi: string; _market_id: string; _session_date: string }
         Returns: Json
       }
       tick_quick_play: { Args: never; Returns: Json }
