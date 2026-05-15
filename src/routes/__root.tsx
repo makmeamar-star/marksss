@@ -80,7 +80,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#0a0a0a" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "SattaKing" },
+      { name: "mobile-web-app-capable", content: "yes" },
       { title: "SattaKing Pro" },
       { name: "description", content: "India's most trusted Matka platform" },
       { name: "author", content: "SattaKing Pro" },
@@ -95,10 +100,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/51eef299-37a0-4774-8a85-de00bab58807/id-preview-fd5b0a81--ef1d2cf5-c490-445a-ae0d-f01e7b09548a.lovable.app-1778294561514.png" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icons/icon-192.png" },
+      { rel: "apple-touch-icon", sizes: "192x192", href: "/icons/icon-192.png" },
+      { rel: "preconnect", href: "https://kpahmkjutkfyhydfgffh.supabase.co", crossOrigin: "anonymous" },
     ],
   }),
   shellComponent: RootShell,
