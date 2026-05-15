@@ -62,6 +62,7 @@ import { Route as ApiPublicHooksHealthCheckRouteImport } from './routes/api/publ
 import { Route as ApiPublicHooksDispatchResultPushRouteImport } from './routes/api/public/hooks/dispatch-result-push'
 import { Route as ApiPublicHooksBackfillResultsRouteImport } from './routes/api/public/hooks/backfill-results'
 import { Route as ApiPublicHooksAutoDeclareResultsRouteImport } from './routes/api/public/hooks/auto-declare-results'
+import { Route as ApiPublicHooksAlertMissingResultsRouteImport } from './routes/api/public/hooks/alert-missing-results'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -341,6 +342,12 @@ const ApiPublicHooksAutoDeclareResultsRoute =
     path: '/api/public/hooks/auto-declare-results',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksAlertMissingResultsRoute =
+  ApiPublicHooksAlertMissingResultsRouteImport.update({
+    id: '/api/public/hooks/alert-missing-results',
+    path: '/api/public/hooks/alert-missing-results',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -389,6 +396,7 @@ export interface FileRoutesByFullPath {
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
+  '/api/public/hooks/alert-missing-results': typeof ApiPublicHooksAlertMissingResultsRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/dispatch-result-push': typeof ApiPublicHooksDispatchResultPushRoute
@@ -442,6 +450,7 @@ export interface FileRoutesByTo {
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
+  '/api/public/hooks/alert-missing-results': typeof ApiPublicHooksAlertMissingResultsRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/dispatch-result-push': typeof ApiPublicHooksDispatchResultPushRoute
@@ -498,6 +507,7 @@ export interface FileRoutesById {
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
+  '/api/public/hooks/alert-missing-results': typeof ApiPublicHooksAlertMissingResultsRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
   '/api/public/hooks/dispatch-result-push': typeof ApiPublicHooksDispatchResultPushRoute
@@ -554,6 +564,7 @@ export interface FileRouteTypes {
     | '/admin/results/declare'
     | '/admin/results/history'
     | '/admin/results/scrape'
+    | '/api/public/hooks/alert-missing-results'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/dispatch-result-push'
@@ -607,6 +618,7 @@ export interface FileRouteTypes {
     | '/admin/results/declare'
     | '/admin/results/history'
     | '/admin/results/scrape'
+    | '/api/public/hooks/alert-missing-results'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/dispatch-result-push'
@@ -662,6 +674,7 @@ export interface FileRouteTypes {
     | '/admin/results/declare'
     | '/admin/results/history'
     | '/admin/results/scrape'
+    | '/api/public/hooks/alert-missing-results'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
     | '/api/public/hooks/dispatch-result-push'
@@ -686,6 +699,7 @@ export interface RootRouteChildren {
   ResponsibleGamingRoute: typeof ResponsibleGamingRoute
   ResultsRoute: typeof ResultsRoute
   TermsRoute: typeof TermsRoute
+  ApiPublicHooksAlertMissingResultsRoute: typeof ApiPublicHooksAlertMissingResultsRoute
   ApiPublicHooksAutoDeclareResultsRoute: typeof ApiPublicHooksAutoDeclareResultsRoute
   ApiPublicHooksBackfillResultsRoute: typeof ApiPublicHooksBackfillResultsRoute
   ApiPublicHooksDispatchResultPushRoute: typeof ApiPublicHooksDispatchResultPushRoute
@@ -1067,6 +1081,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutoDeclareResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/alert-missing-results': {
+      id: '/api/public/hooks/alert-missing-results'
+      path: '/api/public/hooks/alert-missing-results'
+      fullPath: '/api/public/hooks/alert-missing-results'
+      preLoaderRoute: typeof ApiPublicHooksAlertMissingResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1168,6 +1189,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResponsibleGamingRoute: ResponsibleGamingRoute,
   ResultsRoute: ResultsRoute,
   TermsRoute: TermsRoute,
+  ApiPublicHooksAlertMissingResultsRoute:
+    ApiPublicHooksAlertMissingResultsRoute,
   ApiPublicHooksAutoDeclareResultsRoute: ApiPublicHooksAutoDeclareResultsRoute,
   ApiPublicHooksBackfillResultsRoute: ApiPublicHooksBackfillResultsRoute,
   ApiPublicHooksDispatchResultPushRoute: ApiPublicHooksDispatchResultPushRoute,
@@ -1178,13 +1201,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
