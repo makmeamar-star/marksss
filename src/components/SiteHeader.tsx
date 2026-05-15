@@ -24,6 +24,7 @@ export function SiteHeader() {
           {[
             { to: "/", label: "Home" },
             { to: "/markets", label: "Markets" },
+            { to: "/jodi", label: "Jodi 00–99" },
             { to: "/results", label: "Results" },
             { to: "/charts", label: "Charts" },
           ].map((l) => (

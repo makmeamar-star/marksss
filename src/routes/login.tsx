@@ -8,13 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/integrations/supabase/client";
 
-const DEMO_EMAIL = "demo@sattaking.test";
-const DEMO_PASSWORD = "demo-player-2026";
-const DEMO_USERNAME = "demo_player";
 
-const DEMO_ADMIN_EMAIL = "admin@sattaking.test";
-const DEMO_ADMIN_PASSWORD = "demo-admin-2026";
-const DEMO_ADMIN_USERNAME = "demo_admin";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Login — SattaKing Pro" }] }),
@@ -23,17 +17,13 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const login = useAuthStore((s) => s.login);
-  const register = useAuthStore((s) => s.register);
-  const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const navigate = useNavigate();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [demoBusy, setDemoBusy] = useState(false);
-  const [adminBusy, setAdminBusy] = useState(false);
 
-  const anyBusy = busy || demoBusy || adminBusy;
+  const anyBusy = busy;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,53 +40,6 @@ function LoginPage() {
       toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
       setBusy(false);
-    }
-  };
-
-  const ensureSignedIn = async (
-    email: string,
-    password: string,
-    username: string,
-  ) => {
-    try {
-      await login(email, password);
-    } catch {
-      try {
-        await register({ username, email, password });
-      } catch {
-        await login(email, password);
-      }
-    }
-  };
-
-  const demoLogin = async () => {
-    if (anyBusy) return;
-    setDemoBusy(true);
-    try {
-      await ensureSignedIn(DEMO_EMAIL, DEMO_PASSWORD, DEMO_USERNAME);
-      toast.success("Welcome to the demo!");
-      navigate({ to: "/dashboard" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Demo login failed");
-    } finally {
-      setDemoBusy(false);
-    }
-  };
-
-  const demoAdminLogin = async () => {
-    if (anyBusy) return;
-    setAdminBusy(true);
-    try {
-      await ensureSignedIn(DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD, DEMO_ADMIN_USERNAME);
-      // Promote to admin via server-side edge function (no public RPC needed).
-      await supabase.functions.invoke("ensure-demo-admin");
-      await refreshProfile();
-      toast.success("Welcome, admin!");
-      navigate({ to: "/admin" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Admin demo login failed");
-    } finally {
-      setAdminBusy(false);
     }
   };
 
@@ -171,37 +114,6 @@ function LoginPage() {
           <Button type="submit" disabled={anyBusy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
             {busy ? "Signing in…" : "Sign In"}
           </Button>
-
-          <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground/70">
-            <span className="h-px flex-1 bg-border/60" />
-            or try a demo
-            <span className="h-px flex-1 bg-border/60" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              onClick={demoLogin}
-              disabled={anyBusy}
-              variant="outline"
-              className="border-primary/40 text-primary hover:bg-primary/10"
-            >
-              {demoBusy ? "Loading…" : "Demo User"}
-            </Button>
-            <Button
-              type="button"
-              onClick={demoAdminLogin}
-              disabled={anyBusy}
-              variant="outline"
-              className="border-primary/40 text-primary hover:bg-primary/10"
-            >
-              {adminBusy ? "Loading…" : "Demo Admin"}
-            </Button>
-          </div>
-
-          <p className="text-xs text-center text-muted-foreground">
-            First account created automatically becomes the admin.
-          </p>
 
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>

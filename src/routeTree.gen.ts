@@ -18,6 +18,7 @@ import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as JodiRouteImport } from './routes/jodi'
 import { Route as ChartsRouteImport } from './routes/charts'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
@@ -103,6 +104,11 @@ const MarketsRoute = MarketsRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JodiRoute = JodiRouteImport.update({
+  id: '/jodi',
+  path: '/jodi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChartsRoute = ChartsRouteImport.update({
@@ -327,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/charts': typeof ChartsRoute
+  '/jodi': typeof JodiRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
   '/privacy': typeof PrivacyRoute
@@ -377,6 +384,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/charts': typeof ChartsRoute
+  '/jodi': typeof JodiRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
   '/privacy': typeof PrivacyRoute
@@ -430,6 +438,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/charts': typeof ChartsRoute
+  '/jodi': typeof JodiRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
   '/privacy': typeof PrivacyRoute
@@ -483,6 +492,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/charts'
+    | '/jodi'
     | '/login'
     | '/markets'
     | '/privacy'
@@ -533,6 +543,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/charts'
+    | '/jodi'
     | '/login'
     | '/markets'
     | '/privacy'
@@ -585,6 +596,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/charts'
+    | '/jodi'
     | '/login'
     | '/markets'
     | '/privacy'
@@ -638,6 +650,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
   ChartsRoute: typeof ChartsRoute
+  JodiRoute: typeof JodiRoute
   LoginRoute: typeof LoginRoute
   MarketsRoute: typeof MarketsRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -717,6 +730,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jodi': {
+      id: '/jodi'
+      path: '/jodi'
+      fullPath: '/jodi'
+      preLoaderRoute: typeof JodiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/charts': {
@@ -1095,6 +1115,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
   ChartsRoute: ChartsRoute,
+  JodiRoute: JodiRoute,
   LoginRoute: LoginRoute,
   MarketsRoute: MarketsRoute,
   PrivacyRoute: PrivacyRoute,
