@@ -81,7 +81,7 @@ function JodiPage() {
                 </div>
 
                 <Button asChild className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
-                  <Link to="/bet/$marketId" params={{ marketId: m.id }}>Play Jodi</Link>
+                  <Link to="/jodi/$marketId" params={{ marketId: m.id }}>Play Jodi 00–99</Link>
                 </Button>
               </div>
             );
