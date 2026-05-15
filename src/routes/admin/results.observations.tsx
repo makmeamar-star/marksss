@@ -63,6 +63,62 @@ function ObservationsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [actions, setActions] = useState<ActionEntry[]>([]);
+  const upsertAction = (entry: ActionEntry) =>
+    setActions((prev) => {
+      const next = prev.filter((a) => a.id !== entry.id);
+      return [entry, ...next].slice(0, 20);
+    });
+  const updateAction = (id: string, patch: Partial<ActionEntry>) =>
+    setActions((prev) => prev.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+
+  const runApprove = (g: Group, value: string) => {
+    const id = `approve-${g.key}-${Date.now()}`;
+    upsertAction({
+      id,
+      groupKey: g.key,
+      market_name: g.market_name,
+      session: g.session,
+      kind: "approve",
+      value,
+      status: "pending",
+      at: Date.now(),
+    });
+    approveFn({ data: { marketId: g.market_id, sessionDate: g.session_date, session: g.session, value } })
+      .then(() => {
+        updateAction(id, { status: "success", message: `Published ${value}` });
+        toast.success(`Published ${g.market_name} ${g.session}: ${value}`);
+        qc.invalidateQueries({ queryKey: ["admin", "today-observations"] });
+      })
+      .catch((e: Error) => {
+        updateAction(id, { status: "error", message: e.message });
+        toast.error(e.message);
+      });
+  };
+
+  const runReject = (g: Group) => {
+    const id = `reject-${g.key}-${Date.now()}`;
+    upsertAction({
+      id,
+      groupKey: g.key,
+      market_name: g.market_name,
+      session: g.session,
+      kind: "reject",
+      status: "pending",
+      at: Date.now(),
+    });
+    rejectFn({ data: { marketId: g.market_id, sessionDate: g.session_date, session: g.session } })
+      .then(() => {
+        updateAction(id, { status: "success", message: "Observations rejected" });
+        toast.success(`Rejected ${g.market_name} ${g.session}`);
+        qc.invalidateQueries({ queryKey: ["admin", "today-observations"] });
+      })
+      .catch((e: Error) => {
+        updateAction(id, { status: "error", message: e.message });
+        toast.error(e.message);
+      });
+  };
+
   const allGroups = q.data?.groups ?? [];
   const [search, setSearch] = useState("");
   const [sessionFilter, setSessionFilter] = useState<SessionFilter>("ALL");
@@ -81,6 +137,9 @@ function ObservationsPage() {
     }
     return true;
   });
+  const latestByGroup = new Map<string, ActionEntry>();
+  for (const a of actions) if (!latestByGroup.has(a.groupKey)) latestByGroup.set(a.groupKey, a);
+  const anyPending = actions.some((a) => a.status === "pending");
   const conflicts = groups.filter((g) => g.conflict).length;
 
   const sessionCounts: Record<SessionFilter, number> = {
