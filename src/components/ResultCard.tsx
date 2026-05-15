@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NumberReveal } from "./NumberReveal";
 import { CountdownTimer } from "./CountdownTimer";
+import { ResultAlertBell } from "./ResultAlertBell";
 import type { Market, MarketResult } from "@/lib/types";
 
 interface Props {
@@ -63,13 +64,16 @@ export function ResultCard({
             {market.openTime} — {market.closeTime}
           </p>
         </div>
-        {declared ? (
-          <Badge className="bg-primary/15 text-primary border-primary/40">DECLARED</Badge>
-        ) : market.isOpen ? (
-          <Badge className="bg-success/15 text-success border-success/40 pulse-live">OPEN</Badge>
-        ) : (
-          <Badge variant="outline" className="text-muted-foreground">CLOSED</Badge>
-        )}
+        <div className="flex items-center gap-1">
+          {declared ? (
+            <Badge className="bg-primary/15 text-primary border-primary/40">DECLARED</Badge>
+          ) : market.isOpen ? (
+            <Badge className="bg-success/15 text-success border-success/40 pulse-live">OPEN</Badge>
+          ) : (
+            <Badge variant="outline" className="text-muted-foreground">CLOSED</Badge>
+          )}
+          <ResultAlertBell marketId={market.id} />
+        </div>
       </div>
 
       <div className="flex flex-col items-center justify-center my-4 gap-1 min-h-[56px]">
