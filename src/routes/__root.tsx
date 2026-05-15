@@ -19,7 +19,14 @@ import { BottomNav } from "@/components/BottomNav";
 
 import appCss from "../styles.css?url";
 
+function HomeHref() {
+  // Prefer dashboard for signed-in users; falls back to "/" for guests.
+  const user = useAuthStore((s) => s.user);
+  return user ? "/dashboard" : "/";
+}
+
 function NotFoundComponent() {
+  const homeTo = HomeHref();
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -30,10 +37,10 @@ function NotFoundComponent() {
         </p>
         <div className="mt-6">
           <Link
-            to="/"
+            to={homeTo}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            {homeTo === "/dashboard" ? "Back to dashboard" : "Go home"}
           </Link>
         </div>
       </div>
@@ -44,6 +51,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const homeTo = HomeHref();
   useEffect(() => {
     void reportError({ error, source: "react" });
   }, [error]);
@@ -67,12 +75,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           >
             Try again
           </button>
-          <a
-            href="/"
+          <Link
+            to={homeTo}
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
-          </a>
+            {homeTo === "/dashboard" ? "Back to dashboard" : "Go home"}
+          </Link>
         </div>
       </div>
     </div>
