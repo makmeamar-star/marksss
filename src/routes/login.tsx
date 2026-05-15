@@ -27,6 +27,17 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [remember, setRemember] = useState(true);
+
+  const applyRemember = (val: boolean) => {
+    if (typeof window === "undefined") return;
+    if (val) {
+      localStorage.removeItem("auth_remember_off");
+    } else {
+      localStorage.setItem("auth_remember_off", "1");
+      sessionStorage.setItem("auth_alive", "1");
+    }
+  };
 
   const anyBusy = busy;
 
