@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StarRouteImport } from './routes/star'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as ResponsibleGamingRouteImport } from './routes/responsible-gaming'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -68,6 +69,11 @@ import { Route as ApiPublicHooksAlertMissingResultsRouteImport } from './routes/
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StarRoute = StarRouteImport.update({
+  id: '/star',
+  path: '/star',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResultsRoute = ResultsRouteImport.update({
@@ -370,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
+  '/star': typeof StarRoute
   '/terms': typeof TermsRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -425,6 +432,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
+  '/star': typeof StarRoute
   '/terms': typeof TermsRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -483,6 +491,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
+  '/star': typeof StarRoute
   '/terms': typeof TermsRoute
   '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -541,6 +550,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/responsible-gaming'
     | '/results'
+    | '/star'
     | '/terms'
     | '/achievements'
     | '/dashboard'
@@ -596,6 +606,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/responsible-gaming'
     | '/results'
+    | '/star'
     | '/terms'
     | '/achievements'
     | '/dashboard'
@@ -653,6 +664,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/responsible-gaming'
     | '/results'
+    | '/star'
     | '/terms'
     | '/_authenticated/achievements'
     | '/_authenticated/dashboard'
@@ -711,6 +723,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResponsibleGamingRoute: typeof ResponsibleGamingRoute
   ResultsRoute: typeof ResultsRoute
+  StarRoute: typeof StarRoute
   TermsRoute: typeof TermsRoute
   ApiPublicHooksAlertMissingResultsRoute: typeof ApiPublicHooksAlertMissingResultsRoute
   ApiPublicHooksAutoDeclareResultsRoute: typeof ApiPublicHooksAutoDeclareResultsRoute
@@ -729,6 +742,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/star': {
+      id: '/star'
+      path: '/star'
+      fullPath: '/star'
+      preLoaderRoute: typeof StarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/results': {
@@ -1209,6 +1229,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ResponsibleGamingRoute: ResponsibleGamingRoute,
   ResultsRoute: ResultsRoute,
+  StarRoute: StarRoute,
   TermsRoute: TermsRoute,
   ApiPublicHooksAlertMissingResultsRoute:
     ApiPublicHooksAlertMissingResultsRoute,
