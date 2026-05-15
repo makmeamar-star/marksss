@@ -1,16 +1,30 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Home, LayoutGrid, Star, Wallet, User } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
 
-const HIDDEN_PREFIXES = ["/admin", "/login", "/register", "/reset-password"];
+// Routes that already render their own navigation (auth shell, admin, auth pages).
+const HIDDEN_PREFIXES = [
+  "/admin", "/login", "/register", "/reset-password",
+  // _authenticated layout routes — they have their own sidebar + bottom nav
+  "/dashboard", "/wallet", "/my-bets", "/notifications", "/profile",
+  "/rewards", "/kyc", "/settings", "/play", "/bet", "/leaderboard",
+  "/achievements", "/referrals", "/starline",
+];
 
 /**
- * Mobile-first bottom navigation. Hidden on md+ screens and on admin/auth
- * routes. Center "Star" tab is the prominent shortcut to the 4 featured
- * markets (Gali / Disawar / Faridabad / Ghaziabad).
+ * Mobile-first bottom navigation for PUBLIC pages. Hidden on md+ screens and
+ * on routes that ship their own navigation. Center "Star" tab is the prominent
+ * shortcut to the 4 featured markets (Gali / Disawar / Faridabad / Ghaziabad).
+ *
+ * When the visitor is signed in, the "Home" tab routes to their dashboard
+ * instead of the public landing page so the back-button stays inside the app.
  */
 export function BottomNav() {
   const { pathname } = useLocation();
-  if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
+  const isAuthed = useAuthStore((s) => !!s.user);
+  if (HIDDEN_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return null;
+
+  const homeTo = isAuthed ? "/dashboard" : "/";
 
   const isActive = (to: string, exact = false) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(`${to}/`);
@@ -26,7 +40,7 @@ export function BottomNav() {
         aria-label="Primary"
       >
         <div className="relative grid grid-cols-5 h-16 items-center text-[11px]">
-          <Tab to="/" icon={<Home className="h-5 w-5" />} label="Home" active={isActive("/", true)} />
+          <Tab to={homeTo} icon={<Home className="h-5 w-5" />} label="Home" active={isAuthed ? isActive("/dashboard") : isActive("/", true)} />
           <Tab to="/markets" icon={<LayoutGrid className="h-5 w-5" />} label="Markets" active={isActive("/markets")} />
 
           {/* Center: prominent star tab, lifted above the bar */}
