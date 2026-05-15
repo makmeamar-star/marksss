@@ -205,31 +205,85 @@ function ObservationsPage() {
         </div>
       )}
 
+      {actions.length > 0 && (
+        <div className="mt-6 rounded-2xl glass-gold p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold">
+              Recent actions {anyPending && <Loader2 className="inline h-3 w-3 ml-1 animate-spin" />}
+            </h2>
+            <button
+              className="text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => setActions([])}
+            >
+              Clear log
+            </button>
+          </div>
+          <ul className="divide-y divide-border/40 text-sm">
+            {actions.map((a) => (
+              <li key={a.id} className="py-1.5 flex items-center gap-2 flex-wrap">
+                <StatusBadge status={a.status} />
+                <span className="font-medium truncate max-w-[180px]">{a.market_name}</span>
+                <span className="text-[10px] uppercase tracking-wide rounded px-1.5 py-0.5 bg-primary/15 text-primary font-mono">
+                  {a.session}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {a.kind === "approve" ? "Approve" : "Reject"}
+                  {a.value && (
+                    <span className="ml-1 font-mono text-foreground">{a.value}</span>
+                  )}
+                </span>
+                {a.message && (
+                  <span
+                    className={`text-xs ${a.status === "error" ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    — {a.message}
+                  </span>
+                )}
+                <span className="ml-auto text-[11px] text-muted-foreground">
+                  {new Date(a.at).toLocaleTimeString()}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="mt-6 grid gap-3">
-        {groups.map((g) => (
-          <GroupCard
-            key={g.key}
-            group={g}
-            onApprove={(value) =>
-              approveMut.mutate({
-                marketId: g.market_id,
-                sessionDate: g.session_date,
-                session: g.session,
-                value,
-              })
-            }
-            onReject={() =>
-              rejectMut.mutate({
-                marketId: g.market_id,
-                sessionDate: g.session_date,
-                session: g.session,
-              })
-            }
-            busy={approveMut.isPending || rejectMut.isPending}
-          />
-        ))}
+        {groups.map((g) => {
+          const last = latestByGroup.get(g.key);
+          return (
+            <GroupCard
+              key={g.key}
+              group={g}
+              lastAction={last}
+              onApprove={(value) => runApprove(g, value)}
+              onReject={() => runReject(g)}
+              busy={last?.status === "pending"}
+            />
+          );
+        })}
       </div>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: ActionStatus }) {
+  if (status === "pending")
+    return (
+      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" /> pending
+      </span>
+    );
+  if (status === "success")
+    return (
+      <span className="inline-flex items-center gap-1 text-xs text-emerald-400">
+        <Check className="h-3 w-3" /> success
+      </span>
+    );
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-destructive">
+      <X className="h-3 w-3" /> error
+    </span>
   );
 }
 
