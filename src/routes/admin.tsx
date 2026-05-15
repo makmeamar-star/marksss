@@ -14,10 +14,15 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuthStore } from "@/stores/authStore";
 import { LiveClock } from "@/components/admin/LiveClock";
+import { requireAdmin } from "@/lib/adminGuard.functions";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async ({ location }) => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      // On SSR/prerender we can't access the user session — bounce to /login,
+      // which itself will redirect authenticated admins back to /admin.
+      throw redirect({ to: "/login", search: { redirect: location.href } as never });
+    }
     const { supabase } = await import("@/integrations/supabase/client");
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
@@ -26,10 +31,21 @@ export const Route = createFileRoute("/admin")({
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", data.session.user.id);
-    if (!(roles ?? []).some((r) => r.role === "admin")) {
+      .eq("user_id", data.session.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roles) {
       throw redirect({ to: "/dashboard" });
     }
+  },
+  // Server-side defence in depth: even if the client-side guard is bypassed,
+  // the loader fails and the errorComponent kicks the user out.
+  loader: () => requireAdmin(),
+  errorComponent: () => {
+    if (typeof window !== "undefined") {
+      window.location.replace("/dashboard");
+    }
+    return null;
   },
   head: () => ({ meta: [{ title: "Admin — SattaKing Pro" }] }),
   component: AdminLayout,
