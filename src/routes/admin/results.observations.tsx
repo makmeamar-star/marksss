@@ -378,9 +378,31 @@ function GroupCard({
         </table>
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-2">
+      <div className="mt-3 flex items-center justify-between gap-2 flex-wrap">
+        <div className="text-xs">
+          {lastAction && (
+            <span
+              className={`inline-flex items-center gap-1.5 ${
+                lastAction.status === "error"
+                  ? "text-destructive"
+                  : lastAction.status === "success"
+                  ? "text-emerald-400"
+                  : "text-muted-foreground"
+              }`}
+            >
+              <StatusBadge status={lastAction.status} />
+              {lastAction.kind === "approve" ? "Approve" : "Reject"}
+              {lastAction.value && <span className="font-mono">{lastAction.value}</span>}
+              {lastAction.message && <span>· {lastAction.message}</span>}
+            </span>
+          )}
+        </div>
         <Button onClick={() => picked && onApprove(picked)} disabled={busy || !picked} size="sm">
-          <Check className="h-3.5 w-3.5 mr-1.5" />
+          {busy ? (
+            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+          ) : (
+            <Check className="h-3.5 w-3.5 mr-1.5" />
+          )}
           Approve & publish {picked && <span className="ml-1 font-mono">{picked}</span>}
         </Button>
       </div>
