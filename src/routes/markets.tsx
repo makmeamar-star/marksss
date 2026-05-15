@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
@@ -12,7 +12,7 @@ import { todayIST } from "@/lib/marketTime";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { splitTopMarkets } from "@/lib/topMarkets";
+import { splitTopMarkets, TOP_MARKET_IDS } from "@/lib/topMarkets";
 
 const STORAGE_KEY = "markets_show_all";
 
@@ -41,6 +41,31 @@ function MarketsPage() {
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
   useEnsureFreshResults();
+
+  // Prefetch top-15 detail pages (bet + jodi) once markets are loaded so
+  // tapping a card opens instantly — and the route chunks are cached by the
+  // service worker for offline use. Runs idle to avoid contending with paint.
+  const router = useRouter();
+  const knownIds = useMemo(() => new Set(markets.map((m) => m.id)), [markets]);
+  useEffect(() => {
+    if (markets.length === 0) return;
+    const ids = TOP_MARKET_IDS.filter((id) => knownIds.has(id));
+    if (ids.length === 0) return;
+    const run = () => {
+      for (const marketId of ids) {
+        router.preloadRoute({ to: "/bet/$marketId", params: { marketId } }).catch(() => {});
+        router.preloadRoute({ to: "/jodi/$marketId", params: { marketId } }).catch(() => {});
+      }
+    };
+    const ric = (window as any).requestIdleCallback as
+      | ((cb: () => void, opts?: { timeout: number }) => number)
+      | undefined;
+    const handle = ric ? ric(run, { timeout: 1500 }) : window.setTimeout(run, 300);
+    return () => {
+      if (ric && (window as any).cancelIdleCallback) (window as any).cancelIdleCallback(handle);
+      else window.clearTimeout(handle as number);
+    };
+  }, [router, knownIds, markets.length]);
 
   const { q, status } = Route.useSearch();
   const navigate = useNavigate({ from: "/markets" });
