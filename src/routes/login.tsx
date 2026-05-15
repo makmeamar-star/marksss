@@ -16,6 +16,20 @@ const DEMO_ADMIN_PASSWORD = "DemoAdmin@2026";
 
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return;
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.session.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    throw (await import("@tanstack/react-router")).redirect({
+      to: roleRow ? "/admin" : "/dashboard",
+    });
+  },
   head: () => ({ meta: [{ title: "Login — SattaKing Pro" }] }),
   component: LoginPage,
 });
