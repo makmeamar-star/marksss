@@ -20,6 +20,7 @@ export const Route = createFileRoute("/admin/")({
 const tiles = [
   { to: "/admin/markets" as const, icon: Store, title: "Markets" },
   { to: "/admin/results/declare" as const, icon: Trophy, title: "Declare" },
+  { to: "/admin/results/alerts" as const, icon: AlertTriangle, title: "Alerts" },
   { to: "/admin/results/automation" as const, icon: Zap, title: "Automation" },
   { to: "/admin/results/scrape" as const, icon: Globe, title: "Scraper" },
   { to: "/admin/results/history" as const, icon: History, title: "History" },

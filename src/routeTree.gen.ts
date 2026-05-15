@@ -53,6 +53,7 @@ import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.
 import { Route as AdminResultsAutomationRunsRouteImport } from './routes/admin/results.automation-runs'
 import { Route as AdminResultsAutomationAuditRouteImport } from './routes/admin/results.automation-audit'
 import { Route as AdminResultsAutomationRouteImport } from './routes/admin/results.automation'
+import { Route as AdminResultsAlertsRouteImport } from './routes/admin/results.alerts'
 import { Route as AuthenticatedSettingsLimitsRouteImport } from './routes/_authenticated/settings.limits'
 import { Route as AuthenticatedPlayQuickRouteImport } from './routes/_authenticated/play.quick'
 import { Route as AuthenticatedJodiMarketIdRouteImport } from './routes/_authenticated/jodi.$marketId'
@@ -290,6 +291,11 @@ const AdminResultsAutomationRoute = AdminResultsAutomationRouteImport.update({
   path: '/results/automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminResultsAlertsRoute = AdminResultsAlertsRouteImport.update({
+  id: '/results/alerts',
+  path: '/results/alerts',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AuthenticatedSettingsLimitsRoute =
   AuthenticatedSettingsLimitsRouteImport.update({
     id: '/settings/limits',
@@ -404,6 +410,7 @@ export interface FileRoutesByFullPath {
   '/jodi/$marketId': typeof AuthenticatedJodiMarketIdRoute
   '/play/quick': typeof AuthenticatedPlayQuickRoute
   '/settings/limits': typeof AuthenticatedSettingsLimitsRoute
+  '/admin/results/alerts': typeof AdminResultsAlertsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -460,6 +467,7 @@ export interface FileRoutesByTo {
   '/jodi/$marketId': typeof AuthenticatedJodiMarketIdRoute
   '/play/quick': typeof AuthenticatedPlayQuickRoute
   '/settings/limits': typeof AuthenticatedSettingsLimitsRoute
+  '/admin/results/alerts': typeof AdminResultsAlertsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -519,6 +527,7 @@ export interface FileRoutesById {
   '/_authenticated/jodi/$marketId': typeof AuthenticatedJodiMarketIdRoute
   '/_authenticated/play/quick': typeof AuthenticatedPlayQuickRoute
   '/_authenticated/settings/limits': typeof AuthenticatedSettingsLimitsRoute
+  '/admin/results/alerts': typeof AdminResultsAlertsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
@@ -578,6 +587,7 @@ export interface FileRouteTypes {
     | '/jodi/$marketId'
     | '/play/quick'
     | '/settings/limits'
+    | '/admin/results/alerts'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -634,6 +644,7 @@ export interface FileRouteTypes {
     | '/jodi/$marketId'
     | '/play/quick'
     | '/settings/limits'
+    | '/admin/results/alerts'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -692,6 +703,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jodi/$marketId'
     | '/_authenticated/play/quick'
     | '/_authenticated/settings/limits'
+    | '/admin/results/alerts'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
@@ -1045,6 +1057,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResultsAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/results/alerts': {
+      id: '/admin/results/alerts'
+      path: '/results/alerts'
+      fullPath: '/admin/results/alerts'
+      preLoaderRoute: typeof AdminResultsAlertsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_authenticated/settings/limits': {
       id: '/_authenticated/settings/limits'
       path: '/settings/limits'
@@ -1184,6 +1203,7 @@ interface AdminRouteChildren {
   AdminUsersRoute: typeof AdminUsersRoute
   AdminWithdrawalsRoute: typeof AdminWithdrawalsRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminResultsAlertsRoute: typeof AdminResultsAlertsRoute
   AdminResultsAutomationRoute: typeof AdminResultsAutomationRoute
   AdminResultsAutomationAuditRoute: typeof AdminResultsAutomationAuditRoute
   AdminResultsAutomationRunsRoute: typeof AdminResultsAutomationRunsRoute
@@ -1204,6 +1224,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminUsersRoute: AdminUsersRoute,
   AdminWithdrawalsRoute: AdminWithdrawalsRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminResultsAlertsRoute: AdminResultsAlertsRoute,
   AdminResultsAutomationRoute: AdminResultsAutomationRoute,
   AdminResultsAutomationAuditRoute: AdminResultsAutomationAuditRoute,
   AdminResultsAutomationRunsRoute: AdminResultsAutomationRunsRoute,
