@@ -55,6 +55,9 @@ function fmtSec(ms: number) {
 function QuickPlay() {
   const refresh = useAuthStore((s) => s.refreshProfile);
   const balance = useAuthStore((s) => s.user?.balance ?? 0);
+  const hydrated = useAuthStore((s) => s.hydrated);
+  const userId = useAuthStore((s) => s.user?.id);
+  useEffect(() => { if (userId) void refresh(); }, [userId, refresh]);
   const [round, setRound] = useState<Round | null>(null);
   const [recent, setRecent] = useState<Round[]>([]);
   const [myBets, setMyBets] = useState<MyBet[]>([]);
