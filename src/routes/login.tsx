@@ -67,13 +67,29 @@ function LoginPage() {
 
   const anyBusy = busy;
 
+  const goByRole = async () => {
+    const { data } = await supabase.auth.getSession();
+    const uid = data.session?.user.id;
+    if (!uid) {
+      navigate({ to: "/dashboard" });
+      return;
+    }
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin")
+      .maybeSingle();
+    navigate({ to: roleRow ? "/admin" : "/dashboard" });
+  };
+
   const demoLogin = async () => {
     setBusy(true);
     try {
       applyRemember(remember);
       await login(DEMO_EMAIL, DEMO_PASSWORD);
       toast.success("Welcome back, demo player!");
-      navigate({ to: "/dashboard" });
+      await goByRole();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Demo login failed");
     } finally {
@@ -86,8 +102,8 @@ function LoginPage() {
     try {
       applyRemember(remember);
       await login(DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD);
-      toast.success("Welcome back, demo admin!");
-      navigate({ to: "/admin" });
+      toast.success("Welcome back!");
+      await goByRole();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Demo admin login failed");
     } finally {
@@ -106,7 +122,7 @@ function LoginPage() {
       applyRemember(remember);
       await login(identifier, password);
       toast.success(`Welcome back!`);
-      navigate({ to: "/dashboard" });
+      await goByRole();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
