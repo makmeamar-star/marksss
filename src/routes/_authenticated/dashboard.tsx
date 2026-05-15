@@ -55,7 +55,7 @@ function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Kpi
           label="Balance"
-          value={`₹${(user?.balance ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
+          value={hydrated && user ? `₹${(user.balance ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}` : "—"}
           icon={<Wallet />} accent
         />
         <Kpi
