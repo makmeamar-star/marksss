@@ -59,6 +59,7 @@ import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenti
 import { Route as ApiPublicPaymentsUtrCallbackRouteImport } from './routes/api/public/payments/utr-callback'
 import { Route as ApiPublicHooksScrapeResultsRouteImport } from './routes/api/public/hooks/scrape-results'
 import { Route as ApiPublicHooksHealthCheckRouteImport } from './routes/api/public/hooks/health-check'
+import { Route as ApiPublicHooksDispatchResultPushRouteImport } from './routes/api/public/hooks/dispatch-result-push'
 import { Route as ApiPublicHooksBackfillResultsRouteImport } from './routes/api/public/hooks/backfill-results'
 import { Route as ApiPublicHooksAutoDeclareResultsRouteImport } from './routes/api/public/hooks/auto-declare-results'
 
@@ -322,6 +323,12 @@ const ApiPublicHooksHealthCheckRoute =
     path: '/api/public/hooks/health-check',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDispatchResultPushRoute =
+  ApiPublicHooksDispatchResultPushRouteImport.update({
+    id: '/api/public/hooks/dispatch-result-push',
+    path: '/api/public/hooks/dispatch-result-push',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksBackfillResultsRoute =
   ApiPublicHooksBackfillResultsRouteImport.update({
     id: '/api/public/hooks/backfill-results',
@@ -384,6 +391,7 @@ export interface FileRoutesByFullPath {
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/dispatch-result-push': typeof ApiPublicHooksDispatchResultPushRoute
   '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
   '/api/public/payments/utr-callback': typeof ApiPublicPaymentsUtrCallbackRoute
@@ -436,6 +444,7 @@ export interface FileRoutesByTo {
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/dispatch-result-push': typeof ApiPublicHooksDispatchResultPushRoute
   '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
   '/api/public/payments/utr-callback': typeof ApiPublicPaymentsUtrCallbackRoute
@@ -491,6 +500,7 @@ export interface FileRoutesById {
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/auto-declare-results': typeof ApiPublicHooksAutoDeclareResultsRoute
   '/api/public/hooks/backfill-results': typeof ApiPublicHooksBackfillResultsRoute
+  '/api/public/hooks/dispatch-result-push': typeof ApiPublicHooksDispatchResultPushRoute
   '/api/public/hooks/health-check': typeof ApiPublicHooksHealthCheckRoute
   '/api/public/hooks/scrape-results': typeof ApiPublicHooksScrapeResultsRoute
   '/api/public/payments/utr-callback': typeof ApiPublicPaymentsUtrCallbackRoute
@@ -546,6 +556,7 @@ export interface FileRouteTypes {
     | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/dispatch-result-push'
     | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
     | '/api/public/payments/utr-callback'
@@ -598,6 +609,7 @@ export interface FileRouteTypes {
     | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/dispatch-result-push'
     | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
     | '/api/public/payments/utr-callback'
@@ -652,6 +664,7 @@ export interface FileRouteTypes {
     | '/admin/results/scrape'
     | '/api/public/hooks/auto-declare-results'
     | '/api/public/hooks/backfill-results'
+    | '/api/public/hooks/dispatch-result-push'
     | '/api/public/hooks/health-check'
     | '/api/public/hooks/scrape-results'
     | '/api/public/payments/utr-callback'
@@ -675,6 +688,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ApiPublicHooksAutoDeclareResultsRoute: typeof ApiPublicHooksAutoDeclareResultsRoute
   ApiPublicHooksBackfillResultsRoute: typeof ApiPublicHooksBackfillResultsRoute
+  ApiPublicHooksDispatchResultPushRoute: typeof ApiPublicHooksDispatchResultPushRoute
   ApiPublicHooksHealthCheckRoute: typeof ApiPublicHooksHealthCheckRoute
   ApiPublicHooksScrapeResultsRoute: typeof ApiPublicHooksScrapeResultsRoute
   ApiPublicPaymentsUtrCallbackRoute: typeof ApiPublicPaymentsUtrCallbackRoute
@@ -1032,6 +1046,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksHealthCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/dispatch-result-push': {
+      id: '/api/public/hooks/dispatch-result-push'
+      path: '/api/public/hooks/dispatch-result-push'
+      fullPath: '/api/public/hooks/dispatch-result-push'
+      preLoaderRoute: typeof ApiPublicHooksDispatchResultPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/backfill-results': {
       id: '/api/public/hooks/backfill-results'
       path: '/api/public/hooks/backfill-results'
@@ -1149,6 +1170,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ApiPublicHooksAutoDeclareResultsRoute: ApiPublicHooksAutoDeclareResultsRoute,
   ApiPublicHooksBackfillResultsRoute: ApiPublicHooksBackfillResultsRoute,
+  ApiPublicHooksDispatchResultPushRoute: ApiPublicHooksDispatchResultPushRoute,
   ApiPublicHooksHealthCheckRoute: ApiPublicHooksHealthCheckRoute,
   ApiPublicHooksScrapeResultsRoute: ApiPublicHooksScrapeResultsRoute,
   ApiPublicPaymentsUtrCallbackRoute: ApiPublicPaymentsUtrCallbackRoute,
