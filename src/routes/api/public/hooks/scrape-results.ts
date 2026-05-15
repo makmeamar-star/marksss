@@ -118,7 +118,16 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
                 status: "FETCH_ERROR",
                 error: JSON.stringify(detail).slice(0, 1000),
               });
-              summary.push({ market: m.market_id, session, error: detail.message });
+              // Enqueue for the retry-queue processor.
+              await supabase.rpc("enqueue_scrape_retry", {
+                _market_id: m.market_id,
+                _session_date: today,
+                _session: session,
+                _source: m.source,
+                _slug: m.slug,
+                _error: detail.message.slice(0, 500),
+              });
+              summary.push({ market: m.market_id, session, error: detail.message, queued: true });
             }
           }
         }
