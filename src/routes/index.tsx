@@ -124,10 +124,67 @@ function HomePage() {
           </Link>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {markets.map((m) => (
+          {topMarkets.map((m) => (
             <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
           ))}
         </div>
+        {restMarkets.length > 0 && (
+          <Collapsible open={showAll} onOpenChange={onShowAllChange} className="mt-8">
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full justify-between border-primary/30 text-primary hover:bg-primary/10">
+                <span>{showAll ? "Hide" : `Show all ${restMarkets.length} more markets`}</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showAll ? "rotate-180" : ""}`} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {restMarkets.map((m) => (
+                  <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+      </section>
+
+      {/* SCHEDULE */}
+      <section className="container mx-auto px-4 py-12">
+        <h2 className="font-display text-3xl font-bold mb-6">Market Schedule</h2>
+        <div className="glass rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-surface/60 text-muted-foreground">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium uppercase text-xs tracking-wider">Market</th>
+                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Open</th>
+                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Close</th>
+                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Result</th>
+                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Days</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topMarkets.map((m) => (
+                  <ScheduleRow key={m.id} m={m} />
+                ))}
+                {showAll && restMarkets.map((m) => (
+                  <ScheduleRow key={m.id} m={m} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {restMarkets.length > 0 && (
+          <div className="mt-3 text-center">
+            <button
+              type="button"
+              onClick={() => onShowAllChange(!showAll)}
+              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+            >
+              {showAll ? "Hide extra markets" : `Show all ${restMarkets.length} more in schedule`}
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAll ? "rotate-180" : ""}`} />
+            </button>
+          </div>
+        )}
       </section>
 
       {/* SCHEDULE */}
