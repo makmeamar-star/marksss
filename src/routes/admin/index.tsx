@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { getAdminOverview } from "@/lib/adminDashboard.functions";
+import { getMissingResults } from "@/lib/missingResults.functions";
+import { MissingResultsBanner } from "@/components/admin/MissingResultsBanner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/")({
@@ -40,11 +42,18 @@ function timeAgo(iso: string | null): string {
 
 function AdminHome() {
   const fetchOverview = useServerFn(getAdminOverview);
+  const fetchMissing = useServerFn(getMissingResults);
   const q = useQuery({
     queryKey: ["admin", "overview"],
     queryFn: () => fetchOverview(),
     refetchInterval: 30_000,
   });
+  const missingQ = useQuery({
+    queryKey: ["admin", "missing-results"],
+    queryFn: () => fetchMissing(),
+    refetchInterval: 60_000,
+  });
+  const missingCount = missingQ.data?.rows.length ?? 0;
 
   // Realtime invalidation on key tables
   useEffect(() => {
@@ -169,22 +178,35 @@ function AdminHome() {
       <div className="mt-8">
         <h2 className="font-display text-lg font-bold mb-3">Quick actions</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {tiles.map((t) => (
-            <Link
-              key={t.to}
-              to={t.to}
-              className="group flex items-center justify-between gap-3 rounded-xl glass-gold p-4 hover:ring-gold transition-all"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-gold text-background shrink-0">
-                  <t.icon className="h-4 w-4" />
-                </span>
-                <span className="font-medium text-sm truncate">{t.title}</span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          ))}
+          {tiles.map((t) => {
+            const showBadge = t.to === "/admin/results/declare" && missingCount > 0;
+            return (
+              <Link
+                key={t.to}
+                to={t.to}
+                className="group flex items-center justify-between gap-3 rounded-xl glass-gold p-4 hover:ring-gold transition-all relative"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-gold text-background shrink-0">
+                    <t.icon className="h-4 w-4" />
+                  </span>
+                  <span className="font-medium text-sm truncate">{t.title}</span>
+                </div>
+                {showBadge && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center shadow">
+                    {missingCount}
+                  </span>
+                )}
+                <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            );
+          })}
         </div>
+        {missingCount > 0 && (
+          <div className="mt-4">
+            <MissingResultsBanner />
+          </div>
+        )}
       </div>
 
       {q.error && (
