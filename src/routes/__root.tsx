@@ -13,6 +13,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { ErrorMonitor } from "@/components/ErrorMonitor";
 import { AgeGate } from "@/components/AgeGate";
 import { reportError } from "@/lib/errorReporter";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 import appCss from "../styles.css?url";
 
@@ -162,6 +163,7 @@ function RootComponent() {
       <ErrorMonitor />
       <Outlet />
       <AgeGate />
+      <OfflineIndicator />
       <Toaster theme="dark" position="top-right" richColors />
     </QueryClientProvider>
   );
