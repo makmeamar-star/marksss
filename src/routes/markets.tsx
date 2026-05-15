@@ -172,14 +172,27 @@ function MarketsPage() {
     }
   };
 
-  const renderCard = (m: typeof markets[number]) => (
-    <div key={m.id} className="space-y-2">
-      <ResultCard market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} />
-      <Button asChild className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
-        <Link to="/bet/$marketId" params={{ marketId: m.id }} preload="intent">Bet Now</Link>
-      </Button>
-    </div>
-  );
+  const renderCard = (m: typeof markets[number]) => {
+    const star = isStarMarket(m.id);
+    return (
+      <div
+        key={m.id}
+        className={`space-y-2 relative ${
+          star ? "rounded-xl ring-2 ring-primary/40 p-1" : ""
+        }`}
+      >
+        {star && (
+          <span className="absolute -top-2 left-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-gold px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-background shadow">
+            <Star className="h-3 w-3 fill-current" /> Star
+          </span>
+        )}
+        <ResultCard market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} />
+        <Button asChild className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
+          <Link to="/bet/$marketId" params={{ marketId: m.id }} preload="intent">Bet Now</Link>
+        </Button>
+      </div>
+    );
+  };
 
   const statusBtn = (key: "all" | "open" | "closed", label: string) => (
     <button
