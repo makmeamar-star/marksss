@@ -1,105 +1,58 @@
-## Goal
+To me, “update only correct result” means: the app must not publish/settle any result unless the same market/session/date result is confirmed by at least 2 independent sources. If sources disagree or only one source has a value, keep it pending and show it to admin for manual review.
 
-Make the app dramatically easier to use on mobile and put **Gali, Disawar, Faridabad, Ghaziabad** front-and-center everywhere it counts. Visual feel: **Royal Gold** (black `#0d0d0d` / `#1a1a1a` + gold `#c9a84c` / `#f0d78c`).
+Current findings:
 
-## 1. "Star Markets" concept (the 4 highlighted markets)
+- The biggest risk is not only dpboss.boston. Your database currently has all 117 markets in `RANDOM` automation mode, and the scheduled `auto-declare-results` path can publish random panas after market time. That can create incorrect live results even when scraping is broken.
+- The existing 2-source confirmation function exists, but it is weakened by the random auto-declare scheduler and by having only one real scraper source wired.
+- I checked `https://sattamatkadpboss.mobi/`: it has many live results on the homepage, but I did not find Gali, Disawar, Faridabad, or Ghaziabad there.
+- I checked `https://www.fixresult.in/`: its public data API currently exposes around 18 markets; I did not find Gali, Disawar, Faridabad, or Ghaziabad there either.
 
-A single source of truth in code:
+Plan:
 
-```ts
-// src/config/starMarkets.ts
-export const STAR_MARKET_IDS = ["gali", "disawar", "faridabad", "ghaziabad"] as const;
-```
+1. Stop incorrect/random result publishing
 
-Used by every surface below so the list stays consistent.
+- Disable or neutralize the random auto-declare scheduler so it cannot publish fake/random results.
+- Update `run_due_auto_declarations` so it does not randomly select a pana from `pana_chart` for live markets.
+- Keep manual admin declaration available for markets that are not covered by reliable sources.
 
-A new shared component **`StarMarketTile`** renders each market as a big gold-bordered card showing:
+2. Add multi-source real result scrapers
 
-- Market name + live status pill (`OPEN` / `CLOSING in 12m` / `CLOSED`)
-- Today's **Open · Jodi · Close** in large monospace digits (★ until declared)
-- A 3-day mini chart strip (last 3 jodis, dimmed → bright)
-- Primary CTA: **"Play now"** → jumps straight into the bet entry for the active session (or "View result" if both sessions are closed)
+- Add a `sattamatkadpboss` source parser for `https://sattamatkadpboss.mobi/` live homepage result cards.
+- Add a `fixresult` source parser using FixResult’s public JSON data API, matching the way their own homepage loads results.
+- Keep the existing `dpboss` parser, but do not allow it alone to auto-publish.
 
-Skeleton state while results load; offline-cached values shown if network is down (service worker already caches results).
+3. Enforce true 2+ source agreement before publishing
 
-## 2. Surfaces that get the Star Markets
+- Require at least 2 distinct source names reporting the same pana before `record_observation_and_maybe_declare` can call `system_auto_declare`.
+- Remove/disable the current fallback where the same source seen twice over time can count as 2 confirmations.
+- If sources conflict, create a warning and keep the result unpublished.
 
-**Home (`/index`)** — new "★ Star Markets" section pinned right under the hero, before the regular markets list. 2-column grid on mobile, 4-column on desktop.
+4. Update market source mapping
 
-**Markets page (`/markets`)** — a sticky "★ Star Markets" strip at the top (always visible while scrolling), then the autocomplete search and the full grid below. The 4 stars are **also** highlighted inside the regular grid with a thin gold border + ★ badge so they're easy to find when searching/filtering.
+- Add source-map rows for markets that are available on the new sources with the correct source slug/name.
+- Use strong matching only; do not guess ambiguous names like `main-mumbai` vs `main-bazar`.
+- Leave unsupported/uncertain markets unmapped so they do not auto-publish incorrectly.
 
-**Bottom nav (new)** — a 5-slot bottom nav appears on mobile (`<md`):
+5. Improve admin visibility
 
-```
-[ Home ] [ Markets ] [ ★ Star ] [ Wallet ] [ Profile ]
-```
+- Add a source coverage report in the scraper/admin page showing:
+  - markets confirmed by 2+ sources,
+  - markets found on only 1 source,
+  - markets not found on the checked sources,
+  - conflicting source values.
+- Add clear labels: `AUTO_READY`, `NEEDS_SECOND_SOURCE`, `CONFLICT`, `MANUAL_ONLY`.
 
-The center "★ Star" tab is visually larger (gold pill that lifts above the bar) and lands on a dedicated `/star` route showing only the 4 markets in a single-column tall layout — biggest tap targets in the app.
+6. Recheck and report unavailable markets
 
-## 3. "Easier" UI changes
+- After wiring parsers, run a fresh comparison against your active markets.
+- Provide you a list of markets not available on `sattamatkadpboss.mobi` or `fixresult.in` so you can delete them, add another source, or publish manually.
+- Based on my initial check, these priority markets are not available on either suggested source: Gali, Disawar, Faridabad, Ghaziabad, and Desawar Special.
 
-**New `BottomNav` component** (mobile only, hidden on `/admin/*`, `/login`, `/register`):
-- Fixed bottom, safe-area aware, blur backdrop, gold active indicator
-- Replaces the need to dig through the header menu on phones
-- Adds 60px bottom padding to page content when visible so nothing is covered
+Technical details:
 
-**New `StickyActionBar`** — sits just above the BottomNav on Home/Markets/Star/Result-detail pages:
-- 3 wide buttons: **Deposit** (primary gold), **Play** (outline gold), **Wallet** (text)
-- Auto-hides on scroll-down, reappears on scroll-up so it doesn't block content
+- Files likely touched: scraper source modules, scraper coordinator, scrape hooks, queue processor, admin scraper page.
+- Database changes: update the confirmation RPC to require distinct sources only, and neutralize random auto-declare behavior.
+- Data changes: update existing automation/source-map rows after the database function changes are approved.
+- No private API keys are needed for these two sources; FixResult’s data access is already public from their frontend script. 
 
-**Simpler market card layout** — refactor `ResultCard` (or sibling component used in `/markets`) to a single horizontal row on mobile:
-
-```
-[Logo]  Market Name              123-45-678
-        OPEN · closes 13:50      [Play ›]
-```
-
-Bigger 16px base font, 48px tap targets, generous 16px padding, 1px gold hairline separators instead of full borders. Same component, denser variant for desktop grid.
-
-**Header trim** — on mobile, collapse the desktop nav links into a hamburger and keep only Logo + Wallet balance + Bell. The new bottom nav handles primary navigation.
-
-## 4. Royal Gold theme tokens
-
-Add to `src/styles.css` (semantic, not hardcoded):
-
-```css
---gold: oklch(0.78 0.12 85);          /* #c9a84c */
---gold-soft: oklch(0.88 0.10 90);     /* #f0d78c */
---surface: oklch(0.16 0 0);            /* #1a1a1a */
---surface-elevated: oklch(0.20 0 0);
---gradient-gold: linear-gradient(135deg, var(--gold), var(--gold-soft));
---shadow-gold: 0 8px 32px -12px color-mix(in oklab, var(--gold) 40%, transparent);
---ring-star: 0 0 0 1.5px var(--gold);
-```
-
-Star tiles use `--gradient-gold` border + `--shadow-gold`. Status pills, active nav indicator, primary CTAs all map to `--gold`. Existing primary blue stays for non-star CTAs to keep contrast.
-
-## 5. New route
-
-`src/routes/star.tsx` — landing page for the bottom-nav star tab. Single column, 4 large `StarMarketTile`s stacked, each ~220px tall on mobile. Heading "★ Featured Markets". SEO title/description tuned for "Gali Disawar Faridabad Ghaziabad live result".
-
-## Files to add
-
-- `src/config/starMarkets.ts`
-- `src/components/StarMarketTile.tsx`
-- `src/components/StarMarketsSection.tsx` (the grid wrapper for Home + Markets)
-- `src/components/BottomNav.tsx`
-- `src/components/StickyActionBar.tsx`
-- `src/routes/star.tsx`
-
-## Files to edit
-
-- `src/styles.css` — add Royal Gold tokens
-- `src/routes/__root.tsx` — mount `<BottomNav />` (mobile only, route-aware)
-- `src/routes/index.tsx` — insert `<StarMarketsSection />` under hero
-- `src/routes/markets.tsx` — sticky star strip + ★ badge in grid
-- `src/components/SiteHeader.tsx` — mobile trim
-- `src/components/ResultCard.tsx` (or the markets-grid card) — simpler row layout + ★ badge for star markets
-
-## Out of scope (will not touch)
-
-- Bet entry flow, payouts, results scraping/queue logic, admin pages, auth flows, payment channels.
-
-## Open question (non-blocking)
-
-The "Play now" CTA on a Star Tile — when both sessions are closed for today, should it (a) deep-link to tomorrow's market detail with a "Bets open at HH:MM" notice, or (b) show "View Result" only and disable Play? I'll go with **(b) — show View Result, disable Play** unless you prefer (a).
+For gali disawar faridabad gaziabad use [https://satta-king-fast.com/](https://satta-king-fast.com/)  [https://a1-sattaking.com/chart-2026/faridabad-satta-result](https://a1-sattaking.com/chart-2026/faridabad-satta-result)

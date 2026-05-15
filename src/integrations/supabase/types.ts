@@ -158,6 +158,13 @@ export type Database = {
             foreignKeyName: "bets_market_id_fkey"
             columns: ["market_id"]
             isOneToOne: false
+            referencedRelation: "market_source_coverage"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "bets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
             referencedRelation: "markets"
             referencedColumns: ["id"]
           },
@@ -457,6 +464,13 @@ export type Database = {
             foreignKeyName: "market_automation_market_id_fkey"
             columns: ["market_id"]
             isOneToOne: true
+            referencedRelation: "market_source_coverage"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "market_automation_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: true
             referencedRelation: "markets"
             referencedColumns: ["id"]
           },
@@ -513,6 +527,13 @@ export type Database = {
             foreignKeyName: "market_results_market_id_fkey"
             columns: ["market_id"]
             isOneToOne: false
+            referencedRelation: "market_source_coverage"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "market_results_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
             referencedRelation: "markets"
             referencedColumns: ["id"]
           },
@@ -541,6 +562,13 @@ export type Database = {
           source?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "market_source_map_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "market_source_coverage"
+            referencedColumns: ["market_id"]
+          },
           {
             foreignKeyName: "market_source_map_market_id_fkey"
             columns: ["market_id"]
@@ -1558,6 +1586,15 @@ export type Database = {
           user_id: string | null
           username: string | null
           week_won: number | null
+        }
+        Relationships: []
+      }
+      market_source_coverage: {
+        Row: {
+          display_name: string | null
+          market_id: string | null
+          sources: string[] | null
+          sources_configured: number | null
         }
         Relationships: []
       }
