@@ -1,15 +1,26 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, Trophy, TrendingUp, Users, Sparkles } from "lucide-react";
+import { ArrowRight, Trophy, TrendingUp, Users, Sparkles, ChevronDown } from "lucide-react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { ResultsTicker } from "@/components/ResultsTicker";
 import { ResultCard } from "@/components/ResultCard";
 import { RangoliDivider } from "@/components/RangoliDivider";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
+import { splitTopMarkets } from "@/lib/topMarkets";
+
+const ResultsTicker = lazy(() =>
+  import("@/components/ResultsTicker").then((m) => ({ default: m.ResultsTicker })),
+);
+const TickerFallback = () => (
+  <div className="border-y border-border/60 bg-surface/60 h-9" aria-hidden />
+);
+
+const HOME_STORAGE_KEY = "home_show_all_markets";
 
 export const Route = createFileRoute("/")({
   head: () => ({
