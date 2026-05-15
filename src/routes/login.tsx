@@ -30,6 +30,32 @@ function LoginPage() {
 
   const anyBusy = busy;
 
+  const demoLogin = async () => {
+    setBusy(true);
+    try {
+      await login(DEMO_EMAIL, DEMO_PASSWORD);
+      toast.success("Welcome back, demo player!");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Demo login failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const demoAdminLogin = async () => {
+    setBusy(true);
+    try {
+      await login(DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD);
+      toast.success("Welcome back, demo admin!");
+      navigate({ to: "/admin" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Demo admin login failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier || !password) {
