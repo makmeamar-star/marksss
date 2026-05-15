@@ -75,7 +75,8 @@ function PanaChartView() {
 }
 
 function JodiChartView() {
-  const { data: markets = [] } = useMarkets();
+  const { data: rawMarkets = [] } = useMarkets();
+  const markets = useMemo(() => sortTopFirst(rawMarkets), [rawMarkets]);
   const { data: results = [] } = useResultsRange(60);
   const [marketId, setMarketId] = useState(markets[0]?.id);
 
@@ -128,7 +129,8 @@ function JodiChartView() {
 }
 
 function OpenCloseView() {
-  const { data: markets = [] } = useMarkets();
+  const { data: rawMarkets = [] } = useMarkets();
+  const markets = useMemo(() => sortTopFirst(rawMarkets), [rawMarkets]);
   const { data: results = [] } = useResultsRange(30);
   const [marketId, setMarketId] = useState(markets[0]?.id);
 
