@@ -5,11 +5,14 @@ import { ArrowLeft, Check, X, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   listTodayObservations,
   approveObservation,
   rejectObservations,
 } from "@/lib/scraperObservations.functions";
+
+type SessionFilter = "ALL" | "OPEN" | "CLOSE" | "JODI";
 
 export const Route = createFileRoute("/admin/results/observations")({
   component: ObservationsPage,
