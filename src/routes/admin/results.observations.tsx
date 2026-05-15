@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Check, X, AlertTriangle, RefreshCw } from "lucide-react";
+import { ArrowLeft, Check, X, AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,19 @@ import {
 } from "@/lib/scraperObservations.functions";
 
 type SessionFilter = "ALL" | "OPEN" | "CLOSE" | "JODI";
+
+type ActionStatus = "pending" | "success" | "error";
+type ActionEntry = {
+  id: string;
+  groupKey: string;
+  market_name: string;
+  session: "OPEN" | "CLOSE" | "JODI";
+  kind: "approve" | "reject";
+  value?: string;
+  status: ActionStatus;
+  message?: string;
+  at: number;
+};
 
 export const Route = createFileRoute("/admin/results/observations")({
   component: ObservationsPage,
