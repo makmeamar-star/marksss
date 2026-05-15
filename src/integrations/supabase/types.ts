@@ -995,6 +995,42 @@ export type Database = {
         }
         Relationships: []
       }
+      result_observations: {
+        Row: {
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          market_id: string
+          pana: string
+          seen_count: number
+          session: string
+          session_date: string
+          source: string
+        }
+        Insert: {
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          market_id: string
+          pana: string
+          seen_count?: number
+          session: string
+          session_date: string
+          source: string
+        }
+        Update: {
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          market_id?: string
+          pana?: string
+          seen_count?: number
+          session?: string
+          session_date?: string
+          source?: string
+        }
+        Relationships: []
+      }
       result_proof: {
         Row: {
           client_seed: string | null
@@ -1567,6 +1603,16 @@ export type Database = {
         Returns: Json
       }
       ensure_starline_rounds: { Args: never; Returns: Json }
+      find_missing_results: {
+        Args: never
+        Returns: {
+          display_name: string
+          market_id: string
+          minutes_overdue: number
+          scheduled_time: string
+          session: string
+        }[]
+      }
       gen_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -1590,6 +1636,16 @@ export type Database = {
       }
       place_quick_bet: {
         Args: { p_amount: number; p_digit: number; p_round_id: string }
+        Returns: Json
+      }
+      record_observation_and_maybe_declare: {
+        Args: {
+          _market_id: string
+          _pana: string
+          _session: string
+          _session_date: string
+          _source: string
+        }
         Returns: Json
       }
       redeem_promo_code: { Args: { _code: string }; Returns: Json }
