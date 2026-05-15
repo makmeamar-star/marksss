@@ -172,37 +172,6 @@ function LoginPage() {
             {busy ? "Signing in…" : "Sign In"}
           </Button>
 
-          <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground/70">
-            <span className="h-px flex-1 bg-border/60" />
-            or try a demo
-            <span className="h-px flex-1 bg-border/60" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              onClick={demoLogin}
-              disabled={anyBusy}
-              variant="outline"
-              className="border-primary/40 text-primary hover:bg-primary/10"
-            >
-              {demoBusy ? "Loading…" : "Demo User"}
-            </Button>
-            <Button
-              type="button"
-              onClick={demoAdminLogin}
-              disabled={anyBusy}
-              variant="outline"
-              className="border-primary/40 text-primary hover:bg-primary/10"
-            >
-              {adminBusy ? "Loading…" : "Demo Admin"}
-            </Button>
-          </div>
-
-          <p className="text-xs text-center text-muted-foreground">
-            First account created automatically becomes the admin.
-          </p>
-
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
           </p>
