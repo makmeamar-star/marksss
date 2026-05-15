@@ -26,9 +26,7 @@ export const Route = createFileRoute("/login")({
       .eq("user_id", data.session.user.id)
       .eq("role", "admin")
       .maybeSingle();
-    throw (await import("@tanstack/react-router")).redirect({
-      to: roleRow ? "/admin" : "/dashboard",
-    });
+    throw redirect({ to: roleRow ? "/admin" : "/dashboard" });
   },
   head: () => ({ meta: [{ title: "Login — SattaKing Pro" }] }),
   component: LoginPage,
