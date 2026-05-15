@@ -14,6 +14,7 @@ import { PanaReferencePanel } from "@/components/admin/declare/PanaReferencePane
 import { ActivityFeedPanel } from "@/components/admin/declare/ActivityFeedPanel";
 import { AuditLogPanel } from "@/components/admin/declare/AuditLogPanel";
 import { ShortcutsLegend } from "@/components/admin/declare/ShortcutsLegend";
+import { MissingResultsBanner } from "@/components/admin/MissingResultsBanner";
 import { useShortcuts } from "@/hooks/useShortcuts";
 import { useDeclareForm } from "@/stores/declareFormStore";
 
@@ -71,6 +72,8 @@ function DeclarePage() {
           </Button>
         </div>
       </div>
+
+      <MissingResultsBanner />
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
