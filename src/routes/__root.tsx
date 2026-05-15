@@ -135,6 +135,28 @@ function RootComponent() {
     if (!hydrated) void bootstrap();
   }, [hydrated, bootstrap]);
 
+  // Register PWA service worker — but never inside the Lovable editor preview
+  // iframe or on preview hosts (it would cache stale builds).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator)) return;
+    const inIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
+    const host = window.location.hostname;
+    const isPreview =
+      host.includes("id-preview--") ||
+      host.includes("lovableproject.com") ||
+      host === "localhost" ||
+      host === "127.0.0.1";
+    if (inIframe || isPreview) {
+      // Aggressively unregister any SW that may have been installed earlier.
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.unregister());
+      }).catch(() => {});
+      return;
+    }
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorMonitor />
