@@ -144,6 +144,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   logout: async () => {
     await supabase.auth.signOut();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("auth_remember_off");
+      sessionStorage.removeItem("auth_alive");
+    }
     set({ user: null });
   },
 
