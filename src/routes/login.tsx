@@ -172,25 +172,29 @@ function LoginPage() {
             {busy ? "Signing in…" : "Sign In"}
           </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Demo test accounts</span>
-            </div>
-          </div>
+          {demoEnabled && (
+            <>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Demo test accounts</span>
+                </div>
+              </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button type="button" variant="outline" disabled={anyBusy} onClick={demoLogin} className="w-full">
-              <User className="mr-2 h-4 w-4" />
-              {busy ? "Loading…" : "Demo User"}
-            </Button>
-            <Button type="button" variant="outline" disabled={anyBusy} onClick={demoAdminLogin} className="w-full">
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              {busy ? "Loading…" : "Demo Admin"}
-            </Button>
-          </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Button type="button" variant="outline" disabled={anyBusy} onClick={demoLogin} className="w-full">
+                  <User className="mr-2 h-4 w-4" />
+                  {busy ? "Loading…" : "Demo User"}
+                </Button>
+                <Button type="button" variant="outline" disabled={anyBusy} onClick={demoAdminLogin} className="w-full">
+                  <ShieldCheck className="mr-2 h-4 w-4" />
+                  {busy ? "Loading…" : "Demo Admin"}
+                </Button>
+              </div>
+            </>
+          )}
 
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
