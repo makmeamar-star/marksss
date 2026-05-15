@@ -8,8 +8,15 @@
 import { fetchDpbossPanel, type DpbossDayResult } from "./dpboss.server";
 import { fetchSattamatkadpbossPanel } from "./sattamatkadpboss.server";
 import { fetchFixresultPanel } from "./fixresult.server";
+import { fetchSattakingvipPanel } from "./sattakingvip.server";
+import { fetchGaliDisawarChart } from "./galidisawar.server";
 
-export type SourceName = "dpboss" | "sattamatkadpboss" | "fixresult";
+export type SourceName =
+  | "dpboss"
+  | "sattamatkadpboss"
+  | "fixresult"
+  | "sattakingvip"
+  | "galidisawar";
 
 export interface ScrapedDay {
   date: string;          // YYYY-MM-DD
@@ -27,6 +34,8 @@ const SOURCES: Record<SourceName, (slug: string) => Promise<DpbossDayResult[]>> 
   dpboss: fetchDpbossPanel,
   sattamatkadpboss: fetchSattamatkadpbossPanel,
   fixresult: fetchFixresultPanel,
+  sattakingvip: fetchSattakingvipPanel,
+  galidisawar: fetchGaliDisawarChart,
 };
 
 /** Fetch all days available for a given market slug from a given source. */
