@@ -1,86 +1,99 @@
-## Problem
+## Goals
 
-`/admin` and its sub-pages render briefly (or fully on a fresh tab) without a logged-in admin session because:
+1. Surface 15 hand-picked markets up front; tuck the other 102 behind a "Show all markets" expander on the homepage, /markets, and the ticker.
+2. Squeeze obvious perf wins (route-level caching, prefetch, deferred ticker, image hints).
+3. Convert the published site to a real PWA so you can paste the URL into pwabuilder.com and download a signed APK.
 
-1. The route guard skips the check during SSR/prerender (`if (typeof window === "undefined") return;`), so the admin shell HTML is generated and shipped to the browser.
-2. The client-side check is async and runs after render, so anyone hitting `/admin` directly sees the admin layout flash before the redirect.
-3. Login always sends people to `/dashboard` regardless of role — there's no role-aware routing on success.
-4. There is no server-side enforcement for admin pages; everything relies on RLS at query time.
+---
 
-RLS itself looks correct (admin tables use `has_role(auth.uid(), 'admin')`), but the UI layer is leaking.
+## 1. Top 15 markets
 
-## Fix
-
-### 1. Harden the `/admin` route guard (`src/routes/admin.tsx`)
-
-- Keep the SSR early-return, but render a **blank gate component** (`return null` until hydrated + verified) instead of the admin shell. No admin HTML ever paints until the role check resolves.
-- In `beforeLoad`, after `getSession()`:
-  - If no session → `redirect({ to: "/login", search: { redirect } })`.
-  - If session but role check returns no `admin` row → `redirect({ to: "/dashboard" })` + toast "Admin access required".
-- Add a `loader` that calls a new server function `requireAdmin()` so the role is also verified **server-side** (defence in depth — a tampered client can't fake the role).
-
-### 2. New server function `requireAdmin` (`src/lib/admin.functions.ts`)
+Add a single source of truth at `src/lib/topMarkets.ts`:
 
 ```ts
-export const requireAdmin = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
-      .from("user_roles").select("role")
-      .eq("user_id", context.userId).eq("role", "admin").maybeSingle();
-    if (error || !data) throw new Error("FORBIDDEN");
-    return { ok: true };
-  });
+export const TOP_MARKET_IDS = [
+  "kalyan", "kalyan_night", "milan_day", "milan_night",
+  "rajdhani_day", "rajdhani_night", "main_bazar", "main_mumbai",
+  "time_bazar", "sridevi", "sridevi_night",
+  "madhur_day", "madhur_night", "kalyan_morning", "super_kalyan",
+] as const;
+
+export function splitTopMarkets<T extends { id: string }>(all: T[]) {
+  const set = new Set<string>(TOP_MARKET_IDS);
+  const top = TOP_MARKET_IDS
+    .map(id => all.find(m => m.id === id))
+    .filter(Boolean) as T[];
+  const rest = all.filter(m => !set.has(m.id));
+  return { top, rest };
+}
 ```
 
-The `/admin` loader calls this; non-admins get the route's `errorComponent` which redirects to `/dashboard`.
+Apply in three places:
 
-### 3. Role-aware login redirect (`src/routes/login.tsx`)
+- **`src/routes/markets.tsx`** — render `top` in the existing grid; render `rest` inside a shadcn `Collapsible` ("Show all 102 markets" / "Hide"). Default closed. Persist open state in `localStorage` so power users don't keep re-opening it.
+- **`src/routes/index.tsx`** — same split for the "Today's Live Results" grid AND the schedule table. Hero counters keep showing totals across all 117.
+- **`src/components/ResultsTicker.tsx`** — only loop over `top`. Ticker stays snappy and readable.
 
-After every successful login (form, demo user, demo admin), look up the user's role:
+Charts page already uses a `<Select>` so all 117 are still reachable; no change needed there beyond reordering top-15 to the top of the dropdown.
 
-```ts
-const { data: roles } = await supabase.from("user_roles")
-  .select("role").eq("user_id", session.user.id);
-const isAdmin = (roles ?? []).some(r => r.role === "admin");
-navigate({ to: isAdmin ? "/admin" : "/dashboard" });
-```
+---
 
-This removes the hard-coded `/admin` jump from the Demo Admin button (which no longer holds admin after the previous change) and routes the real admin (`lafxnga@gmail.com`) to `/admin` automatically.
+## 2. Performance pass
 
-Also: if `/login` is opened while already authenticated, redirect immediately based on role (covers the "open /admin in a new tab without login" case — they end up on /login → bounced to /dashboard).
+Cheap wins, no architectural changes:
 
-### 4. `_authenticated` guard hardening (same approach as admin)
+- **Cache markets aggressively.** `markets` rarely change. In `useMarkets`, set `staleTime: 5 * 60_000` and `gcTime: 30 * 60_000`. Today's results stay at the current 30s refetch.
+- **Prefetch `/markets` and `/bet/$marketId`** on link hover via `<Link preload="intent">` in `SiteHeader` and the homepage cards. TanStack Router already supports this; the hook is already importable.
+- **Defer the ticker.** Wrap `<ResultsTicker />` in `React.lazy` + `Suspense` with a `h-9` skeleton matching its current placeholder, so it doesn't block hero paint.
+- **Memoize the schedule table.** `useMemo` over `markets` to avoid re-rendering 117 rows on every state tick.
+- **Image hints.** Add `loading="lazy" decoding="async"` to non-LCP imagery (rangoli divider, footer logos). Add `<link rel="preconnect" href="https://kpahmkjutkfyhydfgffh.supabase.co">` in `__root.tsx` head.
+- **DB index sanity.** Already have `markets_pkey`; add a covering index on `market_results(market_id, session_date desc)` if it isn't there (migration step). Speeds the 30-second refetch noticeably.
 
-Same pattern: don't render the layout shell until session is verified post-hydration. Prevents player pages flashing on a logged-out tab too.
+Not in scope: refactoring data fetching, image-format conversion, or font swaps. We'll measure before going deeper.
 
-### 5. Sanity sweep on RLS (read-only)
+---
 
-Run `supabase--linter` and confirm:
-- Every admin-only table has policies gated by `has_role(auth.uid(), 'admin')` (already true based on schema dump).
-- No table has a `USING (true)` write policy.
-- `user_roles` itself is locked down (it is — only admins can write).
+## 3. PWA + APK
 
-If the linter surfaces anything, fix it in a follow-up migration.
+Honoring the warning: the service worker is **disabled in dev/preview** and only activates on `golden-play-pro.lovable.app` and your custom domains.
 
-### 6. Out of scope (not changing)
+Steps:
 
-- Existing RLS policies — they're already correct.
-- The "Demo Admin" button stays visible (per earlier decision) but will now redirect to `/dashboard` since that account is no longer admin.
-- No change to authStore persistence / "Remember me".
+1. **Install `vite-plugin-pwa`** and wire it into `vite.config.ts` with:
+   - `registerType: "autoUpdate"`
+   - `devOptions: { enabled: false }`
+   - `workbox.navigateFallbackDenylist: [/^\/api/, /^\/~oauth/]`
+   - `workbox.runtimeCaching`: `NetworkFirst` for HTML navigations (3s timeout), `StaleWhileRevalidate` for `/assets/*` and Supabase REST GETs.
+2. **Add `public/manifest.webmanifest`** with name "SattaKing Pro", short_name "SattaKing", `display: "standalone"`, theme/background colors from the design tokens, and icon set (192/512 maskable + monochrome). I'll generate the icons with imagegen and drop them in `public/icons/`.
+3. **Guard registration** in `src/main.tsx` (or wherever the client entry is) so it never registers inside iframes or on `*.lovableproject.com` / `id-preview--*` hosts.
+4. **APK delivery** — once published, you paste `https://golden-play-pro.lovable.app` (or your custom domain) into https://pwabuilder.com → Android → Download. PWABuilder produces a signed TWA `.apk`/`.aab` you can sideload or upload to Play Store. The site needs to score green on PWABuilder; the manifest + SW above will do that.
+
+Caveats called out up front:
+- PWA install prompt and offline cache only work on the published URL, never in the editor preview.
+- Manifest fields (`start_url`, `display`) are pinned at install time on iOS/Android. If we change them later, only fresh installs see the change.
+- The APK is a TWA wrapper, not a native app — it's the website running in a Chrome surface. That's the standard, sanctioned way to ship a PWA to Play Store.
+
+---
 
 ## Files touched
 
-- `src/routes/admin.tsx` — gate component, server-side role loader, error redirect.
-- `src/routes/_authenticated.tsx` — render gate post-hydration.
-- `src/routes/login.tsx` — role-aware post-login redirect + already-signed-in redirect.
-- `src/lib/admin.functions.ts` — **new** `requireAdmin` server function.
-- `src/start.ts` — verify `attachSupabaseAuth` is registered (already required for any auth-protected serverFn; add only if missing).
+```text
+src/lib/topMarkets.ts                    (new)
+src/routes/markets.tsx                   (split + Collapsible)
+src/routes/index.tsx                     (split + Collapsible + memo)
+src/routes/charts.tsx                    (reorder dropdown)
+src/components/ResultsTicker.tsx         (top-15 only, lazy-load)
+src/hooks/useGameData.ts                 (staleTime/gcTime tune)
+src/routes/__root.tsx                    (preconnect, lazy ticker scaffold)
+src/main.tsx                             (PWA registration guard)
+vite.config.ts                           (vite-plugin-pwa)
+public/manifest.webmanifest              (new)
+public/icons/*.png                       (new, generated)
+supabase/migrations/<ts>_market_results_idx.sql  (covering index)
+```
 
-## Result
+## What you do after I ship
 
-- Visiting `/admin` without a session → instant redirect to `/login`, no admin HTML paints.
-- Logged-in non-admin hitting `/admin` → redirected to `/dashboard`.
-- Real admin (`lafxnga@gmail.com`) signs in → lands directly on `/admin`.
-- Even with client-side tampering, the loader's server-side `requireAdmin` blocks the page.
-- RLS continues to protect data at the database layer.
+1. Click **Update** in the Publish dialog to deploy the SW to `.lovable.app`.
+2. Open the published URL on Android Chrome → confirm "Install app" appears.
+3. Go to https://pwabuilder.com, paste the URL, click **Package for Stores → Android**, download the APK.

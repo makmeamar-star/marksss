@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
 import { todayIST } from "@/lib/marketTime";
+import { splitTopMarkets } from "@/lib/topMarkets";
 
 export function ResultsTicker() {
   const today = todayIST();
@@ -8,19 +9,23 @@ export function ResultsTicker() {
   const { data: results = [] } = useResultsForDate(today);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  const items = useMemo(() => {
+    const { top } = splitTopMarkets(markets);
+    return top.map((m) => {
+      const r = results.find((x) => x.marketId === m.id);
+      return {
+        name: m.displayName,
+        jodi: r?.jodi ?? "--",
+        open: r?.openPana ?? "***",
+        close: r?.closePana ?? "***",
+      };
+    });
+  }, [markets, results]);
+
   if (!mounted) {
     return <div className="border-y border-border/60 bg-surface/60 h-9" suppressHydrationWarning />;
   }
-
-  const items = markets.map((m) => {
-    const r = results.find((x) => x.marketId === m.id);
-    return {
-      name: m.displayName,
-      jodi: r?.jodi ?? "--",
-      open: r?.openPana ?? "***",
-      close: r?.closePana ?? "***",
-    };
-  });
 
   const row = (key: string) => (
     <div key={key} className="flex shrink-0 items-center gap-8 pr-8">

@@ -75,8 +75,12 @@ export function useMarkets() {
       if (error) throw error;
       return (data ?? []).map(rowToMarket);
     },
-    staleTime: 60_000,
-    refetchInterval: 60_000, // keep isOpen fresh
+    // Markets rarely change. Cache aggressively but keep isOpen fresh
+    // through the periodic refetch.
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: false,
   });
 }
 

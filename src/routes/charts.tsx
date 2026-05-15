@@ -6,6 +6,7 @@ import { PANA_CHART, panaType } from "@/lib/panaChart";
 import { useMarkets, useResultsRange } from "@/hooks/useGameData";
 import { useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { sortTopFirst } from "@/lib/topMarkets";
 
 export const Route = createFileRoute("/charts")({
   head: () => ({
@@ -74,7 +75,8 @@ function PanaChartView() {
 }
 
 function JodiChartView() {
-  const { data: markets = [] } = useMarkets();
+  const { data: rawMarkets = [] } = useMarkets();
+  const markets = useMemo(() => sortTopFirst(rawMarkets), [rawMarkets]);
   const { data: results = [] } = useResultsRange(60);
   const [marketId, setMarketId] = useState(markets[0]?.id);
 
@@ -127,7 +129,8 @@ function JodiChartView() {
 }
 
 function OpenCloseView() {
-  const { data: markets = [] } = useMarkets();
+  const { data: rawMarkets = [] } = useMarkets();
+  const markets = useMemo(() => sortTopFirst(rawMarkets), [rawMarkets]);
   const { data: results = [] } = useResultsRange(30);
   const [marketId, setMarketId] = useState(markets[0]?.id);
 

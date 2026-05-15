@@ -1,15 +1,26 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, Trophy, TrendingUp, Users, Sparkles } from "lucide-react";
+import { ArrowRight, Trophy, TrendingUp, Users, Sparkles, ChevronDown } from "lucide-react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { ResultsTicker } from "@/components/ResultsTicker";
 import { ResultCard } from "@/components/ResultCard";
 import { RangoliDivider } from "@/components/RangoliDivider";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
+import { splitTopMarkets } from "@/lib/topMarkets";
+
+const ResultsTicker = lazy(() =>
+  import("@/components/ResultsTicker").then((m) => ({ default: m.ResultsTicker })),
+);
+const TickerFallback = () => (
+  <div className="border-y border-border/60 bg-surface/60 h-9" aria-hidden />
+);
+
+const HOME_STORAGE_KEY = "home_show_all_markets";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,11 +44,24 @@ function HomePage() {
   const declaredToday = results.filter((r) => r.status === "DECLARED").length;
   const openNow = markets.filter((m) => m.isOpen).length;
 
+  const { top: topMarkets, rest: restMarkets } = useMemo(() => splitTopMarkets(markets), [markets]);
+  const [showAll, setShowAll] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setShowAll(localStorage.getItem(HOME_STORAGE_KEY) === "1");
+  }, []);
+  const onShowAllChange = (v: boolean) => {
+    setShowAll(v);
+    if (typeof window !== "undefined") localStorage.setItem(HOME_STORAGE_KEY, v ? "1" : "0");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="h-1 w-full bg-tricolour opacity-80" aria-hidden />
       <SiteHeader />
-      <ResultsTicker />
+      <Suspense fallback={<TickerFallback />}>
+        <ResultsTicker />
+      </Suspense>
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-radial-spotlight">
@@ -100,10 +124,27 @@ function HomePage() {
           </Link>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {markets.map((m) => (
+          {topMarkets.map((m) => (
             <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
           ))}
         </div>
+        {restMarkets.length > 0 && (
+          <Collapsible open={showAll} onOpenChange={onShowAllChange} className="mt-8">
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full justify-between border-primary/30 text-primary hover:bg-primary/10">
+                <span>{showAll ? "Hide" : `Show all ${restMarkets.length} more markets`}</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showAll ? "rotate-180" : ""}`} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {restMarkets.map((m) => (
+                  <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
       </section>
 
       {/* SCHEDULE */}
@@ -122,19 +163,28 @@ function HomePage() {
                 </tr>
               </thead>
               <tbody>
-                {markets.map((m) => (
-                  <tr key={m.id} className="border-t border-border/50">
-                    <td className="px-4 py-3 font-display font-semibold">{m.displayName}</td>
-                    <td className="px-4 py-3 text-center font-mono">{m.openTime}</td>
-                    <td className="px-4 py-3 text-center font-mono">{m.closeTime}</td>
-                    <td className="px-4 py-3 text-center font-mono text-primary">{m.resultTime}</td>
-                    <td className="px-4 py-3 text-center text-xs text-muted-foreground">{m.days.length === 7 ? "All days" : m.days.join(" ")}</td>
-                  </tr>
+                {topMarkets.map((m) => (
+                  <ScheduleRow key={m.id} m={m} />
+                ))}
+                {showAll && restMarkets.map((m) => (
+                  <ScheduleRow key={m.id} m={m} />
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+        {restMarkets.length > 0 && (
+          <div className="mt-3 text-center">
+            <button
+              type="button"
+              onClick={() => onShowAllChange(!showAll)}
+              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+            >
+              {showAll ? "Hide extra markets" : `Show all ${restMarkets.length} more in schedule`}
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAll ? "rotate-180" : ""}`} />
+            </button>
+          </div>
+        )}
       </section>
 
       {/* QUICK STATS */}
@@ -169,5 +219,17 @@ function QuickStat({ label, value, accent }: { label: string; value: string; acc
       <div className={`font-display text-3xl font-bold ${accent ? "text-primary text-glow-gold" : "text-foreground"}`}>{value}</div>
       <div className="text-xs uppercase tracking-widest text-muted-foreground mt-1">{label}</div>
     </div>
+  );
+}
+
+function ScheduleRow({ m }: { m: { id: string; displayName: string; openTime: string; closeTime: string; resultTime: string; days: string[] } }) {
+  return (
+    <tr className="border-t border-border/50">
+      <td className="px-4 py-3 font-display font-semibold">{m.displayName}</td>
+      <td className="px-4 py-3 text-center font-mono">{m.openTime}</td>
+      <td className="px-4 py-3 text-center font-mono">{m.closeTime}</td>
+      <td className="px-4 py-3 text-center font-mono text-primary">{m.resultTime}</td>
+      <td className="px-4 py-3 text-center text-xs text-muted-foreground">{m.days.length === 7 ? "All days" : m.days.join(" ")}</td>
+    </tr>
   );
 }
