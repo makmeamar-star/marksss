@@ -108,3 +108,43 @@ async function staleWhileRevalidate(request) {
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
+
+// ---- Web Push: result alerts ----
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: "New result", body: event.data ? event.data.text() : "" };
+  }
+  const title = data.title || "Result declared";
+  const options = {
+    body: data.body || "",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: data.tag || "result-alert",
+    renotify: true,
+    data: { url: data.url || "/results" },
+    vibrate: [120, 60, 120],
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || "/results";
+  event.waitUntil((async () => {
+    const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const c of allClients) {
+      try {
+        const url = new URL(c.url);
+        if (url.origin === self.location.origin) {
+          await c.focus();
+          if ("navigate" in c) await c.navigate(target);
+          return;
+        }
+      } catch {}
+    }
+    await self.clients.openWindow(target);
+  })());
+});
