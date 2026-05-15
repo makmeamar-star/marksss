@@ -54,6 +54,7 @@ import { Route as AdminResultsAutomationAuditRouteImport } from './routes/admin/
 import { Route as AdminResultsAutomationRouteImport } from './routes/admin/results.automation'
 import { Route as AuthenticatedSettingsLimitsRouteImport } from './routes/_authenticated/settings.limits'
 import { Route as AuthenticatedPlayQuickRouteImport } from './routes/_authenticated/play.quick'
+import { Route as AuthenticatedJodiMarketIdRouteImport } from './routes/_authenticated/jodi.$marketId'
 import { Route as AuthenticatedBetMarketIdRouteImport } from './routes/_authenticated/bet.$marketId'
 import { Route as ApiPublicPaymentsUtrCallbackRouteImport } from './routes/api/public/payments/utr-callback'
 import { Route as ApiPublicHooksScrapeResultsRouteImport } from './routes/api/public/hooks/scrape-results'
@@ -291,6 +292,12 @@ const AuthenticatedPlayQuickRoute = AuthenticatedPlayQuickRouteImport.update({
   path: '/play/quick',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedJodiMarketIdRoute =
+  AuthenticatedJodiMarketIdRouteImport.update({
+    id: '/jodi/$marketId',
+    path: '/jodi/$marketId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedBetMarketIdRoute =
   AuthenticatedBetMarketIdRouteImport.update({
     id: '/bet/$marketId',
@@ -366,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin/': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/jodi/$marketId': typeof AuthenticatedJodiMarketIdRoute
   '/play/quick': typeof AuthenticatedPlayQuickRoute
   '/settings/limits': typeof AuthenticatedSettingsLimitsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
@@ -417,6 +425,7 @@ export interface FileRoutesByTo {
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin': typeof AdminIndexRoute
   '/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/jodi/$marketId': typeof AuthenticatedJodiMarketIdRoute
   '/play/quick': typeof AuthenticatedPlayQuickRoute
   '/settings/limits': typeof AuthenticatedSettingsLimitsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
@@ -471,6 +480,7 @@ export interface FileRoutesById {
   '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/admin/': typeof AdminIndexRoute
   '/_authenticated/bet/$marketId': typeof AuthenticatedBetMarketIdRoute
+  '/_authenticated/jodi/$marketId': typeof AuthenticatedJodiMarketIdRoute
   '/_authenticated/play/quick': typeof AuthenticatedPlayQuickRoute
   '/_authenticated/settings/limits': typeof AuthenticatedSettingsLimitsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
@@ -525,6 +535,7 @@ export interface FileRouteTypes {
     | '/admin/withdrawals'
     | '/admin/'
     | '/bet/$marketId'
+    | '/jodi/$marketId'
     | '/play/quick'
     | '/settings/limits'
     | '/admin/results/automation'
@@ -576,6 +587,7 @@ export interface FileRouteTypes {
     | '/admin/withdrawals'
     | '/admin'
     | '/bet/$marketId'
+    | '/jodi/$marketId'
     | '/play/quick'
     | '/settings/limits'
     | '/admin/results/automation'
@@ -629,6 +641,7 @@ export interface FileRouteTypes {
     | '/admin/withdrawals'
     | '/admin/'
     | '/_authenticated/bet/$marketId'
+    | '/_authenticated/jodi/$marketId'
     | '/_authenticated/play/quick'
     | '/_authenticated/settings/limits'
     | '/admin/results/automation'
@@ -984,6 +997,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlayQuickRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/jodi/$marketId': {
+      id: '/_authenticated/jodi/$marketId'
+      path: '/jodi/$marketId'
+      fullPath: '/jodi/$marketId'
+      preLoaderRoute: typeof AuthenticatedJodiMarketIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/bet/$marketId': {
       id: '/_authenticated/bet/$marketId'
       path: '/bet/$marketId'
@@ -1042,6 +1062,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedStarlineRoute: typeof AuthenticatedStarlineRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedBetMarketIdRoute: typeof AuthenticatedBetMarketIdRoute
+  AuthenticatedJodiMarketIdRoute: typeof AuthenticatedJodiMarketIdRoute
   AuthenticatedPlayQuickRoute: typeof AuthenticatedPlayQuickRoute
   AuthenticatedSettingsLimitsRoute: typeof AuthenticatedSettingsLimitsRoute
 }
@@ -1059,6 +1080,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedStarlineRoute: AuthenticatedStarlineRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedBetMarketIdRoute: AuthenticatedBetMarketIdRoute,
+  AuthenticatedJodiMarketIdRoute: AuthenticatedJodiMarketIdRoute,
   AuthenticatedPlayQuickRoute: AuthenticatedPlayQuickRoute,
   AuthenticatedSettingsLimitsRoute: AuthenticatedSettingsLimitsRoute,
 }
