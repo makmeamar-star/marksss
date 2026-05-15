@@ -14,22 +14,40 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuthStore } from "@/stores/authStore";
 import { LiveClock } from "@/components/admin/LiveClock";
+import { requireAdmin } from "@/lib/adminGuard.functions";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async ({ location }) => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      // Don't render admin shell during SSR/prerender; loader will also fail
+      // server-side (no auth header) and the errorComponent shows nothing.
+      return;
+    }
     const { supabase } = await import("@/integrations/supabase/client");
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
       throw redirect({ to: "/login", search: { redirect: location.href } as never });
     }
-    const { data: roles } = await supabase
+    const { data: roleRow } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", data.session.user.id);
-    if (!(roles ?? []).some((r) => r.role === "admin")) {
+      .eq("user_id", data.session.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) {
       throw redirect({ to: "/dashboard" });
     }
+  },
+  // Server-side defence in depth — verifies the admin role with the user's
+  // bearer token. On SSR/prerender there's no token, so this throws and the
+  // errorComponent renders an empty placeholder (NOT the admin shell).
+  loader: () => requireAdmin(),
+  errorComponent: () => {
+    if (typeof window !== "undefined") {
+      // Client-side error means session/role check failed — bounce to login.
+      window.location.replace("/login");
+    }
+    return null;
   },
   head: () => ({ meta: [{ title: "Admin — SattaKing Pro" }] }),
   component: AdminLayout,

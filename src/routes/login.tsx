@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { Crown, Sparkles, Trophy, Zap, User, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -16,6 +16,18 @@ const DEMO_ADMIN_PASSWORD = "DemoAdmin@2026";
 
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return;
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.session.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    throw redirect({ to: roleRow ? "/admin" : "/dashboard" });
+  },
   head: () => ({ meta: [{ title: "Login — SattaKing Pro" }] }),
   component: LoginPage,
 });
@@ -53,13 +65,29 @@ function LoginPage() {
 
   const anyBusy = busy;
 
+  const goByRole = async () => {
+    const { data } = await supabase.auth.getSession();
+    const uid = data.session?.user.id;
+    if (!uid) {
+      navigate({ to: "/dashboard" });
+      return;
+    }
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin")
+      .maybeSingle();
+    navigate({ to: roleRow ? "/admin" : "/dashboard" });
+  };
+
   const demoLogin = async () => {
     setBusy(true);
     try {
       applyRemember(remember);
       await login(DEMO_EMAIL, DEMO_PASSWORD);
       toast.success("Welcome back, demo player!");
-      navigate({ to: "/dashboard" });
+      await goByRole();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Demo login failed");
     } finally {
@@ -72,8 +100,8 @@ function LoginPage() {
     try {
       applyRemember(remember);
       await login(DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD);
-      toast.success("Welcome back, demo admin!");
-      navigate({ to: "/admin" });
+      toast.success("Welcome back!");
+      await goByRole();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Demo admin login failed");
     } finally {
@@ -92,7 +120,7 @@ function LoginPage() {
       applyRemember(remember);
       await login(identifier, password);
       toast.success(`Welcome back!`);
-      navigate({ to: "/dashboard" });
+      await goByRole();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
