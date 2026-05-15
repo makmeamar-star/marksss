@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
@@ -12,7 +12,7 @@ import { todayIST } from "@/lib/marketTime";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { splitTopMarkets } from "@/lib/topMarkets";
+import { splitTopMarkets, TOP_MARKET_IDS } from "@/lib/topMarkets";
 
 const STORAGE_KEY = "markets_show_all";
 
