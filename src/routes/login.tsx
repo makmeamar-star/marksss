@@ -244,6 +244,22 @@ function LoginPage() {
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
           </p>
+
+          <div className="pt-3 border-t border-border/60">
+            <button
+              type="button"
+              onClick={() => {
+                document.getElementById("id")?.focus();
+                toast.info("Sign in with your admin credentials", {
+                  description: "You'll be redirected to the admin dashboard automatically.",
+                });
+              }}
+              className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Admin Login →
+            </button>
+          </div>
         </form>
       </div>
     </div>
