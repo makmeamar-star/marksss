@@ -5,11 +5,14 @@ import { ArrowLeft, Check, X, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   listTodayObservations,
   approveObservation,
   rejectObservations,
 } from "@/lib/scraperObservations.functions";
+
+type SessionFilter = "ALL" | "OPEN" | "CLOSE" | "JODI";
 
 export const Route = createFileRoute("/admin/results/observations")({
   component: ObservationsPage,
@@ -47,8 +50,32 @@ function ObservationsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const groups = q.data?.groups ?? [];
+  const allGroups = q.data?.groups ?? [];
+  const [search, setSearch] = useState("");
+  const [sessionFilter, setSessionFilter] = useState<SessionFilter>("ALL");
+  const [conflictsOnly, setConflictsOnly] = useState(false);
+
+  const groups = allGroups.filter((g) => {
+    if (sessionFilter !== "ALL" && g.session !== sessionFilter) return false;
+    if (conflictsOnly && !g.conflict) return false;
+    if (search.trim()) {
+      const s = search.trim().toLowerCase();
+      if (
+        !g.market_name.toLowerCase().includes(s) &&
+        !g.market_id.toLowerCase().includes(s)
+      )
+        return false;
+    }
+    return true;
+  });
   const conflicts = groups.filter((g) => g.conflict).length;
+
+  const sessionCounts: Record<SessionFilter, number> = {
+    ALL: allGroups.length,
+    OPEN: allGroups.filter((g) => g.session === "OPEN").length,
+    CLOSE: allGroups.filter((g) => g.session === "CLOSE").length,
+    JODI: allGroups.filter((g) => g.session === "JODI").length,
+  };
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-8 max-w-6xl">
@@ -60,8 +87,8 @@ function ObservationsPage() {
           <div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold">Scraper Observations</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Today {q.data?.today ?? "—"} (IST) · {groups.length} pending · {conflicts} conflict
-              {conflicts === 1 ? "" : "s"}
+              Today {q.data?.today ?? "—"} (IST) · {groups.length} of {allGroups.length} shown ·{" "}
+              {conflicts} conflict{conflicts === 1 ? "" : "s"}
             </p>
           </div>
         </div>
@@ -69,6 +96,47 @@ function ObservationsPage() {
           <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${q.isFetching ? "animate-spin" : ""}`} />
           Refresh
         </Button>
+      </div>
+
+      <div className="mt-5 rounded-2xl glass-gold p-3 sm:p-4 flex flex-col sm:flex-row gap-3 sm:items-center">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search market by name or id…"
+          className="sm:max-w-xs"
+        />
+        <div className="flex flex-wrap gap-1.5">
+          {(["ALL", "OPEN", "CLOSE", "JODI"] as SessionFilter[]).map((s) => (
+            <Button
+              key={s}
+              size="sm"
+              variant={sessionFilter === s ? "default" : "outline"}
+              onClick={() => setSessionFilter(s)}
+            >
+              {s} <span className="ml-1.5 text-xs opacity-70">{sessionCounts[s]}</span>
+            </Button>
+          ))}
+          <Button
+            size="sm"
+            variant={conflictsOnly ? "default" : "outline"}
+            onClick={() => setConflictsOnly((v) => !v)}
+          >
+            <AlertTriangle className="h-3 w-3 mr-1" /> Conflicts
+          </Button>
+          {(search || sessionFilter !== "ALL" || conflictsOnly) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setSearch("");
+                setSessionFilter("ALL");
+                setConflictsOnly(false);
+              }}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
       </div>
 
       {q.isLoading && <p className="mt-6 text-sm text-muted-foreground">Loading…</p>}
@@ -79,8 +147,9 @@ function ObservationsPage() {
       )}
       {!q.isLoading && groups.length === 0 && (
         <div className="mt-8 rounded-2xl glass-gold p-8 text-center text-muted-foreground">
-          No pending observations. Either everything is already declared or the scraper has not
-          fetched anything yet today.
+          {allGroups.length === 0
+            ? "No pending observations. Either everything is already declared or the scraper has not fetched anything yet today."
+            : "No observations match the current filters."}
         </div>
       )}
 
