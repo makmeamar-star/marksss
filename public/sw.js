@@ -3,20 +3,27 @@
 // StaleWhileRevalidate for /assets/* and same-origin GETs.
 // IMPORTANT: never registered on Lovable preview hosts (see RootComponent guard).
 
-const VERSION = "v2";
+const VERSION = "v3";
 const RUNTIME = `runtime-${VERSION}`;
+const PRECACHE = `precache-${VERSION}`;
 const NAV_TIMEOUT_MS = 3000;
+const OFFLINE_URL = "/offline.html";
 
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(PRECACHE);
+    try {
+      await cache.add(new Request(OFFLINE_URL, { cache: "reload" }));
+    } catch {}
+    self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(
-      keys.filter((k) => !k.endsWith(VERSION)).map((k) => caches.delete(k))
-    );
+    const keep = new Set([RUNTIME, PRECACHE]);
+    await Promise.all(keys.filter((k) => !keep.has(k)).map((k) => caches.delete(k)));
     await self.clients.claim();
   })());
 });
@@ -80,6 +87,9 @@ async function networkFirstHTML(request) {
     if (cached) return cached;
     const fallback = await cache.match("/");
     if (fallback) return fallback;
+    const precache = await caches.open(PRECACHE);
+    const offline = await precache.match(OFFLINE_URL);
+    if (offline) return offline;
     return new Response("Offline", { status: 503, headers: { "content-type": "text/plain" } });
   }
 }
