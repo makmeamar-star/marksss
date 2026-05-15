@@ -1,48 +1,105 @@
 ## Goal
 
-Make **dpboss.boston** the only live result source, and purge historical results so only today's and yesterday's rows remain (re-fetched fresh from dpboss.boston).
+Make the app dramatically easier to use on mobile and put **Gali, Disawar, Faridabad, Ghaziabad** front-and-center everywhere it counts. Visual feel: **Royal Gold** (black `#0d0d0d` / `#1a1a1a` + gold `#c9a84c` / `#f0d78c`).
 
-## 1. Point the scraper at dpboss.boston
+## 1. "Star Markets" concept (the 4 highlighted markets)
 
-`src/lib/scraper/dpboss.server.ts` currently fetches from `https://dpboss.services/panel-chart-record/<slug>.php`. Change the base URL to:
+A single source of truth in code:
+
+```ts
+// src/config/starMarkets.ts
+export const STAR_MARKET_IDS = ["gali", "disawar", "faridabad", "ghaziabad"] as const;
+```
+
+Used by every surface below so the list stays consistent.
+
+A new shared component **`StarMarketTile`** renders each market as a big gold-bordered card showing:
+
+- Market name + live status pill (`OPEN` / `CLOSING in 12m` / `CLOSED`)
+- Today's **Open · Jodi · Close** in large monospace digits (★ until declared)
+- A 3-day mini chart strip (last 3 jodis, dimmed → bright)
+- Primary CTA: **"Play now"** → jumps straight into the bet entry for the active session (or "View result" if both sessions are closed)
+
+Skeleton state while results load; offline-cached values shown if network is down (service worker already caches results).
+
+## 2. Surfaces that get the Star Markets
+
+**Home (`/index`)** — new "★ Star Markets" section pinned right under the hero, before the regular markets list. 2-column grid on mobile, 4-column on desktop.
+
+**Markets page (`/markets`)** — a sticky "★ Star Markets" strip at the top (always visible while scrolling), then the autocomplete search and the full grid below. The 4 stars are **also** highlighted inside the regular grid with a thin gold border + ★ badge so they're easy to find when searching/filtering.
+
+**Bottom nav (new)** — a 5-slot bottom nav appears on mobile (`<md`):
 
 ```
-https://dpboss.boston/panel-chart-record/<slug>.php
+[ Home ] [ Markets ] [ ★ Star ] [ Wallet ] [ Profile ]
 ```
 
-(HTML structure on dpboss.boston mirrors dpboss.services — same `<tbody>` panel parser keeps working. If a row breaks, the existing scrape log will surface it.)
+The center "★ Star" tab is visually larger (gold pill that lifts above the bar) and lands on a dedicated `/star` route showing only the 4 markets in a single-column tall layout — biggest tap targets in the app.
 
-No changes to `index.server.ts` source registry — the source key stays `"dpboss"` (it's just the live URL that moves), so all 199 existing `market_source_map` rows keep working.
+## 3. "Easier" UI changes
 
-## 2. Purge historical result data
+**New `BottomNav` component** (mobile only, hidden on `/admin/*`, `/login`, `/register`):
+- Fixed bottom, safe-area aware, blur backdrop, gold active indicator
+- Replaces the need to dig through the header menu on phones
+- Adds 60px bottom padding to page content when visible so nothing is covered
 
-Run a one-time data cleanup (via the insert tool) keeping only `session_date >= CURRENT_DATE - 1` (today + yesterday, IST):
+**New `StickyActionBar`** — sits just above the BottomNav on Home/Markets/Star/Result-detail pages:
+- 3 wide buttons: **Deposit** (primary gold), **Play** (outline gold), **Wallet** (text)
+- Auto-hides on scroll-down, reappears on scroll-up so it doesn't block content
 
-- `market_results` — delete ~10,863 old rows, keep ~199.
-- `result_observations` — delete all rows older than yesterday.
-- `result_scrape_log` — delete all rows older than yesterday.
-- `result_proof` — delete all rows older than yesterday.
-- `audit_log` — delete rows where `session_date < CURRENT_DATE - 1` (keeps non-result admin actions, which have NULL session_date).
+**Simpler market card layout** — refactor `ResultCard` (or sibling component used in `/markets`) to a single horizontal row on mobile:
 
-**Bets are NOT touched.** Already-settled `bets` rows keep their `win_amount` / `status` / `settled_at` — only the underlying result chart history is wiped. Users still see their own bet history; the public Results page just won't show charts older than yesterday.
+```
+[Logo]  Market Name              123-45-678
+        OPEN · closes 13:50      [Play ›]
+```
 
-## 3. Re-scrape today + yesterday from dpboss.boston
+Bigger 16px base font, 48px tap targets, generous 16px padding, 1px gold hairline separators instead of full borders. Same component, denser variant for desktop grid.
 
-After the URL switch + purge, trigger `/api/public/hooks/scrape-results` once. The existing scraper already iterates today + recent days and writes confirmed panas via `record_observation_and_maybe_declare`.
+**Header trim** — on mobile, collapse the desktop nav links into a hamburger and keep only Logo + Wallet balance + Bell. The new bottom nav handles primary navigation.
 
-Note on the confirm-twice rule: with a single source, auto-declare requires **two sightings of the same pana ≥ 4 minutes apart from dpboss** (existing behavior from the previous task). The 5-minute pg_cron schedule satisfies this naturally. Missing-result alerts continue to fire as already wired.
+## 4. Royal Gold theme tokens
 
-## 4. UI surfaces that show old charts
+Add to `src/styles.css` (semantic, not hardcoded):
 
-- `/results` and any "panel chart" pages query `market_results` directly → automatically truncate to the last 2 days after the purge.
-- No code change needed there; the empty state already handles "no rows".
+```css
+--gold: oklch(0.78 0.12 85);          /* #c9a84c */
+--gold-soft: oklch(0.88 0.10 90);     /* #f0d78c */
+--surface: oklch(0.16 0 0);            /* #1a1a1a */
+--surface-elevated: oklch(0.20 0 0);
+--gradient-gold: linear-gradient(135deg, var(--gold), var(--gold-soft));
+--shadow-gold: 0 8px 32px -12px color-mix(in oklab, var(--gold) 40%, transparent);
+--ring-star: 0 0 0 1.5px var(--gold);
+```
 
-## Files touched
+Star tiles use `--gradient-gold` border + `--shadow-gold`. Status pills, active nav indicator, primary CTAs all map to `--gold`. Existing primary blue stays for non-star CTAs to keep contrast.
 
-- `src/lib/scraper/dpboss.server.ts` — base URL constant.
-- One SQL run via the insert tool — purge old rows from 5 tables.
-- One manual POST to `/api/public/hooks/scrape-results` to backfill today + yesterday from dpboss.boston.
+## 5. New route
 
-## One thing to confirm before I run the purge
+`src/routes/star.tsx` — landing page for the bottom-nav star tab. Single column, 4 large `StarMarketTile`s stacked, each ~220px tall on mobile. Heading "★ Featured Markets". SEO title/description tuned for "Gali Disawar Faridabad Ghaziabad live result".
 
-Deleting old `market_results` is **irreversible** (chart history for all past months is gone). Settled bets stay intact, but the public panel chart will only ever show 2 days going forward. Confirm and I'll execute.
+## Files to add
+
+- `src/config/starMarkets.ts`
+- `src/components/StarMarketTile.tsx`
+- `src/components/StarMarketsSection.tsx` (the grid wrapper for Home + Markets)
+- `src/components/BottomNav.tsx`
+- `src/components/StickyActionBar.tsx`
+- `src/routes/star.tsx`
+
+## Files to edit
+
+- `src/styles.css` — add Royal Gold tokens
+- `src/routes/__root.tsx` — mount `<BottomNav />` (mobile only, route-aware)
+- `src/routes/index.tsx` — insert `<StarMarketsSection />` under hero
+- `src/routes/markets.tsx` — sticky star strip + ★ badge in grid
+- `src/components/SiteHeader.tsx` — mobile trim
+- `src/components/ResultCard.tsx` (or the markets-grid card) — simpler row layout + ★ badge for star markets
+
+## Out of scope (will not touch)
+
+- Bet entry flow, payouts, results scraping/queue logic, admin pages, auth flows, payment channels.
+
+## Open question (non-blocking)
+
+The "Play now" CTA on a Star Tile — when both sessions are closed for today, should it (a) deep-link to tomorrow's market detail with a "Bets open at HH:MM" notice, or (b) show "View Result" only and disable Play? I'll go with **(b) — show View Result, disable Play** unless you prefer (a).
