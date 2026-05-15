@@ -153,7 +153,7 @@ function QuickPlay() {
           </div>
           <div className="text-right">
             <div className="text-xs text-muted-foreground">Balance</div>
-            <div className="font-display text-2xl font-bold text-primary">₹{balance.toLocaleString("en-IN")}</div>
+            <div className="font-display text-2xl font-bold text-primary">{hydrated && userId ? `₹${balance.toLocaleString("en-IN")}` : "—"}</div>
           </div>
         </div>
 
