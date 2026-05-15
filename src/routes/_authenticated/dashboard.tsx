@@ -6,6 +6,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useMarkets, useMyBets, useResultsForDate } from "@/hooks/useGameData";
 import { todayIST } from "@/lib/marketTime";
 import { ResultCard } from "@/components/ResultCard";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — SattaKing Pro" }] }),
@@ -14,6 +15,9 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const user = useAuthStore((s) => s.user);
+  const hydrated = useAuthStore((s) => s.hydrated);
+  const refreshProfile = useAuthStore((s) => s.refreshProfile);
+  useEffect(() => { if (user?.id) void refreshProfile(); }, [user?.id, refreshProfile]);
   const today = todayIST();
   const { data: bets = [] } = useMyBets();
   const { data: markets = [] } = useMarkets();
@@ -51,7 +55,7 @@ function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Kpi
           label="Balance"
-          value={`₹${(user?.balance ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
+          value={hydrated && user ? `₹${(user.balance ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}` : "—"}
           icon={<Wallet />} accent
         />
         <Kpi
