@@ -9,9 +9,9 @@ import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/integrations/supabase/client";
 
 const DEMO_EMAIL = "player@sattaking.test";
-const DEMO_PASSWORD = "demo123";
+const DEMO_PASSWORD = "DemoPlayer@2026";
 const DEMO_ADMIN_EMAIL = "admin@sattaking.test";
-const DEMO_ADMIN_PASSWORD = "admin123";
+const DEMO_ADMIN_PASSWORD = "DemoAdmin@2026";
 
 
 

@@ -13,7 +13,6 @@ import { useAuthStore } from "@/stores/authStore";
 import { ErrorMonitor } from "@/components/ErrorMonitor";
 import { AgeGate } from "@/components/AgeGate";
 import { reportError } from "@/lib/errorReporter";
-import "@/integrations/supabase/server-fn-fetch.client";
 
 import appCss from "../styles.css?url";
 
