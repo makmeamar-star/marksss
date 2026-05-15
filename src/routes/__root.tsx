@@ -165,6 +165,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ErrorMonitor />
       <Outlet />
+      <BottomNav />
       <AgeGate />
       <OfflineIndicator />
       <Toaster theme="dark" position="top-right" richColors />
