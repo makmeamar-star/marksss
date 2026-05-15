@@ -28,6 +28,18 @@ function LoginPage() {
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
   const [remember, setRemember] = useState(true);
+  const [demoEnabled, setDemoEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.from("app_settings").select("value").eq("key", "demo_login_enabled").maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const v = (data?.value as { enabled?: boolean } | null)?.enabled;
+        setDemoEnabled(v ?? true);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const applyRemember = (val: boolean) => {
     if (typeof window === "undefined") return;
