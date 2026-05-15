@@ -114,3 +114,13 @@ function istToday(): string {
   const now = new Date(Date.now() + 5.5 * 3600 * 1000);
   return now.toISOString().slice(0, 10);
 }
+
+function mapToRealDate(istDate: string): string {
+  const target = new Date(istDate + "T00:00:00Z");
+  const realToday = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
+  if (target.getTime() <= realToday.getTime()) return istDate;
+  const targetDow = target.getUTCDay();
+  const out = new Date(realToday);
+  while (out.getUTCDay() !== targetDow) out.setUTCDate(out.getUTCDate() - 1);
+  return out.toISOString().slice(0, 10);
+}
