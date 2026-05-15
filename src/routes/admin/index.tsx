@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Trophy, Zap, Wallet, ArrowDownToLine, History, FileSearch, Store, Globe,
-  Users, TrendingUp, TrendingDown, Activity, AlertTriangle, ArrowRight, KeyRound,
+  Users, TrendingUp, TrendingDown, Activity, AlertTriangle, ArrowRight, KeyRound, Eye,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { getAdminOverview } from "@/lib/adminDashboard.functions";
@@ -21,6 +21,7 @@ const tiles = [
   { to: "/admin/markets" as const, icon: Store, title: "Markets" },
   { to: "/admin/results/declare" as const, icon: Trophy, title: "Declare" },
   { to: "/admin/results/alerts" as const, icon: AlertTriangle, title: "Alerts" },
+  { to: "/admin/results/observations" as const, icon: Eye, title: "Observations" },
   { to: "/admin/results/automation" as const, icon: Zap, title: "Automation" },
   { to: "/admin/results/scrape" as const, icon: Globe, title: "Scraper" },
   { to: "/admin/results/history" as const, icon: History, title: "History" },
