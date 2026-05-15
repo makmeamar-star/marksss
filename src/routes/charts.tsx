@@ -6,6 +6,7 @@ import { PANA_CHART, panaType } from "@/lib/panaChart";
 import { useMarkets, useResultsRange } from "@/hooks/useGameData";
 import { useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { sortTopFirst } from "@/lib/topMarkets";
 
 export const Route = createFileRoute("/charts")({
   head: () => ({
