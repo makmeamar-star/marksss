@@ -14,6 +14,7 @@ import { ErrorMonitor } from "@/components/ErrorMonitor";
 import { AgeGate } from "@/components/AgeGate";
 import { reportError } from "@/lib/errorReporter";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { useQueryCachePersistence } from "@/components/PersistedQueryProvider";
 
 import appCss from "../styles.css?url";
 
@@ -132,6 +133,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const hydrated = useAuthStore((s) => s.hydrated);
+  useQueryCachePersistence(queryClient);
   useEffect(() => {
     if (!hydrated) void bootstrap();
   }, [hydrated, bootstrap]);
