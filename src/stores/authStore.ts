@@ -62,13 +62,20 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   bootstrap: async () => {
     if (typeof window === "undefined") return;
-    const { data } = await supabase.auth.getSession();
-    const session = data.session;
-    if (session) {
-      const u = await loadUserFor(session.user.id, session.user.email ?? null);
-      set({ user: u, hydrated: true });
-    } else {
-      set({ user: null, hydrated: true });
+    try {
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+      if (session) {
+        const u = await loadUserFor(session.user.id, session.user.email ?? null);
+        set({ user: u });
+      } else {
+        set({ user: null });
+      }
+    } catch (e) {
+      console.error("[auth] bootstrap failed", e);
+      set({ user: null });
+    } finally {
+      set({ hydrated: true });
     }
     supabase.auth.onAuthStateChange(async (_event, sess) => {
       if (sess) {
