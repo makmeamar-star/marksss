@@ -156,14 +156,45 @@ function MarketsPage() {
         {/* Search + filter bar */}
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
             <Input
               type="search"
               inputMode="search"
               autoComplete="off"
               placeholder="Search markets… (e.g. Kalyan, Milan, Rajdhani)"
               value={qInput}
-              onChange={(e) => setQInput(e.target.value)}
+              onChange={(e) => {
+                setQInput(e.target.value);
+                setSuggestOpen(true);
+                setActiveSuggestion(-1);
+              }}
+              onFocus={() => setSuggestOpen(true)}
+              onBlur={() => window.setTimeout(() => setSuggestOpen(false), 120)}
+              onKeyDown={(e) => {
+                if (!suggestOpen || suggestions.length === 0) {
+                  if (e.key === "ArrowDown") setSuggestOpen(true);
+                  return;
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setActiveSuggestion((i) => (i + 1) % suggestions.length);
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setActiveSuggestion((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+                } else if (e.key === "Enter" && activeSuggestion >= 0) {
+                  e.preventDefault();
+                  pickSuggestion(suggestions[activeSuggestion]);
+                } else if (e.key === "Escape") {
+                  setSuggestOpen(false);
+                }
+              }}
+              role="combobox"
+              aria-expanded={suggestOpen && suggestions.length > 0}
+              aria-controls="markets-suggestions"
+              aria-autocomplete="list"
+              aria-activedescendant={
+                activeSuggestion >= 0 ? `market-sugg-${suggestions[activeSuggestion]?.id}` : undefined
+              }
               className="pl-9 pr-9 h-11"
               aria-label="Search markets"
             />
@@ -172,10 +203,48 @@ function MarketsPage() {
                 type="button"
                 onClick={() => setQInput("")}
                 aria-label="Clear search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-muted"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-muted z-10"
               >
                 <X className="h-4 w-4" />
               </button>
+            )}
+            {suggestOpen && suggestions.length > 0 && (
+              <ul
+                id="markets-suggestions"
+                role="listbox"
+                className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-y-auto rounded-md border border-border bg-popover shadow-lg"
+              >
+                {suggestions.map((m, idx) => {
+                  const label = m.displayName ?? m.name ?? m.id;
+                  return (
+                    <li
+                      key={m.id}
+                      id={`market-sugg-${m.id}`}
+                      role="option"
+                      aria-selected={idx === activeSuggestion}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        pickSuggestion(m);
+                      }}
+                      onMouseEnter={() => setActiveSuggestion(idx)}
+                      className={`flex items-center justify-between gap-3 px-3 py-2 text-sm cursor-pointer ${
+                        idx === activeSuggestion
+                          ? "bg-primary/10 text-foreground"
+                          : "text-foreground/90 hover:bg-muted"
+                      }`}
+                    >
+                      <span className="truncate">{highlightMatch(label, qInput)}</span>
+                      <span
+                        className={`text-[10px] uppercase tracking-wider shrink-0 ${
+                          m.isOpen ? "text-emerald-400" : "text-muted-foreground"
+                        }`}
+                      >
+                        {m.isOpen ? "Open" : "Closed"}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
           <div className="flex gap-2">
