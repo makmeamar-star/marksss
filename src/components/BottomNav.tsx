@@ -40,7 +40,7 @@ export function BottomNav() {
         aria-label="Primary"
       >
         <div className="relative grid grid-cols-5 h-16 items-center text-[11px]">
-          <Tab to="/" icon={<Home className="h-5 w-5" />} label="Home" active={isActive("/", true)} />
+          <Tab to={homeTo} icon={<Home className="h-5 w-5" />} label="Home" active={isAuthed ? isActive("/dashboard") : isActive("/", true)} />
           <Tab to="/markets" icon={<LayoutGrid className="h-5 w-5" />} label="Markets" active={isActive("/markets")} />
 
           {/* Center: prominent star tab, lifted above the bar */}
