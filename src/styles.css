@@ -132,16 +132,49 @@
   * {
     border-color: var(--color-border);
   }
+  /* Global typography scale-down.
+   * Root font-size is reduced so every rem-based Tailwind size shrinks
+   * proportionally, keeping vertical rhythm intact. Mobile stays a hair
+   * larger than desktop for readability. */
+  html {
+    font-size: 14.5px;
+  }
+  @media (min-width: 768px) {
+    html { font-size: 15px; }
+  }
   html, body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4, .font-display {
+  body {
+    font-size: 0.9375rem; /* ~14px effective */
+    line-height: 1.5;
+  }
+  h1, h2, h3, h4, h5, h6, .font-display {
     font-family: var(--font-display);
     letter-spacing: 0.01em;
   }
+  /* Tighter default heading scale (only applies when no Tailwind text-* override is set) */
+  h1:not([class*="text-"]) { font-size: 1.75rem; line-height: 1.15; }
+  h2:not([class*="text-"]) { font-size: 1.375rem; line-height: 1.2; }
+  h3:not([class*="text-"]) { font-size: 1.125rem; line-height: 1.25; }
+  h4:not([class*="text-"]) { font-size: 1rem; line-height: 1.3; }
+  h5:not([class*="text-"]) { font-size: 0.875rem; line-height: 1.35; }
+  h6:not([class*="text-"]) { font-size: 0.8125rem; line-height: 1.4; }
+
+  /* Compact form labels and table cells by default */
+  label:not([class*="text-"]) { font-size: 0.8125rem; }
+  th:not([class*="text-"]), td:not([class*="text-"]) { font-size: 0.8125rem; }
+
+  /* Never go below this on mobile to keep readability */
+  @media (max-width: 480px) {
+    body, p, li, td, th, label, input, textarea, select, button {
+      font-size: max(0.8125rem, 13px);
+    }
+  }
+
   .font-mono, code, kbd, pre {
     font-family: var(--font-mono);
   }
