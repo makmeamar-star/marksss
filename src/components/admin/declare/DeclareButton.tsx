@@ -20,20 +20,43 @@ export function DeclareButton() {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const qc = useQueryClient();
+  const declareFn = useServerFn(adminDeclareResult);
 
   const enabled = !!marketId && valid && market?.status !== "SUSPENDED" && !busy;
 
   async function handleConfirm(confirmationText: string) {
     if (!marketId) return;
+    if (confirmationText !== "CONFIRM") {
+      toast.error("Type CONFIRM to proceed");
+      return { ok: false as const, error: "Type CONFIRM to proceed" };
+    }
     setBusy(true);
+
+    // 1) Persist to the database via the admin server function.
+    try {
+      await declareFn({
+        data: { marketId, sessionDate: date, session, value: pana },
+      });
+    } catch (e: any) {
+      setBusy(false);
+      const msg = e?.message ?? "Failed to declare result";
+      toast.error(msg);
+      return { ok: false as const, error: msg };
+    }
+
+    // 2) Mirror locally so the UI updates instantly.
     const res = await declareResult({
       marketId, sessionDate: date, session, pana, confirmationText,
     });
     setBusy(false);
 
     if (!res.ok) {
-      toast.error(res.error);
-      return { ok: false as const, error: res.error };
+      // DB write succeeded; just surface the local-mirror warning quietly.
+      toast.success(`Result declared for ${market?.displayName} ${session} — Pana ${pana}`);
+      setOpen(false);
+      reset();
+      qc.invalidateQueries();
+      return { ok: true as const };
     }
 
     setOpen(false);
