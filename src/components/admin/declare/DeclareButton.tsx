@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useRouter } from "@tanstack/react-router";
 import { Target, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,6 +22,28 @@ export function DeclareButton() {
   const [busy, setBusy] = useState(false);
   const qc = useQueryClient();
   const declareFn = useServerFn(adminDeclareResult);
+  const router = useRouter();
+
+  async function refreshAfterDeclare() {
+    // Invalidate every admin/result-related query so observation lists,
+    // declared-today, pending-today, missing-results banner, public result
+    // cards, etc. all reload from the database immediately.
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["admin", "today-observations"] }),
+      qc.invalidateQueries({ queryKey: ["admin", "missing-results"] }),
+      qc.invalidateQueries({ queryKey: ["declared-today"] }),
+      qc.invalidateQueries({ queryKey: ["pending-today"] }),
+      qc.invalidateQueries({ queryKey: ["pending-today", "selector"] }),
+      qc.invalidateQueries({ queryKey: ["session-info"] }),
+      qc.invalidateQueries({ queryKey: ["results"] }),
+      qc.invalidateQueries({ queryKey: ["market-results"] }),
+      qc.invalidateQueries({ queryKey: ["recent-results"] }),
+      qc.invalidateQueries(), // catch-all for anything keyed differently
+    ]);
+    // Re-run route loaders so SSR-fetched data (e.g. results page loaders)
+    // refreshes too.
+    await router.invalidate();
+  }
 
   const enabled = !!marketId && valid && market?.status !== "SUSPENDED" && !busy;
 
@@ -55,7 +78,7 @@ export function DeclareButton() {
       toast.success(`Result declared for ${market?.displayName} ${session} — Pana ${pana}`);
       setOpen(false);
       reset();
-      qc.invalidateQueries();
+      await refreshAfterDeclare();
       return { ok: true as const };
     }
 
@@ -66,7 +89,7 @@ export function DeclareButton() {
     );
     burstConfetti();
     reset();
-    qc.invalidateQueries();
+    await refreshAfterDeclare();
     return { ok: true as const };
   }
 
