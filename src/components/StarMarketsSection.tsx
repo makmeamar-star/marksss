@@ -28,20 +28,20 @@ export function StarMarketsSection({ scroll, hideHeader }: Props) {
 
   return (
     <section
-      className={`relative ${scroll ? "" : "container mx-auto px-4 py-8 md:py-10"}`}
+      className={`relative ${scroll ? "" : "container mx-auto px-4 py-6 md:py-8"}`}
       aria-label="Featured markets"
     >
       {!hideHeader && (
-        <div className="flex items-end justify-between mb-4">
+        <div className="flex items-end justify-between mb-3">
           <div className="flex items-center gap-2">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-gold text-background">
-              <Star className="h-4 w-4 fill-current" />
+            <span className="grid h-5 w-5 place-items-center rounded-full bg-gradient-gold text-background">
+              <Star className="h-3 w-3 fill-current" />
             </span>
             <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold leading-none">
+              <h2 className="font-display text-xl md:text-2xl font-bold leading-none">
                 Star Markets
               </h2>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 Gali · Disawar · Faridabad · Ghaziabad — live every day
               </p>
             </div>
@@ -51,9 +51,9 @@ export function StarMarketsSection({ scroll, hideHeader }: Props) {
 
       {scroll ? (
         <div className="-mx-4 overflow-x-auto pb-2 px-4 snap-x snap-mandatory">
-          <div className="flex gap-3 min-w-max">
+          <div className="flex gap-2 min-w-max">
             {stars.map((m) => (
-              <div key={m.id} className="w-[260px] snap-start">
+              <div key={m.id} className="w-[220px] snap-start">
                 <StarMarketTile
                   market={m}
                   result={results.find((r) => r.marketId === m.id)}
@@ -65,7 +65,7 @@ export function StarMarketsSection({ scroll, hideHeader }: Props) {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {stars.map((m) => (
             <StarMarketTile
               key={m.id}

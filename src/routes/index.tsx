@@ -68,45 +68,45 @@ function HomePage() {
       <section className="relative overflow-hidden bg-radial-spotlight">
         <div className="absolute inset-0 particles-bg opacity-40 pointer-events-none" />
         <div className="absolute inset-0 bg-mandala-dots opacity-[0.07] pointer-events-none" />
-        <div className="container mx-auto px-4 py-20 md:py-28 relative">
+        <div className="container mx-auto px-4 py-12 md:py-16 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="max-w-3xl mx-auto text-center"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs uppercase tracking-widest text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[11px] uppercase tracking-widest text-primary">
+              <Sparkles className="h-3 w-3" />
               <span>Live Now</span>
               <span className="font-devanagari normal-case tracking-normal text-primary/80">· अभी लाइव</span>
             </span>
-            <h1 className="font-display text-5xl md:text-7xl font-bold mt-6 leading-tight">
+            <h1 className="font-display text-3xl md:text-5xl font-bold mt-4 leading-tight">
               India's Most Trusted
               <br />
               <span className="bg-gradient-india bg-clip-text text-transparent text-glow-diya">
                 Matka Platform
               </span>
             </h1>
-            <p className="font-devanagari text-base md:text-lg text-saffron mt-3">
+            <p className="font-devanagari text-sm md:text-base text-saffron mt-2">
               भरोसा · रफ़्तार · असली नतीजे
             </p>
-            <p className="text-lg md:text-xl text-muted-foreground mt-4 max-w-2xl mx-auto">
+            <p className="text-sm md:text-base text-muted-foreground mt-3 max-w-2xl mx-auto">
               Play smart. Win big. Instant results across every major market — Kalyan, Main Mumbai, Milan, Rajdhani and more.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
-              <Button asChild size="lg" className="bg-gradient-india text-background font-bold shadow-[0_0_40px_-8px_var(--saffron)] hover:opacity-90">
-                <Link to="/register">Play Now <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-6">
+              <Button asChild size="sm" className="bg-gradient-india text-background font-bold shadow-[0_0_40px_-8px_var(--saffron)] hover:opacity-90">
+                <Link to="/register">Play Now <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10">
+              <Button asChild size="sm" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10">
                 <Link to="/results">View Results</Link>
               </Button>
             </div>
 
             {/* Live counters (real numbers from today's markets) */}
-            <div className="grid grid-cols-3 gap-4 mt-14 max-w-xl mx-auto">
-              <Stat icon={<TrendingUp className="h-4 w-4" />} label="Active Markets" value={String(markets.length)} />
-              <Stat icon={<Trophy className="h-4 w-4" />} label="Declared Today" value={String(declaredToday)} />
-              <Stat icon={<Users className="h-4 w-4" />} label="Open Now" value={String(openNow)} />
+            <div className="grid grid-cols-3 gap-3 mt-10 max-w-lg mx-auto">
+              <Stat icon={<TrendingUp className="h-3.5 w-3.5" />} label="Active Markets" value={String(markets.length)} />
+              <Stat icon={<Trophy className="h-3.5 w-3.5" />} label="Declared Today" value={String(declaredToday)} />
+              <Stat icon={<Users className="h-3.5 w-3.5" />} label="Open Now" value={String(openNow)} />
             </div>
           </motion.div>
         </div>
@@ -116,32 +116,32 @@ function HomePage() {
       <StarMarketsSection />
 
       {/* LIVE RESULTS */}
-      <section className="container mx-auto px-4 py-16">
-        <RangoliDivider label="आज के नतीजे · Today" className="mb-10" />
-        <div className="flex items-end justify-between mb-8">
+      <section className="container mx-auto px-4 py-10">
+        <RangoliDivider label="आज के नतीजे · Today" className="mb-8" />
+        <div className="flex items-end justify-between mb-6">
           <div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold">Today's Live Results</h2>
-            <p className="text-muted-foreground mt-1">Auto-refreshing every 30 seconds</p>
+            <h2 className="font-display text-2xl md:text-3xl font-bold">Today's Live Results</h2>
+            <p className="text-sm text-muted-foreground mt-1">Auto-refreshing every 30 seconds</p>
           </div>
           <Link to="/results" className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:underline">
-            View all <ArrowRight className="h-4 w-4" />
+            View all <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {topMarkets.map((m) => (
             <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
           ))}
         </div>
         {restMarkets.length > 0 && (
-          <Collapsible open={showAll} onOpenChange={onShowAllChange} className="mt-8">
+          <Collapsible open={showAll} onOpenChange={onShowAllChange} className="mt-6">
             <CollapsibleTrigger asChild>
               <Button variant="outline" className="w-full justify-between border-primary/30 text-primary hover:bg-primary/10">
                 <span>{showAll ? "Hide" : `Show all ${restMarkets.length} more markets`}</span>
                 <ChevronDown className={`h-4 w-4 transition-transform ${showAll ? "rotate-180" : ""}`} />
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <CollapsibleContent className="mt-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {restMarkets.map((m) => (
                   <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
                 ))}
@@ -152,18 +152,18 @@ function HomePage() {
       </section>
 
       {/* SCHEDULE */}
-      <section className="container mx-auto px-4 py-12">
-        <h2 className="font-display text-3xl font-bold mb-6">Market Schedule</h2>
+      <section className="container mx-auto px-4 py-8">
+        <h2 className="font-display text-2xl font-bold mb-4">Market Schedule</h2>
         <div className="glass rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-surface/60 text-muted-foreground">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium uppercase text-xs tracking-wider">Market</th>
-                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Open</th>
-                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Close</th>
-                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Result</th>
-                  <th className="px-4 py-3 font-medium uppercase text-xs tracking-wider">Days</th>
+                  <th className="text-left px-3 py-2 font-medium uppercase text-[10px] tracking-wider">Market</th>
+                  <th className="px-3 py-2 font-medium uppercase text-[10px] tracking-wider">Open</th>
+                  <th className="px-3 py-2 font-medium uppercase text-[10px] tracking-wider">Close</th>
+                  <th className="px-3 py-2 font-medium uppercase text-[10px] tracking-wider">Result</th>
+                  <th className="px-3 py-2 font-medium uppercase text-[10px] tracking-wider">Days</th>
                 </tr>
               </thead>
               <tbody>
@@ -178,7 +178,7 @@ function HomePage() {
           </div>
         </div>
         {restMarkets.length > 0 && (
-          <div className="mt-3 text-center">
+          <div className="mt-2 text-center">
             <button
               type="button"
               onClick={() => onShowAllChange(!showAll)}
@@ -192,8 +192,8 @@ function HomePage() {
       </section>
 
       {/* QUICK STATS */}
-      <section className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <section className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <QuickStat label="Total Markets" value={String(markets.length)} />
           <QuickStat label="Declared Today" value={String(declaredToday)} accent />
           <QuickStat label="Pending" value={String(markets.length - declaredToday)} />
@@ -208,20 +208,20 @@ function HomePage() {
 
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="glass rounded-xl px-4 py-4">
-      <div className="flex items-center justify-center gap-1.5 text-primary text-xs uppercase tracking-widest">
+    <div className="glass rounded-xl px-3 py-3">
+      <div className="flex items-center justify-center gap-1.5 text-primary text-[10px] uppercase tracking-widest">
         {icon} {label}
       </div>
-      <div className="font-display text-2xl md:text-3xl font-bold mt-2 text-glow-gold">{value}</div>
+      <div className="font-display text-xl md:text-2xl font-bold mt-1 text-glow-gold">{value}</div>
     </div>
   );
 }
 
 function QuickStat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className={`glass rounded-xl p-5 text-center ${accent ? "ring-gold" : ""}`}>
-      <div className={`font-display text-3xl font-bold ${accent ? "text-primary text-glow-gold" : "text-foreground"}`}>{value}</div>
-      <div className="text-xs uppercase tracking-widest text-muted-foreground mt-1">{label}</div>
+    <div className={`glass rounded-xl p-4 text-center ${accent ? "ring-gold" : ""}`}>
+      <div className={`font-display text-2xl font-bold ${accent ? "text-primary text-glow-gold" : "text-foreground"}`}>{value}</div>
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">{label}</div>
     </div>
   );
 }
@@ -229,11 +229,11 @@ function QuickStat({ label, value, accent }: { label: string; value: string; acc
 function ScheduleRow({ m }: { m: { id: string; displayName: string; openTime: string; closeTime: string; resultTime: string; days: string[] } }) {
   return (
     <tr className="border-t border-border/50">
-      <td className="px-4 py-3 font-display font-semibold">{m.displayName}</td>
-      <td className="px-4 py-3 text-center font-mono">{m.openTime}</td>
-      <td className="px-4 py-3 text-center font-mono">{m.closeTime}</td>
-      <td className="px-4 py-3 text-center font-mono text-primary">{m.resultTime}</td>
-      <td className="px-4 py-3 text-center text-xs text-muted-foreground">{m.days.length === 7 ? "All days" : m.days.join(" ")}</td>
+      <td className="px-3 py-2 font-display font-semibold text-sm">{m.displayName}</td>
+      <td className="px-3 py-2 text-center font-mono text-sm">{m.openTime}</td>
+      <td className="px-3 py-2 text-center font-mono text-sm">{m.closeTime}</td>
+      <td className="px-3 py-2 text-center font-mono text-sm text-primary">{m.resultTime}</td>
+      <td className="px-3 py-2 text-center text-[10px] text-muted-foreground">{m.days.length === 7 ? "All days" : m.days.join(" ")}</td>
     </tr>
   );
 }
