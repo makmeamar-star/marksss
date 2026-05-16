@@ -78,7 +78,7 @@ export function DeclareButton() {
       toast.success(`Result declared for ${market?.displayName} ${session} — Pana ${pana}`);
       setOpen(false);
       reset();
-      qc.invalidateQueries();
+      await refreshAfterDeclare();
       return { ok: true as const };
     }
 
@@ -89,7 +89,7 @@ export function DeclareButton() {
     );
     burstConfetti();
     reset();
-    qc.invalidateQueries();
+    await refreshAfterDeclare();
     return { ok: true as const };
   }
 
