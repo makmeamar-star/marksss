@@ -12,6 +12,11 @@ export function AgeGate() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Don't gate authentication / legal pages — users on these aren't
+    // gambling yet, and the modal intercepts the first Sign-In click.
+    const path = window.location.pathname;
+    const skip = /^\/(login|register|reset-password|terms|privacy|responsible-gaming|refund-policy)(\/|$)/.test(path);
+    if (skip) return;
     if (!localStorage.getItem(STORAGE_KEY)) setOpen(true);
   }, []);
 
