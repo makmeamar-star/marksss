@@ -267,7 +267,7 @@ function MarketsPage() {
               aria-activedescendant={
                 activeSuggestion >= 0 ? `market-sugg-${suggestions[activeSuggestion]?.id}` : undefined
               }
-              className="pl-9 pr-9 h-11"
+              className="pl-9 pr-9 h-9 text-sm"
               aria-label="Search markets"
             />
             {qInput && (
