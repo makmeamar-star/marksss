@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Target, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -8,6 +9,7 @@ import { useDeclareForm } from "@/stores/declareFormStore";
 import { useMarketStore } from "@/stores/marketStore";
 import { isValidPana } from "@/lib/panaChart";
 import { declareResult } from "@/lib/adminApi";
+import { adminDeclareResult } from "@/lib/adminDeclare.functions";
 import { ConfirmDeclareDialog } from "./ConfirmDeclareDialog";
 import { cn } from "@/lib/utils";
 
