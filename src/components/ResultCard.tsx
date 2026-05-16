@@ -54,45 +54,45 @@ export function ResultCard({
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
-      className={`glass mandala-corner rounded-xl p-5 transition-shadow ${declared ? "ring-gold" : "hover:border-primary/40"}`}
+      whileHover={{ y: -3 }}
+      className={`glass mandala-corner rounded-xl p-3 transition-shadow ${declared ? "ring-gold" : "hover:border-primary/40"}`}
     >
-      <div className="flex items-start justify-between gap-2 mb-3">
+      <div className="flex items-start justify-between gap-2 mb-2">
         <div>
-          <h3 className="font-display text-xl font-bold text-foreground">{market.displayName}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h3 className="font-display text-base font-bold text-foreground">{market.displayName}</h3>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
             {market.openTime} — {market.closeTime}
           </p>
         </div>
         <div className="flex items-center gap-1">
           {declared ? (
-            <Badge className="bg-primary/15 text-primary border-primary/40">DECLARED</Badge>
+            <Badge className="bg-primary/15 text-primary border-primary/40 text-[10px] px-1.5 py-0">DECLARED</Badge>
           ) : market.isOpen ? (
-            <Badge className="bg-success/15 text-success border-success/40 pulse-live">OPEN</Badge>
+            <Badge className="bg-success/15 text-success border-success/40 pulse-live text-[10px] px-1.5 py-0">OPEN</Badge>
           ) : (
-            <Badge variant="outline" className="text-muted-foreground">CLOSED</Badge>
+            <Badge variant="outline" className="text-muted-foreground text-[10px] px-1.5 py-0">CLOSED</Badge>
           )}
           <ResultAlertBell marketId={market.id} />
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center my-4 gap-1 min-h-[56px]">
+      <div className="flex flex-col items-center justify-center my-2 gap-1 min-h-[44px]">
         {showSkeleton ? (
           <div className="flex items-center gap-2" aria-busy="true" aria-label="Loading previous result">
-            <Skeleton className="h-7 w-16" />
+            <Skeleton className="h-5 w-12" />
             <span className="text-muted-foreground/40">·</span>
-            <Skeleton className="h-7 w-10" />
+            <Skeleton className="h-5 w-8" />
             <span className="text-muted-foreground/40">·</span>
-            <Skeleton className="h-7 w-16" />
+            <Skeleton className="h-5 w-12" />
           </div>
         ) : showError ? (
           <div className="flex flex-col items-center gap-1">
-            <span className="font-mono text-muted-foreground/70 text-xl md:text-2xl">*** · ** · ***</span>
+            <span className="font-mono text-muted-foreground/70 text-base md:text-lg">*** · ** · ***</span>
             {onRetryPrevious && (
               <button
                 type="button"
                 onClick={onRetryPrevious}
-                className="text-[10px] uppercase tracking-widest text-primary hover:underline"
+                className="text-[9px] uppercase tracking-widest text-primary hover:underline"
               >
                 Retry
               </button>
@@ -103,24 +103,24 @@ export function ResultCard({
             <div className="flex items-center gap-2 text-center">
               {usePrev ? (
                 <>
-                  <span className="font-mono text-muted-foreground/80 text-xl md:text-2xl">{prevOpen ?? "***"}</span>
+                  <span className="font-mono text-muted-foreground/80 text-base md:text-lg">{prevOpen ?? "***"}</span>
                   <span className="text-muted-foreground mx-1">·</span>
-                  <span className="font-mono text-muted-foreground/80 text-xl md:text-2xl">{previousResult?.jodi ?? "**"}</span>
+                  <span className="font-mono text-muted-foreground/80 text-base md:text-lg">{previousResult?.jodi ?? "**"}</span>
                   <span className="text-muted-foreground mx-1">·</span>
-                  <span className="font-mono text-muted-foreground/80 text-xl md:text-2xl">{prevClose ?? "***"}</span>
+                  <span className="font-mono text-muted-foreground/80 text-base md:text-lg">{prevClose ?? "***"}</span>
                 </>
               ) : (
                 <>
-                  <span className="font-mono text-primary text-xl md:text-2xl text-glow-diya">{openText ?? "***"}</span>
+                  <span className="font-mono text-primary text-base md:text-lg text-glow-diya">{openText ?? "***"}</span>
                   <span className="text-muted-foreground mx-1">·</span>
-                  <NumberReveal value={result?.jodi} size="lg" />
+                  <NumberReveal value={result?.jodi} size="sm" />
                   <span className="text-muted-foreground mx-1">·</span>
-                  <span className="font-mono text-primary text-xl md:text-2xl text-glow-diya">{closeText ?? "***"}</span>
+                  <span className="font-mono text-primary text-base md:text-lg text-glow-diya">{closeText ?? "***"}</span>
                 </>
               )}
             </div>
             {usePrev && (
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground/80">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/80">
                 Prev · {prevDateLabel}
               </span>
             )}
@@ -128,8 +128,8 @@ export function ResultCard({
         )}
       </div>
 
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/60">
-        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/60">
+        <span className="text-[9px] uppercase tracking-widest text-muted-foreground">
           Result @ {market.resultTime}
         </span>
         {!declared && <CountdownTimer targetTime={market.resultTime} label="Reveals in" />}

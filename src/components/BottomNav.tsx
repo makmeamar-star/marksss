@@ -32,33 +32,33 @@ export function BottomNav() {
   return (
     <>
       {/* Spacer so page content isn't hidden behind the fixed bar */}
-      <div className="md:hidden h-20" aria-hidden />
+      <div className="md:hidden h-16" aria-hidden />
 
       <nav
         className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t border-border/60 bg-background/85 backdrop-blur-xl"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Primary"
       >
-        <div className="relative grid grid-cols-5 h-16 items-center text-[11px]">
-          <Tab to={homeTo} icon={<Home className="h-5 w-5" />} label="Home" active={isAuthed ? isActive("/dashboard") : isActive("/", true)} />
-          <Tab to="/markets" icon={<LayoutGrid className="h-5 w-5" />} label="Markets" active={isActive("/markets")} />
+        <div className="relative grid grid-cols-5 h-14 items-center text-[10px]">
+          <Tab to={homeTo} icon={<Home className="h-4 w-4" />} label="Home" active={isAuthed ? isActive("/dashboard") : isActive("/", true)} />
+          <Tab to="/markets" icon={<LayoutGrid className="h-4 w-4" />} label="Markets" active={isActive("/markets")} />
 
           {/* Center: prominent star tab, lifted above the bar */}
           <Link
             to="/star"
             preload="intent"
-            className="relative -mt-7 mx-auto flex flex-col items-center"
+            className="relative -mt-5 mx-auto flex flex-col items-center"
             aria-label="Star markets"
           >
             <span
-              className={`grid h-14 w-14 place-items-center rounded-full bg-gradient-gold text-background shadow-[0_8px_24px_-6px_color-mix(in_oklab,var(--primary)_70%,transparent)] ring-4 ring-background transition-transform ${
+              className={`grid h-11 w-11 place-items-center rounded-full bg-gradient-gold text-background shadow-[0_6px_18px_-4px_color-mix(in_oklab,var(--primary)_70%,transparent)] ring-3 ring-background transition-transform ${
                 isActive("/star") ? "scale-105" : ""
               }`}
             >
-              <Star className="h-6 w-6 fill-current" strokeWidth={2.5} />
+              <Star className="h-5 w-5 fill-current" strokeWidth={2.5} />
             </span>
             <span
-              className={`mt-1 text-[10px] font-bold uppercase tracking-wider ${
+              className={`mt-0.5 text-[9px] font-bold uppercase tracking-wider ${
                 isActive("/star") ? "text-primary" : "text-muted-foreground"
               }`}
             >
@@ -66,8 +66,8 @@ export function BottomNav() {
             </span>
           </Link>
 
-          <Tab to="/wallet" icon={<Wallet className="h-5 w-5" />} label="Wallet" active={isActive("/wallet")} />
-          <Tab to="/profile" icon={<User className="h-5 w-5" />} label="Profile" active={isActive("/profile")} />
+          <Tab to="/wallet" icon={<Wallet className="h-4 w-4" />} label="Wallet" active={isActive("/wallet")} />
+          <Tab to="/profile" icon={<User className="h-4 w-4" />} label="Profile" active={isActive("/profile")} />
         </div>
       </nav>
     </>
@@ -89,17 +89,17 @@ function Tab({
     <Link
       to={to}
       preload="intent"
-      className={`flex flex-col items-center justify-center gap-1 h-full transition-colors ${
+      className={`flex flex-col items-center justify-center gap-0.5 h-full transition-colors ${
         active ? "text-primary" : "text-muted-foreground hover:text-foreground"
       }`}
     >
       <span className={`relative ${active ? "drop-shadow-[0_0_8px_var(--primary)]" : ""}`}>
         {icon}
         {active && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 h-1 w-6 rounded-full bg-primary" />
+          <span className="absolute -top-2 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-primary" />
         )}
       </span>
-      <span className="text-[10px] font-medium tracking-wide">{label}</span>
+      <span className="text-[9px] font-medium tracking-wide">{label}</span>
     </Link>
   );
 }

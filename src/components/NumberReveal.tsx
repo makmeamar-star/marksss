@@ -38,9 +38,9 @@ export function NumberReveal({ value, size = "md", spinOnChange = true }: Props)
   }, [value]);
 
   const sizeCls =
-    size === "lg" ? "text-4xl md:text-5xl" :
-    size === "sm" ? "text-lg" :
-    "text-2xl md:text-3xl";
+    size === "lg" ? "text-2xl md:text-3xl" :
+    size === "sm" ? "text-base" :
+    "text-xl md:text-2xl";
 
   if (!display) {
     return <span className={`font-mono font-bold text-muted-foreground ${sizeCls}`}>--</span>;
