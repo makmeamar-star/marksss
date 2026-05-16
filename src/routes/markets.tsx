@@ -177,17 +177,17 @@ function MarketsPage() {
     return (
       <div
         key={m.id}
-        className={`space-y-2 relative ${
-          star ? "rounded-xl ring-2 ring-primary/40 p-1" : ""
+        className={`space-y-1.5 relative ${
+          star ? "rounded-lg ring-1 ring-primary/40 p-1" : ""
         }`}
       >
         {star && (
-          <span className="absolute -top-2 left-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-gold px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-background shadow">
-            <Star className="h-3 w-3 fill-current" /> Star
+          <span className="absolute -top-1.5 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-gold px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-background shadow">
+            <Star className="h-2.5 w-2.5 fill-current" /> Star
           </span>
         )}
         <ResultCard market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} />
-        <Button asChild className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
+        <Button asChild size="sm" className="w-full h-8 text-xs bg-gradient-gold text-background font-bold hover:opacity-90">
           <Link to="/bet/$marketId" params={{ marketId: m.id }} preload="intent">Bet Now</Link>
         </Button>
       </div>
@@ -198,7 +198,7 @@ function MarketsPage() {
     <button
       key={key}
       onClick={() => setStatus(key)}
-      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
         status === key
           ? "bg-primary text-primary-foreground border-primary"
           : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
@@ -213,20 +213,20 @@ function MarketsPage() {
       <SiteHeader />
 
       {/* Sticky Star Markets strip — always visible at top of /markets */}
-      <div className="sticky top-16 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-3">
+      <div className="sticky top-12 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-2">
           <StarMarketsSection scroll />
         </div>
       </div>
 
-      <section className="container mx-auto px-4 py-10">
-        <h1 className="font-display text-4xl font-bold">Markets</h1>
-        <p className="text-muted-foreground mt-1 mb-6">
+      <section className="container mx-auto px-4 py-6">
+        <h1 className="font-display text-2xl font-bold">Markets</h1>
+        <p className="text-xs text-muted-foreground mt-0.5 mb-4">
           Pick a market to view bet types and place your stake.
         </p>
 
         {/* Search + filter bar */}
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
             <Input
@@ -267,7 +267,7 @@ function MarketsPage() {
               aria-activedescendant={
                 activeSuggestion >= 0 ? `market-sugg-${suggestions[activeSuggestion]?.id}` : undefined
               }
-              className="pl-9 pr-9 h-11"
+              className="pl-9 pr-9 h-9 text-sm"
               aria-label="Search markets"
             />
             {qInput && (
@@ -355,38 +355,39 @@ function MarketsPage() {
 
         {/* When filtering: flat grid. Otherwise: top + collapsible rest. */}
         {filtered.length > 0 && isFiltering && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map(renderCard)}
           </div>
         )}
 
         {filtered.length > 0 && !isFiltering && (
           <>
-            <div className="flex items-baseline justify-between mb-4">
-              <h2 className="font-display text-xl font-semibold">
-                Top {top.length} <span className="text-muted-foreground font-normal text-sm">· most popular</span>
+            <div className="flex items-baseline justify-between mb-3">
+              <h2 className="font-display text-base font-semibold">
+                Top {top.length} <span className="text-muted-foreground font-normal text-[11px]">· most popular</span>
               </h2>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {top.map(renderCard)}
             </div>
 
             {rest.length > 0 && (
-              <Collapsible open={open} onOpenChange={handleOpenChange} className="mt-10">
+              <Collapsible open={open} onOpenChange={handleOpenChange} className="mt-6">
                 <CollapsibleTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-between border-primary/30 text-primary hover:bg-primary/10"
+                    size="sm"
+                    className="w-full justify-between border-primary/30 text-primary hover:bg-primary/10 h-8 text-xs"
                   >
                     <span>{open ? "Hide" : `Show all ${rest.length} more markets`}</span>
                     <ChevronDown
-                      className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+                      className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
                     />
                   </Button>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="mt-4">
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <CollapsibleContent className="mt-3">
+                  <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {rest.map(renderCard)}
                   </div>
                 </CollapsibleContent>
