@@ -355,38 +355,39 @@ function MarketsPage() {
 
         {/* When filtering: flat grid. Otherwise: top + collapsible rest. */}
         {filtered.length > 0 && isFiltering && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map(renderCard)}
           </div>
         )}
 
         {filtered.length > 0 && !isFiltering && (
           <>
-            <div className="flex items-baseline justify-between mb-4">
-              <h2 className="font-display text-xl font-semibold">
-                Top {top.length} <span className="text-muted-foreground font-normal text-sm">· most popular</span>
+            <div className="flex items-baseline justify-between mb-3">
+              <h2 className="font-display text-base font-semibold">
+                Top {top.length} <span className="text-muted-foreground font-normal text-[11px]">· most popular</span>
               </h2>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {top.map(renderCard)}
             </div>
 
             {rest.length > 0 && (
-              <Collapsible open={open} onOpenChange={handleOpenChange} className="mt-10">
+              <Collapsible open={open} onOpenChange={handleOpenChange} className="mt-6">
                 <CollapsibleTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-between border-primary/30 text-primary hover:bg-primary/10"
+                    size="sm"
+                    className="w-full justify-between border-primary/30 text-primary hover:bg-primary/10 h-8 text-xs"
                   >
                     <span>{open ? "Hide" : `Show all ${rest.length} more markets`}</span>
                     <ChevronDown
-                      className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+                      className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
                     />
                   </Button>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="mt-4">
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <CollapsibleContent className="mt-3">
+                  <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {rest.map(renderCard)}
                   </div>
                 </CollapsibleContent>
