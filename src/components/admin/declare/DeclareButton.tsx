@@ -22,6 +22,28 @@ export function DeclareButton() {
   const [busy, setBusy] = useState(false);
   const qc = useQueryClient();
   const declareFn = useServerFn(adminDeclareResult);
+  const router = useRouter();
+
+  async function refreshAfterDeclare() {
+    // Invalidate every admin/result-related query so observation lists,
+    // declared-today, pending-today, missing-results banner, public result
+    // cards, etc. all reload from the database immediately.
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["admin", "today-observations"] }),
+      qc.invalidateQueries({ queryKey: ["admin", "missing-results"] }),
+      qc.invalidateQueries({ queryKey: ["declared-today"] }),
+      qc.invalidateQueries({ queryKey: ["pending-today"] }),
+      qc.invalidateQueries({ queryKey: ["pending-today", "selector"] }),
+      qc.invalidateQueries({ queryKey: ["session-info"] }),
+      qc.invalidateQueries({ queryKey: ["results"] }),
+      qc.invalidateQueries({ queryKey: ["market-results"] }),
+      qc.invalidateQueries({ queryKey: ["recent-results"] }),
+      qc.invalidateQueries(), // catch-all for anything keyed differently
+    ]);
+    // Re-run route loaders so SSR-fetched data (e.g. results page loaders)
+    // refreshes too.
+    await router.invalidate();
+  }
 
   const enabled = !!marketId && valid && market?.status !== "SUSPENDED" && !busy;
 
