@@ -12,21 +12,35 @@ import { fetchAllForMarket, mapToRealDpbossDate, type SourceName } from "@/lib/s
 export const Route = createFileRoute("/api/public/hooks/scrape-results")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
         const url = process.env.SUPABASE_URL!;
         const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
         const supabase = createClient(url, key, {
           auth: { autoRefreshToken: false, persistSession: false },
         });
 
+        // Optional body: { market_id?: string } to scope a single-market re-scrape.
+        let onlyMarketId: string | null = null;
+        try {
+          const text = await request.text();
+          if (text) {
+            const body = JSON.parse(text);
+            if (typeof body?.market_id === "string" && body.market_id.length <= 64) {
+              onlyMarketId = body.market_id;
+            }
+          }
+        } catch {}
+
         // IST today
         const nowIst = new Date(Date.now() + 5.5 * 3600 * 1000);
         const today = nowIst.toISOString().slice(0, 10);
 
-        const { data: maps, error: mapErr } = await supabase
+        let mapQuery = supabase
           .from("market_source_map")
           .select("market_id, source, slug")
           .eq("enabled", true);
+        if (onlyMarketId) mapQuery = mapQuery.eq("market_id", onlyMarketId);
+        const { data: maps, error: mapErr } = await mapQuery;
         if (mapErr) {
           return json({ ok: false, error: mapErr.message }, 500);
         }
