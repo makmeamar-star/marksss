@@ -180,6 +180,84 @@ const RejectInput = z.object({
   reason: z.string().min(3).max(500).optional(),
 });
 
+/**
+ * Per-market scraper coverage report. Buckets every ACTIVE market into:
+ *   AUTO_READY        — has >=2 distinct enabled sources (auto-declare possible)
+ *   NEEDS_SECOND      — has exactly 1 enabled source (manual-only until a second is added)
+ *   MANUAL_ONLY       — has 0 enabled sources
+ *   CONFLICT          — today has observations from >=2 sources that disagree
+ */
+export const getScraperCoverage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await ensureAdmin(supabase, userId);
+    const today = istToday();
+
+    const [{ data: markets }, { data: mapping }, { data: obs }] = await Promise.all([
+      supabaseAdmin
+        .from("markets")
+        .select("id, display_name, status")
+        .eq("status", "ACTIVE")
+        .order("display_name"),
+      supabaseAdmin
+        .from("market_source_map")
+        .select("market_id, source, enabled"),
+      supabaseAdmin
+        .from("result_observations")
+        .select("market_id, session, source, pana")
+        .eq("session_date", today),
+    ]);
+
+    // Build per-market source list
+    const sourcesByMarket = new Map<string, string[]>();
+    for (const m of mapping ?? []) {
+      if (!m.enabled) continue;
+      const arr = sourcesByMarket.get(m.market_id) ?? [];
+      if (!arr.includes(m.source)) arr.push(m.source);
+      sourcesByMarket.set(m.market_id, arr);
+    }
+
+    // Detect conflicts today
+    const conflictMap = new Map<string, Set<string>>(); // market_id -> set of distinct panas
+    for (const o of obs ?? []) {
+      const key = `${o.market_id}|${o.session}`;
+      const set = conflictMap.get(key) ?? new Set<string>();
+      set.add(o.pana);
+      conflictMap.set(key, set);
+    }
+    const marketsWithConflict = new Set<string>();
+    for (const [k, panas] of conflictMap) {
+      if (panas.size > 1) marketsWithConflict.add(k.split("|")[0]);
+    }
+
+    const rows = (markets ?? []).map((m) => {
+      const srcs = sourcesByMarket.get(m.id) ?? [];
+      const conflict = marketsWithConflict.has(m.id);
+      let status: "AUTO_READY" | "NEEDS_SECOND" | "MANUAL_ONLY" | "CONFLICT";
+      if (conflict) status = "CONFLICT";
+      else if (srcs.length >= 2) status = "AUTO_READY";
+      else if (srcs.length === 1) status = "NEEDS_SECOND";
+      else status = "MANUAL_ONLY";
+      return {
+        market_id: m.id,
+        market_name: m.display_name,
+        sources: srcs,
+        source_count: srcs.length,
+        status,
+      };
+    });
+
+    const counts = {
+      AUTO_READY: rows.filter((r) => r.status === "AUTO_READY").length,
+      NEEDS_SECOND: rows.filter((r) => r.status === "NEEDS_SECOND").length,
+      MANUAL_ONLY: rows.filter((r) => r.status === "MANUAL_ONLY").length,
+      CONFLICT: rows.filter((r) => r.status === "CONFLICT").length,
+    };
+
+    return { today, counts, rows };
+  });
+
 export const rejectObservations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => RejectInput.parse(input))
