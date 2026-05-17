@@ -1,58 +1,60 @@
-To me, “update only correct result” means: the app must not publish/settle any result unless the same market/session/date result is confirmed by at least 2 independent sources. If sources disagree or only one source has a value, keep it pending and show it to admin for manual review.
+# Next Version Plan — "Trust & Polish"
 
-Current findings:
+Theme: make results **provably correct**, finish the half-built multi-source scraper, and tighten the highest-friction screens. Medium scope (~1 week).
 
-- The biggest risk is not only dpboss.boston. Your database currently has all 117 markets in `RANDOM` automation mode, and the scheduled `auto-declare-results` path can publish random panas after market time. That can create incorrect live results even when scraping is broken.
-- The existing 2-source confirmation function exists, but it is weakened by the random auto-declare scheduler and by having only one real scraper source wired.
-- I checked `https://sattamatkadpboss.mobi/`: it has many live results on the homepage, but I did not find Gali, Disawar, Faridabad, or Ghaziabad there.
-- I checked `https://www.fixresult.in/`: its public data API currently exposes around 18 markets; I did not find Gali, Disawar, Faridabad, or Ghaziabad there either.
+Defaults chosen for you: focus = Result accuracy + Admin tooling + UX polish. Wallet/payments and new game types are deferred to the version after.
 
-Plan:
+---
 
-1. Stop incorrect/random result publishing
+## 1. Result correctness (P0 — from `.lovable/plan.md`)
 
-- Disable or neutralize the random auto-declare scheduler so it cannot publish fake/random results.
-- Update `run_due_auto_declarations` so it does not randomly select a pana from `pana_chart` for live markets.
-- Keep manual admin declaration available for markets that are not covered by reliable sources.
+The biggest open risk. Today the DB still has markets in `RANDOM` automation mode and the auto-declare scheduler can publish a random pana when scraping is silent.
 
-2. Add multi-source real result scrapers
+- **Kill random auto-declare**
+  - Migrate all `market_automation` rows off `RANDOM` mode → `SCRAPER_ONLY`.
+  - Patch `run_due_auto_declarations` to refuse to publish unless a confirmed observation exists. No fallback to `pana_chart` random pick.
+- **Enforce true 2-source agreement**
+  - Update `record_observation_and_maybe_declare` so `system_auto_declare` only fires when **≥2 distinct source names** report the same pana for that market/session/date.
+  - Remove the "same source seen twice over time" loophole.
+  - On conflict → write `CONFLICT` row to `scraper_alerts`, do not publish.
+- **Wire the already-scaffolded sources**
+  - `sattamatkadpboss`, `fixresult`, `sattakingvip`, `galidisawar` parser files exist (`src/lib/scraper/*.server.ts`) but most markets aren't mapped. Build a source-map seeder and populate `market_source_map` for every active market that has strong slug matches on ≥2 sources.
+  - Mark Gali / Disawar / Faridabad / Ghaziabad to use `satta-king-fast.com` + `a1-sattaking.com` (per existing plan note) as their 2 sources.
+- **Coverage report in admin**
+  - New panel on `/admin/results.scrape` showing per-market: `AUTO_READY` (2+ mapped), `NEEDS_SECOND_SOURCE`, `CONFLICT`, `MANUAL_ONLY`. Drives what to fix next.
 
-- Add a `sattamatkadpboss` source parser for `https://sattamatkadpboss.mobi/` live homepage result cards.
-- Add a `fixresult` source parser using FixResult’s public JSON data API, matching the way their own homepage loads results.
-- Keep the existing `dpboss` parser, but do not allow it alone to auto-publish.
+## 2. Admin tooling polish (P1)
 
-3. Enforce true 2+ source agreement before publishing
+- **Missing-results dashboard**: today's markets past close-time with no result → one-click "Declare" or "Mark Cancelled". Hook into existing `MissingResultsBanner`.
+- **One-click correct**: extend `CorrectResultDialog` to also re-settle bets atomically and write an `audit_log` with before/after values.
+- **Scrape queue health**: surface last-success-per-source, failure rate 24h, and a "re-run now" button per market.
 
-- Require at least 2 distinct source names reporting the same pana before `record_observation_and_maybe_declare` can call `system_auto_declare`.
-- Remove/disable the current fallback where the same source seen twice over time can count as 2 confirmations.
-- If sources conflict, create a warning and keep the result unpublished.
+## 3. UX polish (P1)
 
-4. Update market source mapping
+- **Login speed fix follow-up**: the prior turn fixed the multi-click login, but auth bootstrap still gates the whole tree. Add an optimistic skeleton on protected routes so the first paint is instant.
+- **Result reveal cohesion**: ensure `NumberReveal` and `ResultCard` share one size scale after the recent shrink pass; remove any leftover `text-2xl/3xl` on markets/index/results pages.
+- **Offline + stale-result indicator**: small chip on `ResultCard` when the row is older than expected close-time + 15m and unconfirmed.
 
-- Add source-map rows for markets that are available on the new sources with the correct source slug/name.
-- Use strong matching only; do not guess ambiguous names like `main-mumbai` vs `main-bazar`.
-- Leave unsupported/uncertain markets unmapped so they do not auto-publish incorrectly.
+## 4. Reliability (P2)
 
-5. Improve admin visibility
+- **Fix runtime React #418** currently reported (hydration mismatch). Audit any `Date.now()` / `new Date()` rendered directly into JSX in route components; move into `useEffect` or `suppressHydrationWarning`.
+- **PWA**: bump `sw.js` cache version on each build so users get fresh JS without a hard reload.
 
-- Add a source coverage report in the scraper/admin page showing:
-  - markets confirmed by 2+ sources,
-  - markets found on only 1 source,
-  - markets not found on the checked sources,
-  - conflicting source values.
-- Add clear labels: `AUTO_READY`, `NEEDS_SECOND_SOURCE`, `CONFLICT`, `MANUAL_ONLY`.
+---
 
-6. Recheck and report unavailable markets
+## Technical notes
 
-- After wiring parsers, run a fresh comparison against your active markets.
-- Provide you a list of markets not available on `sattamatkadpboss.mobi` or `fixresult.in` so you can delete them, add another source, or publish manually.
-- Based on my initial check, these priority markets are not available on either suggested source: Gali, Disawar, Faridabad, Ghaziabad, and Desawar Special.
+- DB migrations: 1 to flip automation modes, 1 to harden `system_auto_declare` and `record_observation_and_maybe_declare`, 1 to seed `market_source_map`.
+- New server fn: `getScraperCoverage` in `src/lib/scraperObservations.functions.ts`.
+- New parsers if needed: `satta-king-fast.server.ts`, `a1-sattaking.server.ts` registered in `src/lib/scraper/index.server.ts` under `SourceName`.
+- No new external dependencies. No payment/wallet changes. No new game types.
 
-Technical details:
+## Out of scope (next version after this)
 
-- Files likely touched: scraper source modules, scraper coordinator, scrape hooks, queue processor, admin scraper page.
-- Database changes: update the confirmation RPC to require distinct sources only, and neutralize random auto-declare behavior.
-- Data changes: update existing automation/source-map rows after the database function changes are approved.
-- No private API keys are needed for these two sources; FixResult’s data access is already public from their frontend script. 
+- Razorpay/UPI gateway, KYC automation
+- Starline rework, new bet types, live in-play
+- Referral revamp, push notification campaigns
 
-For gali disawar faridabad gaziabad use [https://satta-king-fast.com/](https://satta-king-fast.com/)  [https://a1-sattaking.com/chart-2026/faridabad-satta-result](https://a1-sattaking.com/chart-2026/faridabad-satta-result)
+---
+
+Reply with anything you want added/removed, or hit **Implement plan** to start.
