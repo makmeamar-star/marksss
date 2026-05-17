@@ -92,6 +92,27 @@ function ScrapePage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
+  const refreshOne = useMutation({
+    mutationFn: async (marketId: string) => {
+      setRefreshingId(marketId);
+      const r = await fetch("/api/public/hooks/scrape-results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ market_id: marketId }),
+      });
+      if (!r.ok) throw new Error(await r.text());
+      return r.json();
+    },
+    onSuccess: (d, marketId) => {
+      const attempts = d?.count ?? 0;
+      toast.success(`Re-scraped ${marketId} (${attempts} attempt${attempts === 1 ? "" : "s"}).`);
+      coverage.refetch();
+      logs.refetch();
+    },
+    onError: (e: any) => toast.error(e.message ?? "Re-scrape failed"),
+    onSettled: () => setRefreshingId(null),
+  });
   return (
     <div className="container mx-auto px-6 py-12 max-w-5xl space-y-6">
       <div>
