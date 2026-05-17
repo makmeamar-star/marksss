@@ -111,7 +111,74 @@ function ScrapePage() {
       </div>
 
       <Card className="p-5">
-        <div className="font-display text-lg font-bold mb-3">Per-market latest status</div>
+        <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
+          <div>
+            <div className="font-display text-lg font-bold">Source coverage</div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Auto-declare requires ≥2 distinct sources reporting the same pana. Markets stuck at 1 source are manual-only.
+            </p>
+          </div>
+          {coverage.data && (
+            <div className="flex gap-2 flex-wrap">
+              {(["AUTO_READY", "NEEDS_SECOND", "MANUAL_ONLY", "CONFLICT", "ALL"] as const).map((k) => {
+                const n = k === "ALL" ? coverage.data!.rows.length : (coverage.data!.counts as any)[k];
+                const active = coverageFilter === k;
+                const tone =
+                  k === "AUTO_READY" ? "border-emerald-500/40 text-emerald-500" :
+                  k === "NEEDS_SECOND" ? "border-amber-500/40 text-amber-500" :
+                  k === "CONFLICT" ? "border-destructive/40 text-destructive" :
+                  k === "MANUAL_ONLY" ? "border-muted-foreground/40 text-muted-foreground" :
+                  "border-primary/40 text-primary";
+                return (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setCoverageFilter(k)}
+                    className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border ${tone} ${active ? "bg-foreground/5" : "bg-transparent"}`}
+                  >
+                    {k.replace("_", " ")} · {n}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {coverage.isLoading ? (
+          <div className="text-xs text-muted-foreground py-4">Loading coverage…</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-muted-foreground border-b">
+                  <th className="py-2">Market</th>
+                  <th>Status</th>
+                  <th>Sources ({coverage.data?.rows.length ?? 0} markets)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(coverage.data?.rows ?? [])
+                  .filter((r) => coverageFilter === "ALL" || r.status === coverageFilter)
+                  .map((r) => (
+                    <tr key={r.market_id} className="border-b border-border/40">
+                      <td className="py-2 font-medium">{r.market_name}</td>
+                      <td>
+                        <CoverageBadge status={r.status} />
+                      </td>
+                      <td className="text-xs text-muted-foreground">
+                        {r.sources.length ? r.sources.join(", ") : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                {coverage.data && !coverage.data.rows.filter((r) => coverageFilter === "ALL" || r.status === coverageFilter).length && (
+                  <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">No markets in this bucket.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
