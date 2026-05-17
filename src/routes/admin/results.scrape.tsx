@@ -179,6 +179,8 @@ function ScrapePage() {
         )}
       </Card>
 
+      <Card className="p-5">
+        <div className="font-display text-lg font-bold mb-3">Per-market latest status</div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
