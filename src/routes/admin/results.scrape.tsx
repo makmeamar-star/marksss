@@ -310,6 +310,16 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${cls}`}>{status}</span>;
 }
 
+function CoverageBadge({ status }: { status: "AUTO_READY" | "NEEDS_SECOND" | "MANUAL_ONLY" | "CONFLICT" }) {
+  const map = {
+    AUTO_READY: "bg-emerald-500/15 text-emerald-500",
+    NEEDS_SECOND: "bg-amber-500/15 text-amber-500",
+    MANUAL_ONLY: "bg-muted text-muted-foreground",
+    CONFLICT: "bg-destructive/15 text-destructive",
+  };
+  return <span className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${map[status]}`}>{status.replace("_", " ")}</span>;
+}
+
 function timeAgo(iso: string): string {
   const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
   if (sec < 60) return `${sec}s ago`;
