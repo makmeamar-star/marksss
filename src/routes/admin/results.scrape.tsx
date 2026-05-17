@@ -14,6 +14,15 @@ export const Route = createFileRoute("/admin/results/scrape")({
 });
 
 function ScrapePage() {
+  const fetchCoverage = useServerFn(getScraperCoverage);
+  const coverage = useQuery({
+    queryKey: ["scraper-coverage"],
+    queryFn: () => fetchCoverage({ data: undefined as any }),
+    refetchInterval: 60_000,
+  });
+  const [coverageFilter, setCoverageFilter] =
+    useState<"ALL" | "AUTO_READY" | "NEEDS_SECOND" | "MANUAL_ONLY" | "CONFLICT">("NEEDS_SECOND");
+
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
