@@ -175,24 +175,41 @@ function ScrapePage() {
                   <th className="py-2">Market</th>
                   <th>Status</th>
                   <th>Sources ({coverage.data?.rows.length ?? 0} markets)</th>
+                  <th className="text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {(coverage.data?.rows ?? [])
                   .filter((r) => coverageFilter === "ALL" || r.status === coverageFilter)
-                  .map((r) => (
-                    <tr key={r.market_id} className="border-b border-border/40">
-                      <td className="py-2 font-medium">{r.market_name}</td>
-                      <td>
-                        <CoverageBadge status={r.status} />
-                      </td>
-                      <td className="text-xs text-muted-foreground">
-                        {r.sources.length ? r.sources.join(", ") : "—"}
-                      </td>
-                    </tr>
-                  ))}
+                  .map((r) => {
+                    const busy = refreshingId === r.market_id;
+                    const canRefresh = r.sources.length > 0;
+                    return (
+                      <tr key={r.market_id} className="border-b border-border/40">
+                        <td className="py-2 font-medium">{r.market_name}</td>
+                        <td>
+                          <CoverageBadge status={r.status} />
+                        </td>
+                        <td className="text-xs text-muted-foreground">
+                          {r.sources.length ? r.sources.join(", ") : "—"}
+                        </td>
+                        <td className="text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-[11px]"
+                            disabled={!canRefresh || busy}
+                            onClick={() => refreshOne.mutate(r.market_id)}
+                            title={canRefresh ? "Re-scrape today's result from all mapped sources" : "No sources mapped"}
+                          >
+                            {busy ? "Refreshing…" : "Refresh"}
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 {coverage.data && !coverage.data.rows.filter((r) => coverageFilter === "ALL" || r.status === coverageFilter).length && (
-                  <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">No markets in this bucket.</td></tr>
+                  <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">No markets in this bucket.</td></tr>
                 )}
               </tbody>
             </table>
