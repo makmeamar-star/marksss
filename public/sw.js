@@ -3,7 +3,7 @@
 // StaleWhileRevalidate for /assets/* and same-origin GETs.
 // IMPORTANT: never registered on Lovable preview hosts (see RootComponent guard).
 
-const VERSION = "v4";
+const VERSION = "v5";
 const RUNTIME = `runtime-${VERSION}`;
 const PRECACHE = `precache-${VERSION}`;
 const NAV_TIMEOUT_MS = 3000;

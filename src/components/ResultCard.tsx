@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,6 +34,24 @@ export function ResultCard({
     ? `${result.closeDigit}-${result.closePana}`
     : undefined;
 
+  // Stale = past result time + 15m grace and still undeclared.
+  // Computed only on the client to avoid SSR hydration mismatches.
+  const [isStale, setIsStale] = useState(false);
+  useEffect(() => {
+    if (declared) { setIsStale(false); return; }
+    const check = () => {
+      const [h, m] = (market.resultTime ?? market.closeTime).split(":").map(Number);
+      if (Number.isNaN(h)) return;
+      const nowIst = new Date(Date.now() + 5.5 * 3600 * 1000);
+      const todayY = nowIst.getUTCFullYear(), todayM = nowIst.getUTCMonth(), todayD = nowIst.getUTCDate();
+      const target = Date.UTC(todayY, todayM, todayD, h, (m ?? 0) + 15);
+      setIsStale(nowIst.getTime() > target);
+    };
+    check();
+    const id = setInterval(check, 60_000);
+    return () => clearInterval(id);
+  }, [declared, market.resultTime, market.closeTime]);
+
   const showFallbackSlot = !declared && !!showPreviousFallback;
   const usePrev = showFallbackSlot && previousResult?.status === "DECLARED";
   const showSkeleton = showFallbackSlot && !usePrev && !!previousLoading;
@@ -67,6 +86,8 @@ export function ResultCard({
         <div className="flex items-center gap-1">
           {declared ? (
             <Badge className="bg-primary/15 text-primary border-primary/40 text-[10px] px-1.5 py-0">DECLARED</Badge>
+          ) : isStale ? (
+            <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/40 text-[10px] px-1.5 py-0">PENDING</Badge>
           ) : market.isOpen ? (
             <Badge className="bg-success/15 text-success border-success/40 pulse-live text-[10px] px-1.5 py-0">OPEN</Badge>
           ) : (
