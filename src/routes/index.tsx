@@ -12,6 +12,7 @@ import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hook
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
 import { splitTopMarkets } from "@/lib/topMarkets";
+import { useHomeMarketCount } from "@/hooks/useHomeMarketCount";
 
 const ResultsTicker = lazy(() =>
   import("@/components/ResultsTicker").then((m) => ({ default: m.ResultsTicker })),
