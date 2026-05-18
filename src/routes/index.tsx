@@ -120,7 +120,12 @@ function HomePage() {
         </div>
         <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {topMarkets.map((m) => (
-            <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
+            <div key={m.id} className="space-y-1.5">
+              <ResultCard market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
+              <Button asChild size="sm" className="w-full h-7 text-[11px] bg-gradient-gold text-background font-bold hover:opacity-90">
+                <Link to="/bet/$marketId" params={{ marketId: m.id }} preload="intent">Bet Now</Link>
+              </Button>
+            </div>
           ))}
         </div>
         <div className="mt-4 text-center text-xs text-muted-foreground">
