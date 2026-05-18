@@ -1,14 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, Trophy, TrendingUp, Users, Sparkles, ChevronDown } from "lucide-react";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { ArrowRight, Trophy, TrendingUp, Users, Sparkles } from "lucide-react";
+import { lazy, Suspense, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultCard } from "@/components/ResultCard";
 import { StarMarketsSection } from "@/components/StarMarketsSection";
 import { RangoliDivider } from "@/components/RangoliDivider";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
@@ -20,8 +19,6 @@ const ResultsTicker = lazy(() =>
 const TickerFallback = () => (
   <div className="border-y border-border/60 bg-surface/60 h-9" aria-hidden />
 );
-
-const HOME_STORAGE_KEY = "home_show_all_markets";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -45,16 +42,7 @@ function HomePage() {
   const declaredToday = results.filter((r) => r.status === "DECLARED").length;
   const openNow = markets.filter((m) => m.isOpen).length;
 
-  const { top: topMarkets, rest: restMarkets } = useMemo(() => splitTopMarkets(markets), [markets]);
-  const [showAll, setShowAll] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setShowAll(localStorage.getItem(HOME_STORAGE_KEY) === "1");
-  }, []);
-  const onShowAllChange = (v: boolean) => {
-    setShowAll(v);
-    if (typeof window !== "undefined") localStorage.setItem(HOME_STORAGE_KEY, v ? "1" : "0");
-  };
+  const { top: topMarkets } = useMemo(() => splitTopMarkets(markets), [markets]);
 
   return (
     <div className="min-h-screen bg-background">
