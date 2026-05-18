@@ -74,9 +74,9 @@ export function ResultCard({
   return (
     <motion.div
       whileHover={{ y: -3 }}
-      className={`glass mandala-corner rounded-xl p-2.5 transition-shadow ${declared ? "ring-gold" : "hover:border-primary/40"}`}
+      className={`glass mandala-corner rounded-xl p-2 sm:p-2.5 transition-shadow ${declared ? "ring-gold" : "hover:border-primary/40"}`}
     >
-      <div className="flex items-start justify-between gap-1.5 mb-1.5">
+      <div className="flex items-start justify-between gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
         <div className="min-w-0">
           <h3 className="font-display text-sm font-bold text-foreground truncate">{market.displayName}</h3>
           <p className="text-[10px] text-muted-foreground mt-0.5">
