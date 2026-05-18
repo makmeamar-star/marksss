@@ -132,23 +132,10 @@ function HomePage() {
             <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
           ))}
         </div>
-        {restMarkets.length > 0 && (
-          <Collapsible open={showAll} onOpenChange={onShowAllChange} className="mt-6">
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between border-primary/30 text-primary hover:bg-primary/10">
-                <span>{showAll ? "Hide" : `Show all ${restMarkets.length} more markets`}</span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${showAll ? "rotate-180" : ""}`} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-3">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {restMarkets.map((m) => (
-                  <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
-                ))}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
+        <div className="mt-4 text-center text-xs text-muted-foreground">
+          Showing top {topMarkets.length} markets ·{" "}
+          <Link to="/markets" className="text-primary hover:underline">View all markets</Link>
+        </div>
       </section>
 
       {/* SCHEDULE */}
