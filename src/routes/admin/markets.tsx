@@ -472,3 +472,33 @@ function MarketsAdmin() {
     </div>
   );
 }
+
+function HomeMarketCountControl() {
+  const current = useHomeMarketCount();
+  const [value, setValue] = useState<string>(String(current));
+  useEffect(() => { setValue(String(current)); }, [current]);
+  const commit = () => {
+    const n = setHomeMarketCount(Number(value));
+    setValue(String(n));
+    toast.success(`Homepage will show ${n} market${n === 1 ? "" : "s"}`);
+  };
+  return (
+    <div className="flex items-center gap-2">
+      <Label htmlFor="home-market-count" className="text-xs text-muted-foreground whitespace-nowrap">
+        Homepage markets
+      </Label>
+      <Input
+        id="home-market-count"
+        type="number"
+        min={MIN_HOME_MARKET_COUNT}
+        max={MAX_HOME_MARKET_COUNT}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+        className="w-20"
+      />
+      <span className="text-xs text-muted-foreground">/ {MAX_HOME_MARKET_COUNT}</span>
+    </div>
+  );
+}
