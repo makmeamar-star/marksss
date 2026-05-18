@@ -355,7 +355,7 @@ function MarketsPage() {
 
         {/* When filtering: flat grid. Otherwise: top + collapsible rest. */}
         {filtered.length > 0 && isFiltering && (
-          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map(renderCard)}
           </div>
         )}
@@ -368,7 +368,7 @@ function MarketsPage() {
               </h2>
             </div>
 
-            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {top.map(renderCard)}
             </div>
 
@@ -387,7 +387,7 @@ function MarketsPage() {
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="mt-3">
-                  <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {rest.map(renderCard)}
                   </div>
                 </CollapsibleContent>
