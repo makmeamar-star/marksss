@@ -10,6 +10,12 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import {
+  useHomeMarketCount,
+  setHomeMarketCount,
+  MIN_HOME_MARKET_COUNT,
+  MAX_HOME_MARKET_COUNT,
+} from "@/hooks/useHomeMarketCount";
 
 export const Route = createFileRoute("/admin/markets")({
   component: MarketsAdmin,
