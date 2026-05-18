@@ -187,7 +187,7 @@ function MarketsPage() {
           </span>
         )}
         <ResultCard market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} />
-        <Button asChild size="sm" className="w-full h-8 text-xs bg-gradient-gold text-background font-bold hover:opacity-90">
+        <Button asChild size="sm" className="w-full h-7 text-[11px] bg-gradient-gold text-background font-bold hover:opacity-90">
           <Link to="/bet/$marketId" params={{ marketId: m.id }} preload="intent">Bet Now</Link>
         </Button>
       </div>
@@ -355,7 +355,7 @@ function MarketsPage() {
 
         {/* When filtering: flat grid. Otherwise: top + collapsible rest. */}
         {filtered.length > 0 && isFiltering && (
-          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map(renderCard)}
           </div>
         )}
@@ -368,7 +368,7 @@ function MarketsPage() {
               </h2>
             </div>
 
-            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {top.map(renderCard)}
             </div>
 
@@ -387,7 +387,7 @@ function MarketsPage() {
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="mt-3">
-                  <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {rest.map(renderCard)}
                   </div>
                 </CollapsibleContent>
