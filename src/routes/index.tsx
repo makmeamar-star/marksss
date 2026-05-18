@@ -1,14 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, Trophy, TrendingUp, Users, Sparkles, ChevronDown } from "lucide-react";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { ArrowRight, Trophy, TrendingUp, Users, Sparkles } from "lucide-react";
+import { lazy, Suspense, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultCard } from "@/components/ResultCard";
 import { StarMarketsSection } from "@/components/StarMarketsSection";
 import { RangoliDivider } from "@/components/RangoliDivider";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
@@ -20,8 +19,6 @@ const ResultsTicker = lazy(() =>
 const TickerFallback = () => (
   <div className="border-y border-border/60 bg-surface/60 h-9" aria-hidden />
 );
-
-const HOME_STORAGE_KEY = "home_show_all_markets";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -45,16 +42,7 @@ function HomePage() {
   const declaredToday = results.filter((r) => r.status === "DECLARED").length;
   const openNow = markets.filter((m) => m.isOpen).length;
 
-  const { top: topMarkets, rest: restMarkets } = useMemo(() => splitTopMarkets(markets), [markets]);
-  const [showAll, setShowAll] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setShowAll(localStorage.getItem(HOME_STORAGE_KEY) === "1");
-  }, []);
-  const onShowAllChange = (v: boolean) => {
-    setShowAll(v);
-    if (typeof window !== "undefined") localStorage.setItem(HOME_STORAGE_KEY, v ? "1" : "0");
-  };
+  const { top: topMarkets } = useMemo(() => splitTopMarkets(markets), [markets]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,23 +120,10 @@ function HomePage() {
             <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
           ))}
         </div>
-        {restMarkets.length > 0 && (
-          <Collapsible open={showAll} onOpenChange={onShowAllChange} className="mt-6">
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between border-primary/30 text-primary hover:bg-primary/10">
-                <span>{showAll ? "Hide" : `Show all ${restMarkets.length} more markets`}</span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${showAll ? "rotate-180" : ""}`} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-3">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {restMarkets.map((m) => (
-                  <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
-                ))}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
+        <div className="mt-4 text-center text-xs text-muted-foreground">
+          Showing top {topMarkets.length} markets ·{" "}
+          <Link to="/markets" className="text-primary hover:underline">View all markets</Link>
+        </div>
       </section>
 
       {/* SCHEDULE */}
@@ -170,25 +145,14 @@ function HomePage() {
                 {topMarkets.map((m) => (
                   <ScheduleRow key={m.id} m={m} />
                 ))}
-                {showAll && restMarkets.map((m) => (
-                  <ScheduleRow key={m.id} m={m} />
-                ))}
               </tbody>
             </table>
           </div>
         </div>
-        {restMarkets.length > 0 && (
-          <div className="mt-2 text-center">
-            <button
-              type="button"
-              onClick={() => onShowAllChange(!showAll)}
-              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
-            >
-              {showAll ? "Hide extra markets" : `Show all ${restMarkets.length} more in schedule`}
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAll ? "rotate-180" : ""}`} />
-            </button>
-          </div>
-        )}
+        <div className="mt-2 text-center text-xs text-muted-foreground">
+          Top {topMarkets.length} markets ·{" "}
+          <Link to="/markets" className="text-primary hover:underline">Full schedule</Link>
+        </div>
       </section>
 
       {/* QUICK STATS */}
