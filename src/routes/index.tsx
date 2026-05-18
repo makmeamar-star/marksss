@@ -12,6 +12,7 @@ import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hook
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
 import { splitTopMarkets } from "@/lib/topMarkets";
+import { useHomeMarketCount } from "@/hooks/useHomeMarketCount";
 
 const ResultsTicker = lazy(() =>
   import("@/components/ResultsTicker").then((m) => ({ default: m.ResultsTicker })),
@@ -42,7 +43,9 @@ function HomePage() {
   const declaredToday = results.filter((r) => r.status === "DECLARED").length;
   const openNow = markets.filter((m) => m.isOpen).length;
 
-  const { top: topMarkets } = useMemo(() => splitTopMarkets(markets), [markets]);
+  const homeCount = useHomeMarketCount();
+  const { top: allTopMarkets } = useMemo(() => splitTopMarkets(markets), [markets]);
+  const topMarkets = useMemo(() => allTopMarkets.slice(0, homeCount), [allTopMarkets, homeCount]);
 
   return (
     <div className="min-h-screen bg-background">
