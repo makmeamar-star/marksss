@@ -157,25 +157,14 @@ function HomePage() {
                 {topMarkets.map((m) => (
                   <ScheduleRow key={m.id} m={m} />
                 ))}
-                {showAll && restMarkets.map((m) => (
-                  <ScheduleRow key={m.id} m={m} />
-                ))}
               </tbody>
             </table>
           </div>
         </div>
-        {restMarkets.length > 0 && (
-          <div className="mt-2 text-center">
-            <button
-              type="button"
-              onClick={() => onShowAllChange(!showAll)}
-              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
-            >
-              {showAll ? "Hide extra markets" : `Show all ${restMarkets.length} more in schedule`}
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAll ? "rotate-180" : ""}`} />
-            </button>
-          </div>
-        )}
+        <div className="mt-2 text-center text-xs text-muted-foreground">
+          Top {topMarkets.length} markets ·{" "}
+          <Link to="/markets" className="text-primary hover:underline">Full schedule</Link>
+        </div>
       </section>
 
       {/* QUICK STATS */}
