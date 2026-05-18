@@ -245,6 +245,7 @@ function MarketsAdmin() {
           <Button variant="outline" onClick={() => { setDefaultsForm(defaultPayouts); setApplyToAll(false); setDefaultsOpen(true); }}>
             <Settings2 className="h-4 w-4 mr-2" />Default Payouts
           </Button>
+          <HomeMarketCountControl />
           <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />Add Market</Button>
         </div>
       </div>
