@@ -187,7 +187,7 @@ function MarketsPage() {
           </span>
         )}
         <ResultCard market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} />
-        <Button asChild size="sm" className="w-full h-8 text-xs bg-gradient-gold text-background font-bold hover:opacity-90">
+        <Button asChild size="sm" className="w-full h-7 text-[11px] bg-gradient-gold text-background font-bold hover:opacity-90">
           <Link to="/bet/$marketId" params={{ marketId: m.id }} preload="intent">Bet Now</Link>
         </Button>
       </div>

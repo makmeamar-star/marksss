@@ -74,16 +74,16 @@ export function ResultCard({
   return (
     <motion.div
       whileHover={{ y: -3 }}
-      className={`glass mandala-corner rounded-xl p-3 transition-shadow ${declared ? "ring-gold" : "hover:border-primary/40"}`}
+      className={`glass mandala-corner rounded-xl p-2.5 transition-shadow ${declared ? "ring-gold" : "hover:border-primary/40"}`}
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div>
-          <h3 className="font-display text-base font-bold text-foreground">{market.displayName}</h3>
+      <div className="flex items-start justify-between gap-1.5 mb-1.5">
+        <div className="min-w-0">
+          <h3 className="font-display text-sm font-bold text-foreground truncate">{market.displayName}</h3>
           <p className="text-[10px] text-muted-foreground mt-0.5">
             {market.openTime} — {market.closeTime}
           </p>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           {declared ? (
             <Badge className="bg-primary/15 text-primary border-primary/40 text-[10px] px-1.5 py-0">DECLARED</Badge>
           ) : isStale ? (
@@ -97,7 +97,7 @@ export function ResultCard({
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center my-2 gap-1 min-h-[44px]">
+      <div className="flex flex-col items-center justify-center my-1.5 gap-1 min-h-[36px]">
         {showSkeleton ? (
           <div className="flex items-center gap-2" aria-busy="true" aria-label="Loading previous result">
             <Skeleton className="h-5 w-12" />
@@ -121,22 +121,22 @@ export function ResultCard({
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-2 text-center">
+            <div className="flex items-center gap-1.5 text-center">
               {usePrev ? (
                 <>
-                  <span className="font-mono text-muted-foreground/80 text-base md:text-lg">{prevOpen ?? "***"}</span>
-                  <span className="text-muted-foreground mx-1">·</span>
-                  <span className="font-mono text-muted-foreground/80 text-base md:text-lg">{previousResult?.jodi ?? "**"}</span>
-                  <span className="text-muted-foreground mx-1">·</span>
-                  <span className="font-mono text-muted-foreground/80 text-base md:text-lg">{prevClose ?? "***"}</span>
+                  <span className="font-mono text-muted-foreground/80 text-sm md:text-base">{prevOpen ?? "***"}</span>
+                  <span className="text-muted-foreground mx-0.5">·</span>
+                  <span className="font-mono text-muted-foreground/80 text-sm md:text-base">{previousResult?.jodi ?? "**"}</span>
+                  <span className="text-muted-foreground mx-0.5">·</span>
+                  <span className="font-mono text-muted-foreground/80 text-sm md:text-base">{prevClose ?? "***"}</span>
                 </>
               ) : (
                 <>
-                  <span className="font-mono text-primary text-base md:text-lg text-glow-diya">{openText ?? "***"}</span>
-                  <span className="text-muted-foreground mx-1">·</span>
+                  <span className="font-mono text-primary text-sm md:text-base text-glow-diya">{openText ?? "***"}</span>
+                  <span className="text-muted-foreground mx-0.5">·</span>
                   <NumberReveal value={result?.jodi} size="sm" />
-                  <span className="text-muted-foreground mx-1">·</span>
-                  <span className="font-mono text-primary text-base md:text-lg text-glow-diya">{closeText ?? "***"}</span>
+                  <span className="text-muted-foreground mx-0.5">·</span>
+                  <span className="font-mono text-primary text-sm md:text-base text-glow-diya">{closeText ?? "***"}</span>
                 </>
               )}
             </div>
@@ -149,9 +149,9 @@ export function ResultCard({
         )}
       </div>
 
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/60">
-        <span className="text-[9px] uppercase tracking-widest text-muted-foreground">
-          Result @ {market.resultTime}
+      <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-border/60 gap-2">
+        <span className="text-[9px] uppercase tracking-widest text-muted-foreground truncate">
+          @ {market.resultTime}
         </span>
         {!declared && <CountdownTimer targetTime={market.resultTime} label="Reveals in" />}
       </div>
