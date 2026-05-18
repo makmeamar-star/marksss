@@ -78,8 +78,8 @@ export function ResultCard({
     >
       <div className="flex items-start justify-between gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
         <div className="min-w-0">
-          <h3 className="font-display text-sm font-bold text-foreground truncate">{market.displayName}</h3>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <h3 className="font-display text-xs sm:text-sm font-bold text-foreground truncate">{market.displayName}</h3>
+          <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5">
             {market.openTime} — {market.closeTime}
           </p>
         </div>
@@ -97,7 +97,7 @@ export function ResultCard({
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center my-1.5 gap-1 min-h-[36px]">
+      <div className="flex flex-col items-center justify-center my-1 sm:my-1.5 gap-1 min-h-[32px] sm:min-h-[36px]">
         {showSkeleton ? (
           <div className="flex items-center gap-2" aria-busy="true" aria-label="Loading previous result">
             <Skeleton className="h-5 w-12" />
