@@ -47,7 +47,7 @@ function StarPage() {
           </span>
           <div>
             <h1 className="font-display text-3xl md:text-4xl font-bold leading-none">
-              Star Markets
+              Delhi Markets
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Gali · Disawar · Faridabad · Ghaziabad — live every day
