@@ -12,7 +12,7 @@ import { pickStarMarkets } from "@/config/starMarkets";
 export const Route = createFileRoute("/star")({
   head: () => ({
     meta: [
-      { title: "Star Markets — Gali · Disawar · Faridabad · Ghaziabad" },
+      { title: "Delhi Markets — Gali · Disawar · Faridabad · Ghaziabad" },
       {
         name: "description",
         content:
