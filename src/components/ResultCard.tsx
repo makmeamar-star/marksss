@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NumberReveal } from "./NumberReveal";
@@ -72,9 +71,8 @@ export function ResultCard({
     : undefined;
 
   return (
-    <motion.div
-      whileHover={{ y: -3 }}
-      className={`glass mandala-corner rounded-xl p-2 sm:p-2.5 transition-shadow ${declared ? "ring-gold" : "hover:border-primary/40"}`}
+    <div
+      className={`glass mandala-corner rounded-xl p-2 sm:p-2.5 transition-all duration-150 hover:-translate-y-0.5 ${declared ? "ring-gold" : "hover:border-primary/40"}`}
     >
       <div className="flex items-start justify-between gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
         <div className="min-w-0">
@@ -155,6 +153,6 @@ export function ResultCard({
         </span>
         {!declared && <CountdownTimer targetTime={market.resultTime} label="Reveals in" />}
       </div>
-    </motion.div>
+    </div>
   );
 }

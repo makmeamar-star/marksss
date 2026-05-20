@@ -28,9 +28,13 @@ export const Route = createFileRoute("/markets")({
   validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
-      { title: "Markets — SattaKing Pro" },
-      { name: "description", content: "All active Matka markets with timings, status and live results." },
+      { title: "All Matka Markets — Live Timings & Results · SattaKing Pro" },
+      { name: "description", content: "Every active Matka market with open/close timings, live status and today's declared results. Kalyan, Main Mumbai, Milan, Rajdhani, Gali, Disawar and more." },
+      { property: "og:title", content: "All Matka Markets — Live Timings & Results" },
+      { property: "og:description", content: "Every active Matka market with timings, status and today's results." },
+      { property: "og:url", content: "https://matka.world/markets" },
     ],
+    links: [{ rel: "canonical", href: "https://matka.world/markets" }],
   }),
   component: MarketsPage,
 });

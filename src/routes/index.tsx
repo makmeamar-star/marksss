@@ -25,10 +25,13 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "SattaKing Pro — India's Most Trusted Matka Platform" },
-      { name: "description", content: "Live Matka results, instant settlements, and a beautifully crafted betting experience. Play smart. Win big." },
-      { property: "og:title", content: "SattaKing Pro — Trusted Matka Platform" },
-      { property: "og:description", content: "Live Matka results & instant settlements." },
+      { name: "description", content: "Live Matka results, instant settlements, and a beautifully crafted betting experience. Kalyan, Main Mumbai, Milan, Rajdhani, Gali, Disawar — all in one place." },
+      { property: "og:title", content: "SattaKing Pro — India's Most Trusted Matka Platform" },
+      { property: "og:description", content: "Live Matka results & instant settlements across every major market." },
+      { property: "og:url", content: "https://matka.world/" },
+      { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: "https://matka.world/" }],
   }),
   component: HomePage,
 });

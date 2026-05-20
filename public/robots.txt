@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# Disallow private / authenticated areas
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /wallet
+Disallow: /my-bets
+Disallow: /notifications
+Disallow: /profile
+Disallow: /kyc
+Disallow: /settings
+Disallow: /bet/
+Disallow: /jodi/
+Disallow: /play/
+Disallow: /referrals
+Disallow: /rewards
+Disallow: /achievements
+Disallow: /leaderboard
+Disallow: /starline
+Disallow: /api/
+
+Sitemap: https://matka.world/sitemap.xml

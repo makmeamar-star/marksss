@@ -14,9 +14,13 @@ const JODI_MARKET_IDS = ["gali", "disawar", "faridabad", "ghaziabad"] as const;
 export const Route = createFileRoute("/jodi")({
   head: () => ({
     meta: [
-      { title: "Jodi 00–99 — Gali, Disawar, Faridabad, Ghaziabad" },
-      { name: "description", content: "Play classic North-Indian Jodi (00–99) markets — Gali, Disawar, Faridabad and Ghaziabad — with live timings and results." },
+      { title: "Jodi 00–99 · Gali, Disawar, Faridabad, Ghaziabad — SattaKing Pro" },
+      { name: "description", content: "Play and track classic North-Indian Jodi (00–99) markets — Gali, Disawar, Faridabad and Ghaziabad — with live timings, today's number and recent history." },
+      { property: "og:title", content: "Jodi 00–99 — Gali, Disawar, Faridabad, Ghaziabad" },
+      { property: "og:description", content: "Live Jodi 00–99 markets with timings and today's number." },
+      { property: "og:url", content: "https://matka.world/jodi" },
     ],
+    links: [{ rel: "canonical", href: "https://matka.world/jodi" }],
   }),
   component: JodiPage,
 });
