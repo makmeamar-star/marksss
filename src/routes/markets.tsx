@@ -183,7 +183,7 @@ function MarketsPage() {
       >
         {star && (
           <span className="absolute -top-1.5 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-gold px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-background shadow">
-            <Star className="h-2.5 w-2.5 fill-current" /> Star
+            <Star className="h-2.5 w-2.5 fill-current" /> Delhi
           </span>
         )}
         <ResultCard market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} />
@@ -212,7 +212,7 @@ function MarketsPage() {
     <div className="min-h-screen">
       <SiteHeader />
 
-      {/* Sticky Star Markets strip — always visible at top of /markets */}
+      {/* Sticky Delhi Markets strip — always visible at top of /markets */}
       <div className="sticky top-12 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-2">
           <StarMarketsSection scroll />

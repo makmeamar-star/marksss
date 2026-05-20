@@ -12,13 +12,13 @@ import { pickStarMarkets } from "@/config/starMarkets";
 export const Route = createFileRoute("/star")({
   head: () => ({
     meta: [
-      { title: "Star Markets — Gali · Disawar · Faridabad · Ghaziabad" },
+      { title: "Delhi Markets — Gali · Disawar · Faridabad · Ghaziabad" },
       {
         name: "description",
         content:
           "Live results, today's open & close, and one-tap play for the most popular markets — Gali, Disawar, Faridabad and Ghaziabad.",
       },
-      { property: "og:title", content: "Star Markets — Gali, Disawar, Faridabad, Ghaziabad" },
+      { property: "og:title", content: "Delhi Markets — Gali, Disawar, Faridabad, Ghaziabad" },
       {
         property: "og:description",
         content: "Live Matka results for the four most-watched markets, with one-tap betting.",
@@ -47,7 +47,7 @@ function StarPage() {
           </span>
           <div>
             <h1 className="font-display text-3xl md:text-4xl font-bold leading-none">
-              Star Markets
+              Delhi Markets
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Gali · Disawar · Faridabad · Ghaziabad — live every day

@@ -15,7 +15,7 @@ const HIDDEN_PREFIXES = [
  * Mobile-first bottom navigation for PUBLIC pages. Hidden on md+ screens and
  * on routes that ship their own navigation. Center "Star" tab is the prominent
  * shortcut to the 4 featured markets (Gali / Disawar / Faridabad / Ghaziabad).
- *
+ * Formerly "Star Markets", now branded as "Delhi Markets".
  * When the visitor is signed in, the "Home" tab routes to their dashboard
  * instead of the public landing page so the back-button stays inside the app.
  */
@@ -48,7 +48,7 @@ export function BottomNav() {
             to="/star"
             preload="intent"
             className="relative -mt-5 mx-auto flex flex-col items-center"
-            aria-label="Star markets"
+            aria-label="Delhi markets"
           >
             <span
               className={`grid h-11 w-11 place-items-center rounded-full bg-gradient-gold text-background shadow-[0_6px_18px_-4px_color-mix(in_oklab,var(--primary)_70%,transparent)] ring-3 ring-background transition-transform ${
@@ -62,7 +62,7 @@ export function BottomNav() {
                 isActive("/star") ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              Star
+              Delhi
             </span>
           </Link>
 

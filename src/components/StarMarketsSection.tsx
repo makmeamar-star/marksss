@@ -13,7 +13,7 @@ interface Props {
 }
 
 /**
- * Featured "Star Markets" section: pinned grid of Gali, Disawar,
+ * Featured "Delhi Markets" section: pinned grid of Gali, Disawar,
  * Faridabad, Ghaziabad with today's result + Play CTA.
  */
 export function StarMarketsSection({ scroll, hideHeader }: Props) {
@@ -39,7 +39,7 @@ export function StarMarketsSection({ scroll, hideHeader }: Props) {
             </span>
             <div>
               <h2 className="font-display text-xl md:text-2xl font-bold leading-none">
-                Star Markets
+                Delhi Markets
               </h2>
               <p className="text-[10px] text-muted-foreground mt-0.5">
                 Gali · Disawar · Faridabad · Ghaziabad — live every day

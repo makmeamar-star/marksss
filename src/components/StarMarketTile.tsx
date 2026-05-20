@@ -46,7 +46,7 @@ export function StarMarketTile({ market, result, recentJodis = [], compact }: Pr
     >
       {/* gold ribbon */}
       <span className="absolute -top-2 left-2 inline-flex items-center gap-1 rounded-full bg-gradient-gold px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-background shadow-md">
-        <Star className="h-2.5 w-2.5 fill-current" /> Star
+        <Star className="h-2.5 w-2.5 fill-current" /> Delhi
       </span>
 
       <div className="flex items-start justify-between gap-2 mt-1">
@@ -98,7 +98,7 @@ export function StarMarketTile({ market, result, recentJodis = [], compact }: Pr
             to="/bet/$marketId"
             params={{ marketId: market.id }}
             preload="intent"
-            className="flex items-center justify-center gap-1 w-full rounded-lg bg-gradient-gold text-background font-bold text-xs py-2 hover:opacity-95 active:scale-[0.98] transition"
+            className="flex items-center justify-center gap-1 w-full rounded-lg bg-gradient-gold text-background font-bold text-xs h-8 hover:opacity-95 active:scale-[0.98] transition"
           >
             Play Now <ArrowRight className="h-3.5 w-3.5" />
           </Link>
@@ -107,7 +107,7 @@ export function StarMarketTile({ market, result, recentJodis = [], compact }: Pr
             to="/jodi/$marketId"
             params={{ marketId: market.id }}
             preload="intent"
-            className="flex items-center justify-center gap-1 w-full rounded-lg border border-primary/40 text-primary font-semibold text-xs py-2 hover:bg-primary/10 transition"
+            className="flex items-center justify-center gap-1 w-full rounded-lg border border-primary/40 text-primary font-semibold text-xs h-8 hover:bg-primary/10 transition"
           >
             View Result <ArrowRight className="h-3.5 w-3.5" />
           </Link>
