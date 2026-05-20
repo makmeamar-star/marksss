@@ -62,7 +62,7 @@ export function BottomNav() {
                 isActive("/star") ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              Star
+              Delhi
             </span>
           </Link>
 
