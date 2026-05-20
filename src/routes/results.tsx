@@ -12,10 +12,13 @@ import { todayIST } from "@/lib/marketTime";
 export const Route = createFileRoute("/results")({
   head: () => ({
     meta: [
-      { title: "Live Matka Results — SattaKing Pro" },
-      { name: "description", content: "Live and historical Matka results across Kalyan, Main Mumbai, Milan, Rajdhani and more markets." },
-      { property: "og:title", content: "Live Matka Results — SattaKing Pro" },
+      { title: "Live Matka Results Today — Kalyan, Main Mumbai, Milan · SattaKing Pro" },
+      { name: "description", content: "Today's live Matka results and 14-day history across Kalyan, Main Mumbai, Milan, Rajdhani, Gali, Disawar and every active market — auto-refreshing." },
+      { property: "og:title", content: "Live Matka Results Today — SattaKing Pro" },
+      { property: "og:description", content: "Auto-refreshing live results across every major Matka market." },
+      { property: "og:url", content: "https://matka.world/results" },
     ],
+    links: [{ rel: "canonical", href: "https://matka.world/results" }],
   }),
   component: ResultsPage,
 });

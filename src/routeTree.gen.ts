@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StarRouteImport } from './routes/star'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as ResponsibleGamingRouteImport } from './routes/responsible-gaming'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -76,6 +77,11 @@ const TermsRoute = TermsRouteImport.update({
 const StarRoute = StarRouteImport.update({
   id: '/star',
   path: '/star',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResultsRoute = ResultsRouteImport.update({
@@ -389,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/star': typeof StarRoute
   '/terms': typeof TermsRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
@@ -447,6 +454,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/star': typeof StarRoute
   '/terms': typeof TermsRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
@@ -508,6 +516,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/star': typeof StarRoute
   '/terms': typeof TermsRoute
   '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
@@ -569,6 +578,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/responsible-gaming'
     | '/results'
+    | '/sitemap.xml'
     | '/star'
     | '/terms'
     | '/achievements'
@@ -627,6 +637,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/responsible-gaming'
     | '/results'
+    | '/sitemap.xml'
     | '/star'
     | '/terms'
     | '/achievements'
@@ -687,6 +698,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/responsible-gaming'
     | '/results'
+    | '/sitemap.xml'
     | '/star'
     | '/terms'
     | '/_authenticated/achievements'
@@ -748,6 +760,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResponsibleGamingRoute: typeof ResponsibleGamingRoute
   ResultsRoute: typeof ResultsRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StarRoute: typeof StarRoute
   TermsRoute: typeof TermsRoute
   ApiPublicHooksAlertMissingResultsRoute: typeof ApiPublicHooksAlertMissingResultsRoute
@@ -774,6 +787,13 @@ declare module '@tanstack/react-router' {
       path: '/star'
       fullPath: '/star'
       preLoaderRoute: typeof StarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/results': {
@@ -1272,6 +1292,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ResponsibleGamingRoute: ResponsibleGamingRoute,
   ResultsRoute: ResultsRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   StarRoute: StarRoute,
   TermsRoute: TermsRoute,
   ApiPublicHooksAlertMissingResultsRoute:
