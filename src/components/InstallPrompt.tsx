@@ -124,7 +124,7 @@ export function InstallPrompt() {
       style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)" }}
     >
       <button
-        onClick={dismiss}
+        onClick={() => dismiss("user")}
         aria-label="Dismiss"
         className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
       >
@@ -152,7 +152,7 @@ export function InstallPrompt() {
               <Button size="sm" onClick={install} className="h-8">
                 Install
               </Button>
-              <Button size="sm" variant="ghost" onClick={dismiss} className="h-8">
+              <Button size="sm" variant="ghost" onClick={() => dismiss("user")} className="h-8">
                 Not now
               </Button>
             </div>
