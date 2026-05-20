@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Download, X, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -60,12 +61,16 @@ export function InstallPrompt() {
       e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
       // Show after results have had time to render.
-      setTimeout(() => setVisible(true), SHOW_DELAY_MS);
+      setTimeout(() => {
+        setVisible(true);
+        track("pwa_install_prompt_shown", { platform: "android" });
+      }, SHOW_DELAY_MS);
     };
 
     const onInstalled = () => {
       setVisible(false);
       setDeferred(null);
+      track("pwa_installed", { platform: iOS ? "ios" : "android" });
     };
 
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
@@ -74,7 +79,10 @@ export function InstallPrompt() {
     // iOS doesn't fire beforeinstallprompt — show our manual A2HS hint.
     let iosTimer: number | undefined;
     if (iOS) {
-      iosTimer = window.setTimeout(() => setVisible(true), SHOW_DELAY_MS);
+      iosTimer = window.setTimeout(() => {
+        setVisible(true);
+        track("pwa_install_prompt_shown", { platform: "ios" });
+      }, SHOW_DELAY_MS);
     }
 
     return () => {
@@ -84,20 +92,23 @@ export function InstallPrompt() {
     };
   }, []);
 
-  const dismiss = () => {
+  const dismiss = (source: "user" | "auto" = "user") => {
     try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch {}
     setVisible(false);
+    track("pwa_install_prompt_dismissed", { platform: isIOS ? "ios" : "android", source });
   };
 
   const install = async () => {
     if (!deferred) return;
+    track("pwa_install_prompt_clicked", { platform: "android" });
     try {
       await deferred.prompt();
       const { outcome } = await deferred.userChoice;
-      if (outcome !== "accepted") dismiss();
+      track("pwa_install_prompt_outcome", { platform: "android", outcome });
+      if (outcome !== "accepted") dismiss("auto");
       else setVisible(false);
     } catch {
-      dismiss();
+      dismiss("auto");
     } finally {
       setDeferred(null);
     }
@@ -113,7 +124,7 @@ export function InstallPrompt() {
       style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)" }}
     >
       <button
-        onClick={dismiss}
+        onClick={() => dismiss("user")}
         aria-label="Dismiss"
         className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
       >
@@ -141,7 +152,7 @@ export function InstallPrompt() {
               <Button size="sm" onClick={install} className="h-8">
                 Install
               </Button>
-              <Button size="sm" variant="ghost" onClick={dismiss} className="h-8">
+              <Button size="sm" variant="ghost" onClick={() => dismiss("user")} className="h-8">
                 Not now
               </Button>
             </div>
