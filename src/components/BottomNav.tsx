@@ -15,7 +15,7 @@ const HIDDEN_PREFIXES = [
  * Mobile-first bottom navigation for PUBLIC pages. Hidden on md+ screens and
  * on routes that ship their own navigation. Center "Star" tab is the prominent
  * shortcut to the 4 featured markets (Gali / Disawar / Faridabad / Ghaziabad).
- *
+ * Formerly "Star Markets", now branded as "Delhi Markets".
  * When the visitor is signed in, the "Home" tab routes to their dashboard
  * instead of the public landing page so the back-button stays inside the app.
  */
