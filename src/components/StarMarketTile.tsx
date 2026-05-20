@@ -15,14 +15,6 @@ interface Props {
  */
 export function StarMarketTile({ market, result, recentJodis = [], compact }: Props) {
   const declared = result?.status === "DECLARED";
-  const open =
-    result?.openPana && result?.openDigit !== undefined
-      ? `${result.openPana}-${result.openDigit}`
-      : "★★★-★";
-  const close =
-    result?.closePana && result?.closeDigit !== undefined
-      ? `${result.closeDigit}-${result.closePana}`
-      : "★-★★★";
   const jodi = result?.jodi ?? "★★";
 
   const status: "OPEN" | "CLOSED" | "DECLARED" = declared
@@ -65,12 +57,20 @@ export function StarMarketTile({ market, result, recentJodis = [], compact }: Pr
         </span>
       </div>
 
-      {/* Today's number — big and centered */}
-      <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-        <NumCell label="Open" value={open} dim={!result?.openPana} />
-        <NumCell label="Jodi" value={jodi} highlight dim={!result?.jodi} />
-        <NumCell label="Close" value={close} dim={!result?.closePana} />
+      {/* Today's Jodi — single hero number (00–99) */}
+      <div className="mt-3 flex justify-center">
+        <div
+          className={`rounded-lg bg-background/40 border border-border/50 px-6 py-2 text-center ${
+            !result?.jodi ? "opacity-50" : ""
+          }`}
+        >
+          <div className="text-[8px] uppercase tracking-widest text-muted-foreground">Jodi</div>
+          <div className="font-mono font-bold text-3xl sm:text-4xl text-primary text-glow-gold leading-none mt-0.5">
+            {jodi}
+          </div>
+        </div>
       </div>
+
 
       {/* Last 3 jodis strip */}
       {recentJodis.length > 0 && (
@@ -117,27 +117,3 @@ export function StarMarketTile({ market, result, recentJodis = [], compact }: Pr
   );
 }
 
-function NumCell({
-  label,
-  value,
-  highlight,
-  dim,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-  dim?: boolean;
-}) {
-  return (
-    <div className="rounded-md bg-background/40 border border-border/50 py-1.5">
-      <div className="text-[8px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div
-        className={`font-mono font-bold ${highlight ? "text-xl sm:text-2xl text-primary" : "text-sm sm:text-base"} ${
-          dim ? "opacity-50" : ""
-        }`}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
