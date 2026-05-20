@@ -252,7 +252,8 @@ function JodiBetPage() {
             <Button
               onClick={addAllToSlip}
               disabled={picked.size === 0}
-              className="bg-gradient-gold text-background font-bold flex-1 max-w-xs"
+              size="sm"
+              className="h-8 text-xs bg-gradient-gold text-background font-bold hover:opacity-90 flex-1 max-w-xs"
             >
               <Plus className="h-4 w-4 mr-1" />
               Add {picked.size > 0 ? `${picked.size} Jodi` : "to slip"}
