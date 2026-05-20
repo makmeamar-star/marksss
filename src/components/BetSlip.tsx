@@ -118,7 +118,8 @@ function SlipBody({ onClose }: { onClose?: () => void }) {
         <Button
           onClick={submit}
           disabled={slip.length === 0 || total > balance || submitting}
-          className="w-full bg-gradient-gold text-background font-bold hover:opacity-90"
+          size="sm"
+          className="w-full h-8 text-xs bg-gradient-gold text-background font-bold hover:opacity-90"
         >
           {submitting ? "Placing..." : total > balance ? "Insufficient balance" : `Place ${slip.length || ""} bet${slip.length === 1 ? "" : "s"}`}
         </Button>
