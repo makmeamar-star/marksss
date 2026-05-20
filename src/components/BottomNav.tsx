@@ -48,7 +48,7 @@ export function BottomNav() {
             to="/star"
             preload="intent"
             className="relative -mt-5 mx-auto flex flex-col items-center"
-            aria-label="Star markets"
+            aria-label="Delhi markets"
           >
             <span
               className={`grid h-11 w-11 place-items-center rounded-full bg-gradient-gold text-background shadow-[0_6px_18px_-4px_color-mix(in_oklab,var(--primary)_70%,transparent)] ring-3 ring-background transition-transform ${
