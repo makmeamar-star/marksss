@@ -1,14 +1,19 @@
 {
-  "name": "SattaKing Pro",
+  "id": "/?source=pwa",
+  "name": "SattaKing Pro — Live Matka Results",
   "short_name": "SattaKing",
-  "description": "India's most trusted Matka platform — live results, instant settlements.",
-  "start_url": "/",
+  "description": "India's most trusted Matka platform — live Kalyan, Main Mumbai, Gali, Disawar results with instant settlements.",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "portrait",
   "background_color": "#0a0a0a",
-  "theme_color": "#d4a017",
-  "categories": ["entertainment", "games"],
+  "theme_color": "#0a0a0a",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "categories": ["entertainment", "games", "sports"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -27,6 +32,36 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Live Results",
+      "short_name": "Results",
+      "description": "View today's live Matka results",
+      "url": "/results?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Markets",
+      "short_name": "Markets",
+      "description": "Browse all Matka markets",
+      "url": "/markets?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Charts",
+      "short_name": "Charts",
+      "description": "Historical Matka charts",
+      "url": "/charts?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Jodi",
+      "short_name": "Jodi",
+      "description": "Jodi panel and predictions",
+      "url": "/jodi?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
