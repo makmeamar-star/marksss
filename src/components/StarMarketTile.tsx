@@ -117,27 +117,3 @@ export function StarMarketTile({ market, result, recentJodis = [], compact }: Pr
   );
 }
 
-function NumCell({
-  label,
-  value,
-  highlight,
-  dim,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-  dim?: boolean;
-}) {
-  return (
-    <div className="rounded-md bg-background/40 border border-border/50 py-1.5">
-      <div className="text-[8px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div
-        className={`font-mono font-bold ${highlight ? "text-xl sm:text-2xl text-primary" : "text-sm sm:text-base"} ${
-          dim ? "opacity-50" : ""
-        }`}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
