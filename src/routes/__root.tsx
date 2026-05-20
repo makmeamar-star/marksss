@@ -16,6 +16,7 @@ import { reportError } from "@/lib/errorReporter";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useQueryCachePersistence } from "@/components/PersistedQueryProvider";
 import { BottomNav } from "@/components/BottomNav";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 import appCss from "../styles.css?url";
 
@@ -181,6 +182,7 @@ function RootComponent() {
       <BottomNav />
       <AgeGate />
       <OfflineIndicator />
+      <InstallPrompt />
       <Toaster theme="dark" position="top-right" richColors />
     </QueryClientProvider>
   );
