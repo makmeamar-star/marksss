@@ -11,10 +11,13 @@ import { sortTopFirst } from "@/lib/topMarkets";
 export const Route = createFileRoute("/charts")({
   head: () => ({
     meta: [
-      { title: "Matka Charts — Pana, Jodi & Open/Close · SattaKing Pro" },
-      { name: "description", content: "Browse the official Matka pana chart, jodi history, and open/close digit frequency by market." },
-      { property: "og:title", content: "Matka Charts — SattaKing Pro" },
+      { title: "Matka Charts — Pana, Jodi & Open/Close Frequency · SattaKing Pro" },
+      { name: "description", content: "Official Matka pana chart, jodi history, and open/close digit frequency analysis across every active market." },
+      { property: "og:title", content: "Matka Charts — Pana, Jodi & Open/Close" },
+      { property: "og:description", content: "Pana chart, jodi history and digit frequency by market." },
+      { property: "og:url", content: "https://matka.world/charts" },
     ],
+    links: [{ rel: "canonical", href: "https://matka.world/charts" }],
   }),
   component: ChartsPage,
 });

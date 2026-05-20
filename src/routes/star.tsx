@@ -13,17 +13,12 @@ export const Route = createFileRoute("/star")({
   head: () => ({
     meta: [
       { title: "Delhi Markets — Gali · Disawar · Faridabad · Ghaziabad" },
-      {
-        name: "description",
-        content:
-          "Live results, today's open & close, and one-tap play for the most popular markets — Gali, Disawar, Faridabad and Ghaziabad.",
-      },
+      { name: "description", content: "Live results, today's number, and one-tap play for the most popular Delhi markets — Gali, Disawar, Faridabad and Ghaziabad." },
       { property: "og:title", content: "Delhi Markets — Gali, Disawar, Faridabad, Ghaziabad" },
-      {
-        property: "og:description",
-        content: "Live Matka results for the four most-watched markets, with one-tap betting.",
-      },
+      { property: "og:description", content: "Live Matka results for the four most-watched markets, with one-tap betting." },
+      { property: "og:url", content: "https://matka.world/star" },
     ],
+    links: [{ rel: "canonical", href: "https://matka.world/star" }],
   }),
   component: StarPage,
 });
