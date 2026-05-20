@@ -272,7 +272,7 @@ function SangamFull({ onAdd, payout }: { onAdd: (n: string) => void; payout: num
           </div>
         </div>
       </div>
-      <Button onClick={submit} disabled={!open || !close} className="mt-4 bg-gradient-gold text-background font-semibold">
+      <Button onClick={submit} disabled={!open || !close} size="sm" className="mt-4 h-8 text-xs bg-gradient-gold text-background font-bold hover:opacity-90">
         <Plus className="h-4 w-4 mr-1" /> Add to slip
       </Button>
     </Section>
