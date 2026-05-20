@@ -1,109 +1,130 @@
 /**
- * dpboss "gali / disawar" style monthly chart scraper.
+ * sattaking.in homepage scraper for the four Delhi (jodi-only) markets:
+ * Gali, Disawar, Faridabad, Ghaziabad.
  *
- *   https://dpboss.boston/chart/<slug>.php
+ * The homepage prints a list of rows like:
+ *   "GALI 11:50 PM CHART 86 Yesterday __ Today"
+ *   "FARIDABAD 06:00 PM CHART 49 Yesterday __ Today"
  *
- * The chart is a Day x Month grid where each cell is a single 2-digit jodi
- * (or "**" if not declared). We only need today's cell, so we just collect
- * every (date -> jodi) pair we can detect and return them tagged.
+ * We pull every (NAME, YESTERDAY, TODAY) triple, then resolve the slug
+ * to one of those rows. "__" means the result hasn't been declared yet.
+ *
+ * The function name + return shape are preserved so the existing
+ * scraper coordinator (index.server.ts) keeps working unchanged.
  */
 
 import type { DpbossDayResult } from "./dpboss.server";
 
-const BASE = "https://dpboss.boston/chart";
-const TIMEOUT_MS = 8000;
+const BASE = "https://sattaking.in/";
+const TIMEOUT_MS = 10_000;
 
-const cache = new Map<string, { at: number; data: DpbossDayResult[] }>();
+const cache = new Map<string, { at: number; data: Row[] }>();
 const CACHE_TTL_MS = 60_000;
 
+interface Row {
+  name: string; // upper-case canonical row name from sattaking.in
+  yesterday: string | null;
+  today: string | null;
+}
+
+// slug (from market_source_map) → list of acceptable row names on sattaking.in
+// (case-insensitive, matched after collapsing whitespace).
+const SLUG_TO_NAMES: Record<string, string[]> = {
+  gali: ["GALI"],
+  disawar: ["DESAWAR", "SUPER FAST RESULTS DESAWAR"],
+  faridabad: ["FARIDABAD"],
+  ghaziabad: ["GHAZIABAD"],
+};
+
 export async function fetchGaliDisawarChart(slug: string): Promise<DpbossDayResult[]> {
-  const url = `${BASE}/${encodeURIComponent(slug)}.php`;
-  const cached = cache.get(url);
+  const rows = await fetchRows();
+  const accepted = SLUG_TO_NAMES[slug.toLowerCase()] ?? [slug.toUpperCase()];
+  const hit = rows.find((r) => accepted.includes(r.name));
+  if (!hit || !hit.today) return [];
+
+  // Tag with every plausible "today" date the coordinator might look up,
+  // so we work whether the app is on real-time or a future-shifted clock.
+  const dates = candidateTodayDates();
+  return dates.map((date) => ({
+    date,
+    openPana: null,
+    closePana: null,
+    jodi: hit.today!,
+  }));
+}
+
+async function fetchRows(): Promise<Row[]> {
+  const cached = cache.get(BASE);
   if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.data;
 
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(url, {
+    const res = await fetch(BASE, {
       signal: ctrl.signal,
       headers: {
         accept: "text/html",
         "user-agent":
-          "Mozilla/5.0 (compatible; SattaResultsBot/1.0; +https://matka.bharatkaal.online)",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
       },
     });
-    if (!res.ok) throw new Error(`dpboss chart ${res.status} for ${slug}`);
+    if (!res.ok) throw new Error(`sattaking.in ${res.status} for ${BASE}`);
     const html = await res.text();
     const rows = parse(html);
-    cache.set(url, { at: Date.now(), data: rows });
+    cache.set(BASE, { at: Date.now(), data: rows });
     return rows;
   } finally {
     clearTimeout(t);
   }
 }
 
-/**
- * Tolerant parser: walks the table body and pairs the day-of-month + month-year
- * column header with each cell's 2-digit jodi. We don't need the whole grid,
- * just (date -> jodi) pairs for the current/recent days.
- */
-function parse(html: string): DpbossDayResult[] {
-  // Pull all <tr>...</tr>
-  const rowRe = /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi;
-  const headerMonths: string[] = [];
-  let firstRow = true;
-  const out: DpbossDayResult[] = [];
+function parse(html: string): Row[] {
+  // Strip tags → single-line whitespace-normalised text.
+  const text = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ");
 
-  let m: RegExpExecArray | null;
-  while ((m = rowRe.exec(html))) {
-    const cells = [...m[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((c) =>
-      stripTags(c[1]).trim(),
-    );
-    if (cells.length === 0) continue;
+  // Match "<NAME> <HH:MM AM/PM> CHART <Y> Yesterday <T> Today" rows.
+  // Name allows letters, spaces and "&" (NAME group is non-greedy so we stop
+  // at the first time literal).
+  const re =
+    /([A-Z][A-Z &]+?)\s+\d{1,2}:\d{2}\s*[AP]M\s+CHART\s+(\S+)\s+Yesterday\s+(\S+)\s+Today/g;
 
-    if (firstRow && cells.some((c) => /[A-Za-z]+\s*-?\s*\d{2,4}/.test(c))) {
-      // Month header row, like "Jan-2025", "Feb-2025"...
-      for (const c of cells.slice(1)) headerMonths.push(c);
-      firstRow = false;
-      continue;
-    }
-    firstRow = false;
-
-    const day = cells[0]?.match(/^\d{1,2}$/)?.[0];
-    if (!day) continue;
-    const dayNum = parseInt(day, 10);
-    if (dayNum < 1 || dayNum > 31) continue;
-
-    for (let i = 1; i < cells.length; i++) {
-      const jodi = cells[i].match(/^\d{2}$/)?.[0];
-      if (!jodi) continue;
-      const month = headerMonths[i - 1];
-      const date = monthHeaderToDate(month, dayNum);
-      if (!date) continue;
-      out.push({ date, openPana: null, closePana: null, jodi });
-    }
+  const out: Row[] = [];
+  for (const m of text.matchAll(re)) {
+    const name = m[1].trim().replace(/\s+/g, " ");
+    const y = m[2] === "__" ? null : /^\d{1,3}$/.test(m[2]) ? m[2].padStart(2, "0").slice(-2) : null;
+    const tRaw = m[3];
+    const t = tRaw === "__" ? null : /^\d{1,3}$/.test(tRaw) ? tRaw.padStart(2, "0").slice(-2) : null;
+    out.push({ name, yesterday: y, today: t });
   }
   return out;
 }
 
-function stripTags(s: string): string {
-  return s.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ");
-}
+/**
+ * The coordinator computes `lookupDate = mapToRealDpbossDate(istToday)`
+ * and then does `days.find(d => d.date === lookupDate)`. Since sattaking.in's
+ * "Today" is always the wall-clock real today, we tag the entry with every
+ * date that lookupDate could equal:
+ *   - IST today (when real time ≥ IST clock)
+ *   - real UTC today
+ *   - real UTC today walked back to IST today's weekday
+ */
+function candidateTodayDates(): string[] {
+  const nowIst = new Date(Date.now() + 5.5 * 3600 * 1000);
+  const istToday = nowIst.toISOString().slice(0, 10);
+  const realToday = new Date().toISOString().slice(0, 10);
 
-const MONTHS: Record<string, number> = {
-  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
-  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
-};
+  const target = new Date(istToday + "T00:00:00Z");
+  const real = new Date(realToday + "T00:00:00Z");
+  let walked = realToday;
+  if (target.getTime() > real.getTime()) {
+    const out = new Date(real);
+    const dow = target.getUTCDay();
+    while (out.getUTCDay() !== dow) out.setUTCDate(out.getUTCDate() - 1);
+    walked = out.toISOString().slice(0, 10);
+  }
 
-function monthHeaderToDate(header: string | undefined, day: number): string | null {
-  if (!header) return null;
-  const mm = header.match(/([A-Za-z]{3,9})\s*-?\s*(\d{2,4})/);
-  if (!mm) return null;
-  const monthIdx = MONTHS[mm[1].slice(0, 3).toLowerCase()];
-  if (!monthIdx) return null;
-  let year = parseInt(mm[2], 10);
-  if (year < 100) year += 2000;
-  const mm2 = String(monthIdx).padStart(2, "0");
-  const dd = String(day).padStart(2, "0");
-  return `${year}-${mm2}-${dd}`;
+  return Array.from(new Set([istToday, realToday, walked]));
 }
