@@ -103,7 +103,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* STAR MARKETS — pinned featured 4 */}
+      {/* DELHI MARKETS — pinned featured 4 */}
       <StarMarketsSection />
 
       {/* LIVE RESULTS */}
