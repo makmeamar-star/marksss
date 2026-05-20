@@ -18,7 +18,7 @@ export const Route = createFileRoute("/star")({
         content:
           "Live results, today's open & close, and one-tap play for the most popular markets — Gali, Disawar, Faridabad and Ghaziabad.",
       },
-      { property: "og:title", content: "Star Markets — Gali, Disawar, Faridabad, Ghaziabad" },
+      { property: "og:title", content: "Delhi Markets — Gali, Disawar, Faridabad, Ghaziabad" },
       {
         property: "og:description",
         content: "Live Matka results for the four most-watched markets, with one-tap betting.",
