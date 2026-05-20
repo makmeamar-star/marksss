@@ -212,7 +212,7 @@ function MarketsPage() {
     <div className="min-h-screen">
       <SiteHeader />
 
-      {/* Sticky Star Markets strip — always visible at top of /markets */}
+      {/* Sticky Delhi Markets strip — always visible at top of /markets */}
       <div className="sticky top-12 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-2">
           <StarMarketsSection scroll />
