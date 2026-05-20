@@ -107,7 +107,7 @@ export function StarMarketTile({ market, result, recentJodis = [], compact }: Pr
             to="/jodi/$marketId"
             params={{ marketId: market.id }}
             preload="intent"
-            className="flex items-center justify-center gap-1 w-full rounded-lg border border-primary/40 text-primary font-semibold text-xs py-2 hover:bg-primary/10 transition"
+            className="flex items-center justify-center gap-1 w-full rounded-lg border border-primary/40 text-primary font-semibold text-xs h-8 hover:bg-primary/10 transition"
           >
             View Result <ArrowRight className="h-3.5 w-3.5" />
           </Link>
