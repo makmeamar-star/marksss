@@ -46,7 +46,7 @@ export function StarMarketTile({ market, result, recentJodis = [], compact }: Pr
     >
       {/* gold ribbon */}
       <span className="absolute -top-2 left-2 inline-flex items-center gap-1 rounded-full bg-gradient-gold px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-background shadow-md">
-        <Star className="h-2.5 w-2.5 fill-current" /> Star
+        <Star className="h-2.5 w-2.5 fill-current" /> Delhi
       </span>
 
       <div className="flex items-start justify-between gap-2 mt-1">
