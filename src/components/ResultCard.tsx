@@ -153,6 +153,6 @@ export function ResultCard({
         </span>
         {!declared && <CountdownTimer targetTime={market.resultTime} label="Reveals in" />}
       </div>
-    </motion.div>
+    </div>
   );
 }
