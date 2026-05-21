@@ -913,6 +913,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pwa_install_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          outcome: string | null
+          platform: string
+          session_id: string | null
+          source: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          outcome?: string | null
+          platform: string
+          session_id?: string | null
+          source?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          outcome?: string | null
+          platform?: string
+          session_id?: string | null
+          source?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       quick_bets: {
         Row: {
           amount: number
