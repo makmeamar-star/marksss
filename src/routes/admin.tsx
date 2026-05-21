@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import {
   LayoutDashboard, Trophy, Wallet, Crown, LogOut, Menu,
-  Store, ArrowLeftRight, History, Zap, Globe, FileSearch, Users, Activity, Megaphone, ShieldAlert, CreditCard, ShieldCheck,
+  Store, ArrowLeftRight, History, Zap, Globe, FileSearch, Users, Activity, Megaphone, ShieldAlert, CreditCard, ShieldCheck, BarChart3,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,7 @@ const NAV = [
   { to: "/admin/broadcasts", label: "Broadcasts", icon: Megaphone },
   { to: "/admin/risk", label: "Risk & Ops", icon: ShieldAlert },
   { to: "/admin/monitoring", label: "Monitoring", icon: ShieldAlert },
+  { to: "/admin/analytics/pwa", label: "PWA Funnel", icon: BarChart3 },
 ] as const;
 
 function AdminLayout() {

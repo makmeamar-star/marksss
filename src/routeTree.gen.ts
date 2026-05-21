@@ -56,6 +56,7 @@ import { Route as AdminResultsAutomationRunsRouteImport } from './routes/admin/r
 import { Route as AdminResultsAutomationAuditRouteImport } from './routes/admin/results.automation-audit'
 import { Route as AdminResultsAutomationRouteImport } from './routes/admin/results.automation'
 import { Route as AdminResultsAlertsRouteImport } from './routes/admin/results.alerts'
+import { Route as AdminAnalyticsPwaRouteImport } from './routes/admin/analytics.pwa'
 import { Route as AuthenticatedSettingsLimitsRouteImport } from './routes/_authenticated/settings.limits'
 import { Route as AuthenticatedPlayQuickRouteImport } from './routes/_authenticated/play.quick'
 import { Route as AuthenticatedJodiMarketIdRouteImport } from './routes/_authenticated/jodi.$marketId'
@@ -309,6 +310,11 @@ const AdminResultsAlertsRoute = AdminResultsAlertsRouteImport.update({
   path: '/results/alerts',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAnalyticsPwaRoute = AdminAnalyticsPwaRouteImport.update({
+  id: '/analytics/pwa',
+  path: '/analytics/pwa',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AuthenticatedSettingsLimitsRoute =
   AuthenticatedSettingsLimitsRouteImport.update({
     id: '/settings/limits',
@@ -424,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/jodi/$marketId': typeof AuthenticatedJodiMarketIdRoute
   '/play/quick': typeof AuthenticatedPlayQuickRoute
   '/settings/limits': typeof AuthenticatedSettingsLimitsRoute
+  '/admin/analytics/pwa': typeof AdminAnalyticsPwaRoute
   '/admin/results/alerts': typeof AdminResultsAlertsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
@@ -483,6 +490,7 @@ export interface FileRoutesByTo {
   '/jodi/$marketId': typeof AuthenticatedJodiMarketIdRoute
   '/play/quick': typeof AuthenticatedPlayQuickRoute
   '/settings/limits': typeof AuthenticatedSettingsLimitsRoute
+  '/admin/analytics/pwa': typeof AdminAnalyticsPwaRoute
   '/admin/results/alerts': typeof AdminResultsAlertsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
@@ -545,6 +553,7 @@ export interface FileRoutesById {
   '/_authenticated/jodi/$marketId': typeof AuthenticatedJodiMarketIdRoute
   '/_authenticated/play/quick': typeof AuthenticatedPlayQuickRoute
   '/_authenticated/settings/limits': typeof AuthenticatedSettingsLimitsRoute
+  '/admin/analytics/pwa': typeof AdminAnalyticsPwaRoute
   '/admin/results/alerts': typeof AdminResultsAlertsRoute
   '/admin/results/automation': typeof AdminResultsAutomationRoute
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
@@ -607,6 +616,7 @@ export interface FileRouteTypes {
     | '/jodi/$marketId'
     | '/play/quick'
     | '/settings/limits'
+    | '/admin/analytics/pwa'
     | '/admin/results/alerts'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
@@ -666,6 +676,7 @@ export interface FileRouteTypes {
     | '/jodi/$marketId'
     | '/play/quick'
     | '/settings/limits'
+    | '/admin/analytics/pwa'
     | '/admin/results/alerts'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
@@ -727,6 +738,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jodi/$marketId'
     | '/_authenticated/play/quick'
     | '/_authenticated/settings/limits'
+    | '/admin/analytics/pwa'
     | '/admin/results/alerts'
     | '/admin/results/automation'
     | '/admin/results/automation-audit'
@@ -1104,6 +1116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResultsAlertsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/analytics/pwa': {
+      id: '/admin/analytics/pwa'
+      path: '/analytics/pwa'
+      fullPath: '/admin/analytics/pwa'
+      preLoaderRoute: typeof AdminAnalyticsPwaRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_authenticated/settings/limits': {
       id: '/_authenticated/settings/limits'
       path: '/settings/limits'
@@ -1243,6 +1262,7 @@ interface AdminRouteChildren {
   AdminUsersRoute: typeof AdminUsersRoute
   AdminWithdrawalsRoute: typeof AdminWithdrawalsRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminAnalyticsPwaRoute: typeof AdminAnalyticsPwaRoute
   AdminResultsAlertsRoute: typeof AdminResultsAlertsRoute
   AdminResultsAutomationRoute: typeof AdminResultsAutomationRoute
   AdminResultsAutomationAuditRoute: typeof AdminResultsAutomationAuditRoute
@@ -1265,6 +1285,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminUsersRoute: AdminUsersRoute,
   AdminWithdrawalsRoute: AdminWithdrawalsRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminAnalyticsPwaRoute: AdminAnalyticsPwaRoute,
   AdminResultsAlertsRoute: AdminResultsAlertsRoute,
   AdminResultsAutomationRoute: AdminResultsAutomationRoute,
   AdminResultsAutomationAuditRoute: AdminResultsAutomationAuditRoute,
