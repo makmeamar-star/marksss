@@ -176,10 +176,11 @@ function HomePage() {
       {/* QUICK STATS */}
       <section className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <QuickStat label="Total Markets" value={String(markets.length)} />
-          <QuickStat label="Declared Today" value={String(declaredToday)} accent />
-          <QuickStat label="Pending" value={String(markets.length - declaredToday)} />
-          <QuickStat label="Open Now" value={String(openNow)} />
+          <QuickStat label="Total Markets" value={stat(markets.length)} />
+          <QuickStat label="Declared Today" value={stat(declaredToday)} accent />
+          <QuickStat label="Pending" value={stat(markets.length - declaredToday)} />
+          <QuickStat label="Open Now" value={stat(openNow)} />
+
         </div>
       </section>
 
