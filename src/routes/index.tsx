@@ -104,9 +104,10 @@ function HomePage() {
 
             {/* Live counters (real numbers from today's markets) */}
             <div className="grid grid-cols-3 gap-3 mt-10 max-w-lg mx-auto">
-              <Stat icon={<TrendingUp className="h-3.5 w-3.5" />} label="Active Markets" value={String(markets.length)} />
-              <Stat icon={<Trophy className="h-3.5 w-3.5" />} label="Declared Today" value={String(declaredToday)} />
-              <Stat icon={<Users className="h-3.5 w-3.5" />} label="Open Now" value={String(openNow)} />
+              <Stat icon={<TrendingUp className="h-3.5 w-3.5" />} label="Active Markets" value={stat(markets.length)} />
+              <Stat icon={<Trophy className="h-3.5 w-3.5" />} label="Declared Today" value={stat(declaredToday)} />
+              <Stat icon={<Users className="h-3.5 w-3.5" />} label="Open Now" value={stat(openNow)} />
+
             </div>
           </motion.div>
         </div>
