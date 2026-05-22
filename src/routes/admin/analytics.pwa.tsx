@@ -37,6 +37,32 @@ function PwaFunnelPage() {
     queryFn: () => fetchFunnel({ data: { rangeDays } }),
   });
 
+  // Live updates via Supabase Realtime: debounce-refetch on new events.
+  const queryClient = useQueryClient();
+  const [liveCount, setLiveCount] = useState(0);
+  const [isLive, setIsLive] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    const channel = supabase
+      .channel("pwa_install_events:admin")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "pwa_install_events" },
+        () => {
+          setLiveCount((n) => n + 1);
+          if (debounceRef.current) clearTimeout(debounceRef.current);
+          debounceRef.current = setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "pwa-funnel"] });
+          }, 1500);
+        },
+      )
+      .subscribe((status) => setIsLive(status === "SUBSCRIBED"));
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return (
     <div className="px-4 md:px-8 py-6 space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
