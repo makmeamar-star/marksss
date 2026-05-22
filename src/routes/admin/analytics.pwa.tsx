@@ -73,6 +73,18 @@ function PwaFunnelPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] ${
+              isLive
+                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "border-border/60 bg-muted/40 text-muted-foreground"
+            }`}
+            title={isLive ? "Receiving live events" : "Live channel not connected"}
+          >
+            <Radio className={`h-3 w-3 ${isLive ? "animate-pulse" : ""}`} />
+            {isLive ? "Live" : "Offline"}
+            {liveCount > 0 && <span className="font-medium">· {liveCount}</span>}
+          </span>
           {RANGES.map((r) => (
             <Button
               key={r}
