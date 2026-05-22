@@ -1,127 +1,127 @@
-# SattaKing Pro — Full Audit & Improvement Plan
+# SattaKing Pro — Next Version ("v2 Advance") Plan
 
-North star: **acquire more users**. Every item below is scored against that goal first, with UX polish, perf/reliability, player features, and admin/ops as supporting workstreams.
-
----
-
-## 1. What's already strong
-
-- Solid TanStack Start architecture, server functions, RLS, multi-source scraper with confirm-twice logic.
-- Clean design system in `src/styles.css` (semantic tokens, India-themed gradients).
-- PWA scaffolding, offline indicator, persisted query cache.
-- Bottom nav + admin tooling already in place.
-
-This plan is about turning a working product into a **shareable, fast-loading, conversion-tuned** one.
+North star stays the same: **acquire more users, keep them coming back daily, and convert them into bettors**. v2 layers intelligence, virality, and trust on top of what already ships.
 
 ---
 
-## 2. Findings, grouped by impact on acquisition
+## 1. Goals for v2
 
-### A. Acquisition blockers (do first)
-
-1. **SEO is shallow.** Most public routes likely share weak metadata. The root `head()` uses a Lovable-preview screenshot as `og:image` — bad social previews kill organic shares. Title/description aren't keyword-optimized for "matka", "kalyan result", "gali disawar today".
-2. **No public, indexable result pages per market.** Users searching "kalyan result today" land on a generic homepage instead of a deep page. This is the single biggest organic-traffic miss for a matka site.
-3. **Hero CTA goes to `/register`** with no proof: no testimonials, no "X results declared today live", no trust badges, no payout examples. Stats grid is there but buried below the fold on mobile.
-4. **No referral loop surfaced publicly.** Referrals exist (`/referrals` route) but there's no homepage hook ("Invite friends, get ₹X bonus").
-5. **Hydration mismatches** in `Dashboard` and `StarMarketsSection` (visible in runtime errors). These cause flicker, hurt LCP/CLS, and erode trust.
-6. **No `sitemap.xml` / `robots.txt`** strategy visible — Google can't crawl deep market pages even if we add them.
-
-### B. UX & visual polish
-
-7. Homepage is dense and text-heavy at the top — the hero, ticker, Delhi markets, results grid, schedule table, and quick stats all stack with little visual rhythm. First-time visitors don't know where to look.
-8. `ResultCard` is information-rich but cramped at `text-xs`/`text-[9px]`. On a 898px viewport (current preview) the open–jodi–close row is hard to scan.
-9. "Bet Now" button styling is consistent (good — recent work), but the card → CTA pair has no visual emphasis state when a market is currently OPEN. A live market should feel different.
-10. No empty/loading hero state — when markets array is empty the page looks broken.
-11. `SiteHeader` desktop nav is tight and low-contrast (`text-xs text-muted-foreground`); active state isn't punchy.
-12. Bottom nav center "Delhi" star is great, but the rest of the icons are small and unlabeled-feeling.
-13. Win celebration / number reveal exist but aren't teased on the public site as social proof.
-
-### C. Performance & reliability
-
-14. **Hydration mismatches** (Dashboard ResultCard, StarMarketsSection) — see A.5. Root cause is almost certainly time-based logic running differently on server vs client. `ResultCard` already guards `isStale` with a client-only `useEffect`; similar pattern likely missing elsewhere (computed `isOpen`, `pulse-live` on badges, motion variants).
-15. `framer-motion` is loaded eagerly across many components. It's ~50KB gz; lazy-load on routes that need it, or replace simple `whileHover={{y:-3}}` with CSS transform on hover.
-16. `useEnsureFreshResults` fires a POST on every homepage mount with a 90s session cooldown. Move throttle to a global key, and skip when the tab isn't visible.
-17. Results query refetches every 30–60s but is also realtime-subscribed → double work. Pick one (prefer realtime + on-focus refetch).
-18. Schedule table on the homepage renders even when there's only 1 row of data — wrap in a "no markets configured" empty state.
-19. LCP image: hero has no image, but the gradient text + particles background still costs paint time. Mark hero heading region as `content-visibility: auto` for offscreen sections (results grid, schedule).
-20. Service worker correctly disabled in preview — good. Verify `sw.js` strategy on production isn't caching `index.html` (stale builds).
-21. `og:image` points at a Lovable preview asset; replace with a generated branded image stored in `/public`.
-
-### D. Features that drive acquisition / retention
-
-22. **Public per-market pages** (`/markets/$marketId` or `/result/$marketId`) with: today's result, last 30 days panel chart, payout calc, schedule, "Bet Now" CTA gated behind login. SEO-indexable.
-23. **Share buttons** on every result ("Share to WhatsApp" — huge in India). One-tap deep link with prefilled text.
-24. **PWA install prompt** surfaced on mobile after second visit.
-25. **Push notifications** for result declarations (infra partially exists — `push.functions.ts`, `dispatch-result-push.ts`). Promote subscription on result pages.
-26. **Daily login bonus + streak** to bring users back tomorrow.
-27. **Leaderboard** is already routed but not promoted publicly; show top winners (anonymized) on homepage for social proof.
-28. **WhatsApp/Telegram bot link** in footer for result alerts — common in this market.
-29. **Language toggle** — UI already mixes Hindi/English; offer full Hindi mode.
-
-### E. Admin & operations
-
-30. Scraper has good logging, but no public health page — add `/status` showing source health (uses the existing `health-check.ts`).
-31. `MissingResultsBanner` is admin-only; create a public "Last updated 2m ago" stamp on each result for trust.
-32. Centralize the "fake/shifted clock" handling — `mapToRealDpbossDate` lives in scraper code, but UI components compute IST manually in 5+ places. Wrap in a single hook.
-33. Admin declare flow has 14 sub-components — review if all needed or can consolidate.
-
-### F. Security / compliance (table-stakes for ads & app stores)
-
-34. Verify age-gate (`AgeGate`) blocks first paint, not just an overlay. Required by Indian ad networks.
-35. Responsible-gaming + Refund-policy + Privacy + Terms routes exist — link them from the footer prominently and from the register page.
-36. Run the project security scanner once before launching any ad campaign.
+1. **Organic growth** — rank for "kalyan result today", "gali disawar chart", etc., and turn every result into a shareable artifact.
+2. **Daily retention** — give every user a reason to open the app at result time, every single day.
+3. **Smarter product** — use the data we already collect (results, bets, scrapes, PWA funnel) to power predictions, personalization, and risk controls.
+4. **Operator trust** — make the site feel safer, faster, and more "official" than the dpboss-style competitors.
 
 ---
 
-## 3. Recommended sequencing (4 phases)
+## 2. Workstreams
 
-### Phase 1 — Acquisition foundation (highest leverage)
-- Fix the two hydration errors (Dashboard ResultCard, StarMarketsSection).
-- Per-route SEO: unique title/description/og for `/`, `/markets`, `/jodi`, `/results`, `/charts`.
-- Generate a real branded `og:image` (1200x630) and host it in `/public`.
-- Add `robots.txt` and a generated `sitemap.xml` server route.
-- Create `/markets/$marketId` public page with deep result history (SEO target).
-- Strengthen hero: trust badges row (instant settlement, X markets, Y results today), 1 testimonial card.
+### A. Acquisition & SEO (highest ROI)
 
-### Phase 2 — Sharing & retention loop
-- WhatsApp share button on every `ResultCard` and per-market page.
-- PWA install prompt component (after 2nd visit, dismissible).
-- Daily-login streak widget on `/dashboard`.
-- Surface referral CTA on homepage + post-bet success screen.
-- Public leaderboard preview block on homepage.
+1. **Per-market public pages** at `/markets/$marketId` and `/charts/$marketId`
+   - Today's result, last 30/60/90-day panel + jodi chart, schedule, payout calculator, FAQ schema.
+   - Per-route `head()` with unique title/description/canonical/og — derived from loader data.
+2. **Generated branded OG images** (1200×630) per market + per result day, stored in Supabase Storage, referenced from `head()`.
+3. **Programmatic content**: weekly/monthly "Kalyan result history — May 2026" pages auto-generated from results data.
+4. **Sitemap upgrade**: include every market + every chart month; ping search engines on declare.
+5. **JSON-LD**: `BreadcrumbList`, `FAQPage`, `Dataset` for chart pages.
+6. **Speed**: fix remaining hydration mismatches (`Stat`, `StarMarketsSection`), lazy-load `framer-motion`, drop double polling where realtime is already on.
 
-### Phase 3 — Performance pass
-- Replace `framer-motion` micro-animations (hover lift, fade-in) with CSS where possible; keep `motion` only for `NumberReveal` / `WinCelebration`.
-- Audit all `Date.now()` / IST math for SSR safety; add a `useIstNow()` hook gated by `useEffect`.
-- Drop the 60s refetch interval where realtime is already subscribed.
-- Set explicit `width`/`height` on icon containers to kill any residual CLS.
-- Add `content-visibility: auto` to below-fold sections.
+### B. Sharing & virality
 
-### Phase 4 — UX polish & visual rhythm
-- Redesign `ResultCard` with a clearer 3-zone layout (header / numbers / footer-CTA) and a distinct visual state when market is OPEN.
-- Homepage: collapse the schedule table on mobile into an accordion, lift the Delhi markets section higher.
-- Header active-state stronger; bottom nav labels slightly larger.
-- Use the `design--create_directions` flow on the homepage hero + ResultCard once Phase 1 is done.
+7. **WhatsApp/Telegram share** on every `ResultCard`, per-market page, and post-win screen. Pre-filled text + short link.
+8. **Auto-generated "result card" image** (canvas/satori on the server) users can download/share — branded, watermarked.
+9. **Referral loop surfaced publicly**: homepage band + post-bet success + post-win celebration. Track k-factor.
+10. **PWA install nudge v2**: after 2nd visit OR after first win; A/B copy via the existing PWA funnel table.
+
+### C. Retention & engagement
+
+11. **Daily login streak** (`user_streaks` table + RPC), with bonus credit at 3/7/14/30 days.
+12. **Push notifications**: result-declared pushes per subscribed market (infra exists in `push.functions.ts` — finish UI + opt-in flow on each market page).
+13. **In-app result alerts** with sound (component exists — promote it).
+14. **Public leaderboard preview** on homepage (anonymized top winners today/week).
+15. **Achievements** — wire the existing `/achievements` route to real events (first bet, 7-day streak, first jodi win, etc.).
+16. **Hindi language toggle** (full i18n, not partial).
+
+### D. Smart features (data we already have)
+
+17. **Jodi/pana frequency & "hot/cold" insights** per market, computed from `market_results` — surfaced on chart pages and as a "Today's picks" widget (clearly labelled as statistical, not a prediction).
+18. **Personal stats dashboard upgrade**: win rate by market, best bet type, monthly P&L chart.
+19. **Smart bet suggestions** based on user's history + market hot numbers (opt-in).
+20. **AI result-explainer**: short auto-written summary per declared result ("Kalyan opened 240 → 6, closed 123 → 6, jodi 66") using Lovable AI for natural-language phrasing in Hindi/English.
+
+### E. Trust, safety, compliance
+
+21. **"Last updated" + source badge** on every result (use `result_scrape_log`).
+22. **Public `/status` page** showing scraper health, uptime, last declare per market.
+23. **Responsible-gaming upgrades**: deposit/loss/session limits surfaced in onboarding, cooling-off period, self-exclusion.
+24. **Stronger age-gate** that blocks first paint (required for ad networks).
+25. **Run security scanner**, fix RLS gaps, rotate keys before any paid campaign.
+
+### F. Admin & ops v2
+
+26. **Unified ops console**: one screen with scraper health, missing results, pending payouts, today's P&L, live PWA funnel (already built).
+27. **Risk dashboard**: heavy-exposure jodi/pana per market before close, so admin can suspend if needed.
+28. **Automation: auto-declare with confidence threshold** (two-source confirm exists — extend to auto-publish when confidence is high, queue for review otherwise).
+29. **Broadcast composer** with templates + scheduling (push + in-app + WhatsApp deep link).
+30. **Audit log search/filter** + CSV export.
+
+### G. Monetization & wallet
+
+31. **UPI auto-verify via UTR** (`utr-callback` exists — finish the loop with auto-credit + receipt).
+32. **Withdrawal SLA tracker** visible to user ("Avg 12 min today") — trust signal.
+33. **Promo/cashback engine** behind a single `promotions` table (component exists, no engine).
+34. **Refer-and-earn tiers**: bronze/silver/gold based on referred bettor volume.
 
 ---
 
-## 4. Technical detail (for the implementation pass)
+## 3. Recommended sequencing (4 sprints)
 
-- **Hydration fix pattern:** any value derived from "now" (badges, isOpen, isStale, time-until) must render the server-safe default on first paint and update inside `useEffect`. `ResultCard.isStale` already does this; `Market.isOpen` is computed in `useGameData.rowToMarket` at query time — that's fine for client, but if the same data is consumed in SSR, the badge will mismatch when the client recomputes 200ms later. Solution: compute `isOpen` lazily in the component via a client-only hook.
-- **SEO routes:** add `head()` per route file with unique meta; for `/markets/$marketId` derive from loader data so the title is "Kalyan Result Today — 240-6-123 | SattaKing Pro".
-- **Sitemap:** server route at `app/routes/sitemap[.]xml.ts` returning XML built from the markets table.
-- **Share:** plain `<a href="https://wa.me/?text=...">` works on mobile; no SDK needed.
-- **PWA prompt:** capture `beforeinstallprompt`, store dismissal in localStorage with TTL.
-- **Streak:** new `user_streaks` table + RPC `record_daily_login` called from `_authenticated` root loader.
+### Sprint 1 — Foundation & SEO (1 week)
+- Hydration fixes (Stat, StarMarketsSection, any `Date.now()` in render).
+- Per-route SEO + branded OG image + sitemap upgrade + JSON-LD.
+- Per-market public page (`/markets/$marketId`) with chart + share buttons.
+- "Last updated" + source badge on results.
+
+### Sprint 2 — Virality & retention loop (1 week)
+- WhatsApp share everywhere + auto-generated result-card image.
+- PWA install nudge v2 (A/B via funnel table already live).
+- Daily streak + 3/7/14/30 bonus.
+- Public leaderboard preview on homepage.
+- Push notifications opt-in on each market page.
+
+### Sprint 3 — Smart layer (1–2 weeks)
+- Hot/cold jodi & pana stats per market.
+- Personal stats dashboard upgrade.
+- AI result-explainer (Lovable AI Gateway, Gemini Flash).
+- Smart bet suggestions (opt-in).
+- Hindi full i18n.
+
+### Sprint 4 — Trust, ops, monetization (1–2 weeks)
+- Public `/status` + risk dashboard + auto-declare with confidence.
+- Responsible-gaming controls + stronger age-gate + security scan.
+- UPI auto-credit finish + withdrawal SLA tracker.
+- Promo/cashback engine + referral tiers.
 
 ---
 
-## 5. Out of scope for this plan
-- Payment provider changes, KYC vendor swap, new wagering products (Starline beyond what exists), native mobile app.
+## 4. Technical notes
+
+- **Hydration**: any "now"-derived value (badges, isOpen, isStale, stat counts) must render a server-safe default and update inside `useEffect`. Audit `Stat`, `StarMarketsSection`, ticker, countdowns.
+- **OG images**: server route `/api/og/market/$id.png` using `satori` + `resvg-wasm` (Worker-safe), cached in Storage by `(marketId, sessionDate)`.
+- **Hot/cold**: nightly server function aggregates last 30/90/365 days into a `market_number_stats` table; chart pages read from that, not raw results.
+- **AI explainer**: triggered from the existing declare flow; writes to `market_results.summary_en` / `summary_hi`. Use Gemini 2.5 Flash via Lovable AI Gateway — no key needed.
+- **Streaks**: `user_streaks (user_id, current, longest, last_login_date)` + RPC `record_daily_login` called from the `_authenticated` root loader.
+- **Push**: VAPID infra already exists; just wire per-market opt-in UI + dispatch on declare.
+- **Realtime vs polling**: prefer realtime + on-focus refetch; remove 30–60s intervals where realtime is subscribed.
+- **All server-side logic** stays in `createServerFn` (TanStack Start) — no Supabase Edge Functions for new work.
 
 ---
 
-## 6. What I'd like to confirm before building
-- Are public per-market SEO pages OK from a compliance standpoint in your target geos? (Some operators avoid indexing.)
-- Is WhatsApp share acceptable, or do you want Telegram-only?
-- For Phase 1, do you want me to start with SEO + hydration fixes, or with the per-market public page?
+## 5. What I want to confirm before I start building
+
+1. Which sprint do you want first — **SEO foundation** (slowest payoff, biggest long-term) or **virality/retention** (fastest visible impact)?
+2. Are public per-market SEO pages OK in your target geos compliance-wise?
+3. WhatsApp share OK, or Telegram-only?
+4. AI result-explainer in **Hindi + English** by default, or English only initially?
+
+Once you pick, I'll start Sprint 1 immediately.
