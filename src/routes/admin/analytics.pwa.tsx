@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Smartphone, Apple, Globe, Download, MousePointerClick, Eye, Check, X } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { Smartphone, Apple, Globe, Download, MousePointerClick, Eye, Check, X, Radio } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { getPwaInstallFunnel, type PwaFunnelRow } from "@/lib/pwaAnalytics.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,32 @@ function PwaFunnelPage() {
     queryFn: () => fetchFunnel({ data: { rangeDays } }),
   });
 
+  // Live updates via Supabase Realtime: debounce-refetch on new events.
+  const queryClient = useQueryClient();
+  const [liveCount, setLiveCount] = useState(0);
+  const [isLive, setIsLive] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    const channel = supabase
+      .channel("pwa_install_events:admin")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "pwa_install_events" },
+        () => {
+          setLiveCount((n) => n + 1);
+          if (debounceRef.current) clearTimeout(debounceRef.current);
+          debounceRef.current = setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "pwa-funnel"] });
+          }, 1500);
+        },
+      )
+      .subscribe((status) => setIsLive(status === "SUBSCRIBED"));
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return (
     <div className="px-4 md:px-8 py-6 space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -46,6 +73,18 @@ function PwaFunnelPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] ${
+              isLive
+                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "border-border/60 bg-muted/40 text-muted-foreground"
+            }`}
+            title={isLive ? "Receiving live events" : "Live channel not connected"}
+          >
+            <Radio className={`h-3 w-3 ${isLive ? "animate-pulse" : ""}`} />
+            {isLive ? "Live" : "Offline"}
+            {liveCount > 0 && <span className="font-medium">· {liveCount}</span>}
+          </span>
           {RANGES.map((r) => (
             <Button
               key={r}
