@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Smartphone, Apple, Globe, Download, MousePointerClick, Eye, Check, X } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { Smartphone, Apple, Globe, Download, MousePointerClick, Eye, Check, X, Radio } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { getPwaInstallFunnel, type PwaFunnelRow } from "@/lib/pwaAnalytics.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
