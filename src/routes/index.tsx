@@ -43,8 +43,14 @@ function HomePage() {
   const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
   useEnsureFreshResults();
 
+  // Hydration-safe: server has no realtime data, so render placeholders until mounted.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const declaredToday = results.filter((r) => r.status === "DECLARED").length;
   const openNow = markets.filter((m) => m.isOpen).length;
+  const stat = (n: number) => (mounted ? String(n) : "—");
+
 
   const homeCount = useHomeMarketCount();
   const { top: allTopMarkets } = useMemo(() => splitTopMarkets(markets), [markets]);
