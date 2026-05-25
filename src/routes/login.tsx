@@ -1,19 +1,14 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { Crown, Sparkles, Trophy, Zap, User, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Crown, Sparkles, Trophy, Zap, ShieldCheck, Mail, Phone } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/integrations/supabase/client";
-
-const DEMO_EMAIL = "player@sattaking.test";
-const DEMO_PASSWORD = "DemoPlayer@2026";
-const DEMO_ADMIN_EMAIL = "admin@sattaking.test";
-const DEMO_ADMIN_PASSWORD = "DemoAdmin@2026";
-
-
+import { lovable } from "@/integrations/lovable";
 
 export const Route = createFileRoute("/login")({
   beforeLoad: async () => {
@@ -35,83 +30,89 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
-  const [identifier, setIdentifier] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
   const [remember, setRemember] = useState(true);
-  const [demoEnabled, setDemoEnabled] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    supabase.from("app_settings").select("value").eq("key", "demo_login_enabled").maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return;
-        const v = (data?.value as { enabled?: boolean } | null)?.enabled;
-        setDemoEnabled(v ?? true);
-      });
-    return () => { cancelled = true; };
-  }, []);
 
   const applyRemember = (val: boolean) => {
     if (typeof window === "undefined") return;
-    if (val) {
-      localStorage.removeItem("auth_remember_off");
-    } else {
+    if (val) localStorage.removeItem("auth_remember_off");
+    else {
       localStorage.setItem("auth_remember_off", "1");
       sessionStorage.setItem("auth_alive", "1");
     }
   };
-
-  const anyBusy = busy;
 
   const goByRole = (user: { role?: string } | null) => {
     const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
     navigate({ to: isAdmin ? "/admin" : "/dashboard" });
   };
 
-  const demoLogin = async () => {
+  const submitEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return toast.error("Enter email and password");
     setBusy(true);
     try {
       applyRemember(remember);
-      const u = await login(DEMO_EMAIL, DEMO_PASSWORD);
-      toast.success("Welcome back, demo player!");
-      goByRole(u);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Demo login failed");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const demoAdminLogin = async () => {
-    setBusy(true);
-    try {
-      applyRemember(remember);
-      const u = await login(DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD);
+      const u = await login(email, password);
       toast.success("Welcome back!");
       goByRole(u);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Demo admin login failed");
+      toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
       setBusy(false);
     }
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!identifier || !password) {
-      toast.error("Enter email and password");
-      return;
-    }
+  const oauth = async (provider: "google" | "apple") => {
     setBusy(true);
     try {
-      applyRemember(remember);
-      const u = await login(identifier, password);
-      toast.success(`Welcome back!`);
-      goByRole(u);
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error(result.error.message || `${provider} sign-in failed`);
+        setBusy(false);
+        return;
+      }
+      if (result.redirected) return;
+      navigate({ to: "/dashboard" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Login failed");
+      toast.error(err instanceof Error ? err.message : "OAuth failed");
+      setBusy(false);
+    }
+  };
+
+  const sendOtp = async () => {
+    if (!phone || phone.length < 8) return toast.error("Enter a valid phone number with country code (e.g. +91…)");
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ phone });
+      if (error) throw error;
+      setOtpSent(true);
+      toast.success("OTP sent to your phone");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send OTP");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!otp) return toast.error("Enter the OTP");
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({ phone, token: otp, type: "sms" });
+      if (error) throw error;
+      toast.success("Signed in!");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Invalid OTP");
     } finally {
       setBusy(false);
     }
@@ -139,117 +140,104 @@ function LoginPage() {
             <Perk icon={<Sparkles />} text="Welcome bonus + referral rewards" />
           </ul>
         </div>
-        <p className="text-xs text-muted-foreground/60 relative">
-          Prototype build · No real money is exchanged.
-        </p>
+        <p className="text-xs text-muted-foreground/60 relative">Prototype build · No real money is exchanged.</p>
       </div>
 
       <div className="flex items-center justify-center p-6 sm:p-12">
-        <form onSubmit={submit} className="w-full max-w-sm space-y-5">
+        <div className="w-full max-w-sm space-y-5">
           <div>
             <h1 className="font-display text-3xl font-bold">Sign in</h1>
             <p className="text-sm text-muted-foreground mt-1">Sign in to your SattaKing Pro account.</p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="id">Email</Label>
-            <Input id="id" type="email" value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="you@example.com" autoComplete="email" />
+          <div className="grid grid-cols-2 gap-3">
+            <Button type="button" variant="outline" disabled={busy} onClick={() => oauth("google")} className="w-full">
+              <GoogleIcon className="mr-2 h-4 w-4" /> Google
+            </Button>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => oauth("apple")} className="w-full">
+              <AppleIcon className="mr-2 h-4 w-4" /> Apple
+            </Button>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="pwd">Password</Label>
-            <div className="relative">
-              <Input id="pwd" type={showPwd ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" />
-              <button type="button" onClick={() => setShowPwd((x) => !x)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-primary">
-                {showPwd ? "hide" : "show"}
-              </button>
-            </div>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">or</span></div>
           </div>
 
-          <div className="flex items-center justify-between text-xs">
-            <label className="flex items-center gap-2 text-muted-foreground cursor-pointer select-none"><input type="checkbox" className="accent-[var(--primary)]" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me</label>
-            <button
-              type="button"
-              className="text-primary hover:underline"
-              onClick={async () => {
-                if (!identifier || !identifier.includes("@")) {
-                  toast.error("Enter your account email above first");
-                  return;
-                }
-                const { error } = await supabase.auth.resetPasswordForEmail(identifier, {
-                  redirectTo: `${window.location.origin}/reset-password`,
-                });
-                if (error) toast.error(error.message);
-                else toast.success("Password reset email sent");
-              }}
-            >Forgot password?</button>
-          </div>
+          <Tabs defaultValue="email" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="email"><Mail className="mr-2 h-3.5 w-3.5" />Email</TabsTrigger>
+              <TabsTrigger value="phone"><Phone className="mr-2 h-3.5 w-3.5" />Phone</TabsTrigger>
+            </TabsList>
 
-          <Button type="submit" disabled={anyBusy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
-            {busy ? "Signing in…" : "Sign In"}
-          </Button>
-
-          {demoEnabled === null ? (
-            <>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
+            <TabsContent value="email" className="space-y-4 pt-4">
+              <form onSubmit={submitEmail} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    <span className="inline-block h-3 w-24 animate-pulse rounded bg-muted" />
-                  </span>
+                <div className="space-y-2">
+                  <Label htmlFor="pwd">Password</Label>
+                  <div className="relative">
+                    <Input id="pwd" type={showPwd ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" />
+                    <button type="button" onClick={() => setShowPwd((x) => !x)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-primary">
+                      {showPwd ? "hide" : "show"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
-                <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
-              </div>
-            </>
-          ) : demoEnabled ? (
-            <>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
+                <div className="flex items-center justify-between text-xs">
+                  <label className="flex items-center gap-2 text-muted-foreground cursor-pointer select-none">
+                    <input type="checkbox" className="accent-[var(--primary)]" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me
+                  </label>
+                  <button type="button" className="text-primary hover:underline" onClick={async () => {
+                    if (!email || !email.includes("@")) return toast.error("Enter your account email above first");
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
+                    if (error) toast.error(error.message); else toast.success("Password reset email sent");
+                  }}>Forgot password?</button>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Demo test accounts</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Button type="button" variant="outline" disabled={anyBusy} onClick={demoLogin} className="w-full">
-                  <User className="mr-2 h-4 w-4" />
-                  {busy ? "Loading…" : "Demo User"}
+                <Button type="submit" disabled={busy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
+                  {busy ? "Signing in…" : "Sign In"}
                 </Button>
-                <Button type="button" variant="outline" disabled={anyBusy} onClick={demoAdminLogin} className="w-full">
-                  <ShieldCheck className="mr-2 h-4 w-4" />
-                  {busy ? "Loading…" : "Demo Admin"}
-                </Button>
-              </div>
-            </>
-          ) : null}
+              </form>
+            </TabsContent>
+
+            <TabsContent value="phone" className="space-y-4 pt-4">
+              {!otpSent ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone number</Label>
+                    <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" autoComplete="tel" />
+                    <p className="text-[10px] text-muted-foreground">Include country code, e.g. +91 for India.</p>
+                  </div>
+                  <Button type="button" onClick={sendOtp} disabled={busy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
+                    {busy ? "Sending…" : "Send OTP"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="otp">Enter OTP</Label>
+                    <Input id="otp" inputMode="numeric" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="123456" autoComplete="one-time-code" />
+                    <p className="text-[10px] text-muted-foreground">Sent to {phone}. <button type="button" className="text-primary hover:underline" onClick={() => { setOtpSent(false); setOtp(""); }}>Change number</button></p>
+                  </div>
+                  <Button type="button" onClick={verifyOtp} disabled={busy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
+                    {busy ? "Verifying…" : "Verify & Sign In"}
+                  </Button>
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
 
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
           </p>
 
           <div className="pt-3 border-t border-border/60">
-            <button
-              type="button"
-              onClick={() => {
-                document.getElementById("id")?.focus();
-                toast.info("Sign in with your admin credentials", {
-                  description: "You'll be redirected to the admin dashboard automatically.",
-                });
-              }}
-              className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Admin Login →
-            </button>
+            <Link to="/admin-login" className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
+              <ShieldCheck className="h-3.5 w-3.5" /> Admin Login →
+            </Link>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
@@ -258,10 +246,23 @@ function LoginPage() {
 function Perk({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <li className="flex items-start gap-3">
-      <span className="grid h-8 w-8 place-items-center rounded-md border border-primary/30 bg-primary/10 text-primary shrink-0">
-        {icon}
-      </span>
+      <span className="grid h-8 w-8 place-items-center rounded-md border border-primary/30 bg-primary/10 text-primary shrink-0">{icon}</span>
       <span>{text}</span>
     </li>
+  );
+}
+
+function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.4 14.6 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12s4.3 9.6 9.6 9.6c5.5 0 9.2-3.9 9.2-9.4 0-.6-.1-1.1-.2-1.6H12z"/>
+    </svg>
+  );
+}
+function AppleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden fill="currentColor">
+      <path d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.9-1.5-.1-2.8.8-3.6.8-.8 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.6.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0-.1-2.5-.9-2.5-3.8zM14 5.4c.7-.8 1.1-1.9 1-3-1 .1-2.1.7-2.8 1.5-.6.7-1.2 1.9-1 2.9 1.1.1 2.2-.5 2.8-1.4z"/>
+    </svg>
   );
 }
