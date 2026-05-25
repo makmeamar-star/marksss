@@ -1,3 +1,4 @@
+import { callAdminHook } from "@/lib/callAdminHook";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, RefreshCw, Wifi, WifiOff, Activity } from "lucide-react";
@@ -71,7 +72,7 @@ function MonitoringPage() {
   async function runHealthCheck() {
     setRunning(true);
     try {
-      const res = await fetch("/api/public/hooks/health-check", { method: "POST" });
+      const res = await callAdminHook("/api/public/hooks/health-check", { method: "POST" });
       const j = await res.json();
       if (!j.ok) throw new Error(j.error || "failed");
       toast.success(`Health check ran. ${j.alertsInserted} new alert(s).`);
