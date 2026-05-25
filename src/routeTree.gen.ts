@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
-import { Route as StarRouteImport } from './routes/star'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as ResponsibleGamingRouteImport } from './routes/responsible-gaming'
@@ -73,11 +72,6 @@ import { Route as ApiPublicHooksAlertMissingResultsRouteImport } from './routes/
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StarRoute = StarRouteImport.update({
-  id: '/star',
-  path: '/star',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -402,7 +396,6 @@ export interface FileRoutesByFullPath {
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/star': typeof StarRoute
   '/terms': typeof TermsRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -462,7 +455,6 @@ export interface FileRoutesByTo {
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/star': typeof StarRoute
   '/terms': typeof TermsRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -525,7 +517,6 @@ export interface FileRoutesById {
   '/responsible-gaming': typeof ResponsibleGamingRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/star': typeof StarRoute
   '/terms': typeof TermsRoute
   '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -588,7 +579,6 @@ export interface FileRouteTypes {
     | '/responsible-gaming'
     | '/results'
     | '/sitemap.xml'
-    | '/star'
     | '/terms'
     | '/achievements'
     | '/dashboard'
@@ -648,7 +638,6 @@ export interface FileRouteTypes {
     | '/responsible-gaming'
     | '/results'
     | '/sitemap.xml'
-    | '/star'
     | '/terms'
     | '/achievements'
     | '/dashboard'
@@ -710,7 +699,6 @@ export interface FileRouteTypes {
     | '/responsible-gaming'
     | '/results'
     | '/sitemap.xml'
-    | '/star'
     | '/terms'
     | '/_authenticated/achievements'
     | '/_authenticated/dashboard'
@@ -773,7 +761,6 @@ export interface RootRouteChildren {
   ResponsibleGamingRoute: typeof ResponsibleGamingRoute
   ResultsRoute: typeof ResultsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  StarRoute: typeof StarRoute
   TermsRoute: typeof TermsRoute
   ApiPublicHooksAlertMissingResultsRoute: typeof ApiPublicHooksAlertMissingResultsRoute
   ApiPublicHooksAutoDeclareResultsRoute: typeof ApiPublicHooksAutoDeclareResultsRoute
@@ -792,13 +779,6 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/star': {
-      id: '/star'
-      path: '/star'
-      fullPath: '/star'
-      preLoaderRoute: typeof StarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -1314,7 +1294,6 @@ const rootRouteChildren: RootRouteChildren = {
   ResponsibleGamingRoute: ResponsibleGamingRoute,
   ResultsRoute: ResultsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  StarRoute: StarRoute,
   TermsRoute: TermsRoute,
   ApiPublicHooksAlertMissingResultsRoute:
     ApiPublicHooksAlertMissingResultsRoute,

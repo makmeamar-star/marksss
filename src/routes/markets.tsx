@@ -6,9 +6,7 @@ import { z } from "zod";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultCard } from "@/components/ResultCard";
-import { StarMarketsSection } from "@/components/StarMarketsSection";
-import { isStarMarket } from "@/config/starMarkets";
-import { Star } from "lucide-react";
+import { useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
@@ -63,6 +61,7 @@ function MarketsPage() {
   const today = todayIST();
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
+  const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
   useEnsureFreshResults();
 
   // Prefetch top-15 detail pages (bet + jodi) once markets are loaded so
@@ -177,20 +176,17 @@ function MarketsPage() {
   };
 
   const renderCard = (m: typeof markets[number]) => {
-    const star = isStarMarket(m.id);
     return (
-      <div
-        key={m.id}
-        className={`space-y-1.5 relative ${
-          star ? "rounded-lg ring-1 ring-primary/40 p-1" : ""
-        }`}
-      >
-        {star && (
-          <span className="absolute -top-1.5 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-gold px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-background shadow">
-            <Star className="h-2.5 w-2.5 fill-current" /> Delhi
-          </span>
-        )}
-        <ResultCard market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} />
+      <div key={m.id} className="space-y-1.5 relative">
+        <ResultCard
+          market={m}
+          result={results.find((r) => r.marketId === m.id && r.sessionDate === today)}
+          previousResult={latestPerMarket[m.id]}
+          showPreviousFallback
+          previousLoading={prevLoading}
+          previousError={prevError}
+          onRetryPrevious={() => refetchPrev()}
+        />
         <Button asChild size="sm" className="w-full h-8 text-xs bg-gradient-gold text-background font-bold hover:opacity-90">
           <Link to="/bet/$marketId" params={{ marketId: m.id }} preload="intent">Bet Now</Link>
         </Button>
@@ -216,12 +212,6 @@ function MarketsPage() {
     <div className="min-h-screen">
       <SiteHeader />
 
-      {/* Sticky Delhi Markets strip — always visible at top of /markets */}
-      <div className="sticky top-12 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-2">
-          <StarMarketsSection scroll />
-        </div>
-      </div>
 
       <section className="container mx-auto px-4 py-6">
         <h1 className="font-display text-2xl font-bold">Markets</h1>
