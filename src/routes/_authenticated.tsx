@@ -9,6 +9,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WinCelebration } from "@/components/WinCelebration";
+import { SupportFab } from "@/components/SupportFab";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -108,6 +109,7 @@ function AuthLayout() {
           <Outlet />
         </main>
         <WinCelebration amount={lastWin} onClose={() => setLastWin(null)} />
+        <SupportFab />
 
         {/* Mobile bottom nav */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur grid grid-cols-5">
