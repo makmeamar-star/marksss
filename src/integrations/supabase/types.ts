@@ -1752,6 +1752,7 @@ export type Database = {
         }[]
       }
       gen_referral_code: { Args: never; Returns: string }
+      get_hook_secret: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
