@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/admin/login")({
+export const Route = createFileRoute("/admin-login")({
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getSession();

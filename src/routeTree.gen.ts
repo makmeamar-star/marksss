@@ -21,6 +21,7 @@ import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JodiRouteImport } from './routes/jodi'
 import { Route as ChartsRouteImport } from './routes/charts'
+import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -33,7 +34,6 @@ import { Route as AdminRiskRouteImport } from './routes/admin/risk'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminMonitoringRouteImport } from './routes/admin/monitoring'
 import { Route as AdminMarketsRouteImport } from './routes/admin/markets'
-import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminKycRouteImport } from './routes/admin/kyc'
 import { Route as AdminDepositsRouteImport } from './routes/admin/deposits'
 import { Route as AdminBroadcastsRouteImport } from './routes/admin/broadcasts'
@@ -132,6 +132,11 @@ const ChartsRoute = ChartsRouteImport.update({
   path: '/charts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin-login',
+  path: '/admin-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -189,11 +194,6 @@ const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
 const AdminMarketsRoute = AdminMarketsRouteImport.update({
   id: '/markets',
   path: '/markets',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLoginRoute = AdminLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminKycRoute = AdminKycRouteImport.update({
@@ -403,6 +403,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin-login': typeof AdminLoginRoute
   '/charts': typeof ChartsRoute
   '/jodi': typeof JodiRoute
   '/login': typeof LoginRoute
@@ -431,7 +432,6 @@ export interface FileRoutesByFullPath {
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/kyc': typeof AdminKycRoute
-  '/admin/login': typeof AdminLoginRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -465,6 +465,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-login': typeof AdminLoginRoute
   '/charts': typeof ChartsRoute
   '/jodi': typeof JodiRoute
   '/login': typeof LoginRoute
@@ -493,7 +494,6 @@ export interface FileRoutesByTo {
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/kyc': typeof AdminKycRoute
-  '/admin/login': typeof AdminLoginRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -530,6 +530,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin-login': typeof AdminLoginRoute
   '/charts': typeof ChartsRoute
   '/jodi': typeof JodiRoute
   '/login': typeof LoginRoute
@@ -558,7 +559,6 @@ export interface FileRoutesById {
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/deposits': typeof AdminDepositsRoute
   '/admin/kyc': typeof AdminKycRoute
-  '/admin/login': typeof AdminLoginRoute
   '/admin/markets': typeof AdminMarketsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -595,6 +595,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/admin-login'
     | '/charts'
     | '/jodi'
     | '/login'
@@ -623,7 +624,6 @@ export interface FileRouteTypes {
     | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/kyc'
-    | '/admin/login'
     | '/admin/markets'
     | '/admin/monitoring'
     | '/admin/payments'
@@ -657,6 +657,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/admin-login'
     | '/charts'
     | '/jodi'
     | '/login'
@@ -685,7 +686,6 @@ export interface FileRouteTypes {
     | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/kyc'
-    | '/admin/login'
     | '/admin/markets'
     | '/admin/monitoring'
     | '/admin/payments'
@@ -721,6 +721,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/admin'
+    | '/admin-login'
     | '/charts'
     | '/jodi'
     | '/login'
@@ -749,7 +750,6 @@ export interface FileRouteTypes {
     | '/admin/broadcasts'
     | '/admin/deposits'
     | '/admin/kyc'
-    | '/admin/login'
     | '/admin/markets'
     | '/admin/monitoring'
     | '/admin/payments'
@@ -786,6 +786,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AdminLoginRoute: typeof AdminLoginRoute
   ChartsRoute: typeof ChartsRoute
   JodiRoute: typeof JodiRoute
   LoginRoute: typeof LoginRoute
@@ -894,6 +895,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChartsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-login': {
+      id: '/admin-login'
+      path: '/admin-login'
+      fullPath: '/admin-login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -976,13 +984,6 @@ declare module '@tanstack/react-router' {
       path: '/markets'
       fullPath: '/admin/markets'
       preLoaderRoute: typeof AdminMarketsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/login': {
-      id: '/admin/login'
-      path: '/login'
-      fullPath: '/admin/login'
-      preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/kyc': {
@@ -1294,7 +1295,6 @@ interface AdminRouteChildren {
   AdminBroadcastsRoute: typeof AdminBroadcastsRoute
   AdminDepositsRoute: typeof AdminDepositsRoute
   AdminKycRoute: typeof AdminKycRoute
-  AdminLoginRoute: typeof AdminLoginRoute
   AdminMarketsRoute: typeof AdminMarketsRoute
   AdminMonitoringRoute: typeof AdminMonitoringRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
@@ -1319,7 +1319,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBroadcastsRoute: AdminBroadcastsRoute,
   AdminDepositsRoute: AdminDepositsRoute,
   AdminKycRoute: AdminKycRoute,
-  AdminLoginRoute: AdminLoginRoute,
   AdminMarketsRoute: AdminMarketsRoute,
   AdminMonitoringRoute: AdminMonitoringRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
@@ -1346,6 +1345,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
+  AdminLoginRoute: AdminLoginRoute,
   ChartsRoute: ChartsRoute,
   JodiRoute: JodiRoute,
   LoginRoute: LoginRoute,
@@ -1371,3 +1371,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

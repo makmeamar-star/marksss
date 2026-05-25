@@ -233,7 +233,7 @@ function LoginPage() {
           </p>
 
           <div className="pt-3 border-t border-border/60">
-            <Link to="/admin/login" className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
+            <Link to="/admin-login" className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
               <ShieldCheck className="h-3.5 w-3.5" /> Admin Login →
             </Link>
           </div>
