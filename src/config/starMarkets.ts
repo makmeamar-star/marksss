@@ -1,10 +1,25 @@
-// The 4 always-on featured markets. Single source of truth used by Home,
-// Markets page, the bottom nav star tab, and ResultCard's ★ badge.
+// Featured "Star Markets" pinned across Home, /star, /markets sticky bar and
+// the bottom nav star tab. Curated order shown to users.
 export const STAR_MARKET_IDS = [
+  // Delhi (jodi-only)
   "gali",
   "disawar",
   "faridabad",
   "ghaziabad",
+  // Mumbai mains
+  "kalyan",
+  "kalyan_night",
+  "main_bazar",
+  "main_mumbai",
+  "milan_day",
+  "milan_night",
+  "rajdhani_day",
+  "rajdhani_night",
+  "sridevi",
+  "sridevi_night",
+  "time_bazar",
+  "madhur_day",
+  "madhur_night",
 ] as const;
 
 export type StarMarketId = (typeof STAR_MARKET_IDS)[number];

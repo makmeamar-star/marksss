@@ -12,10 +12,10 @@ import { pickStarMarkets } from "@/config/starMarkets";
 export const Route = createFileRoute("/star")({
   head: () => ({
     meta: [
-      { title: "Delhi Markets — Gali · Disawar · Faridabad · Ghaziabad" },
-      { name: "description", content: "Live results, today's number, and one-tap play for the most popular Delhi markets — Gali, Disawar, Faridabad and Ghaziabad." },
-      { property: "og:title", content: "Delhi Markets — Gali, Disawar, Faridabad, Ghaziabad" },
-      { property: "og:description", content: "Live Matka results for the four most-watched markets, with one-tap betting." },
+      { title: "Top Markets — Kalyan, Milan, Rajdhani, Gali, Disawar" },
+      { name: "description", content: "Live results for the top Matka markets: Kalyan, Milan Day/Night, Rajdhani Day/Night, Sridevi, Main Bazar, Main Mumbai, Time Bazar, Madhur, plus Delhi favourites Gali, Disawar, Faridabad and Ghaziabad." },
+      { property: "og:title", content: "Top Matka Markets — Kalyan, Milan, Rajdhani & Delhi" },
+      { property: "og:description", content: "Live results and one-tap play for the most-watched Matka markets." },
       { property: "og:url", content: "https://matka.world/star" },
     ],
     links: [{ rel: "canonical", href: "https://matka.world/star" }],
@@ -42,10 +42,10 @@ function StarPage() {
           </span>
           <div>
             <h1 className="font-display text-3xl md:text-4xl font-bold leading-none">
-              Delhi Markets
+              Top Markets
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Gali · Disawar · Faridabad · Ghaziabad — live every day
+              Kalyan · Milan · Rajdhani · Sridevi · Main · Madhur · Delhi — live auto-updates
             </p>
           </div>
         </div>
@@ -55,7 +55,7 @@ function StarPage() {
             Loading featured markets…
           </div>
         ) : (
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {stars.map((m) => (
               <StarMarketTile
                 key={m.id}

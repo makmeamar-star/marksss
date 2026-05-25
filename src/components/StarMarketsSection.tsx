@@ -37,12 +37,12 @@ export function StarMarketsSection({ scroll, hideHeader }: Props) {
             <span className="grid h-5 w-5 place-items-center rounded-full bg-gradient-gold text-background">
               <Star className="h-3 w-3 fill-current" />
             </span>
-            <div>
+          <div>
               <h2 className="font-display text-xl md:text-2xl font-bold leading-none">
-                Delhi Markets
+                Top Markets
               </h2>
               <p className="text-[10px] text-muted-foreground mt-0.5">
-                Gali · Disawar · Faridabad · Ghaziabad — live every day
+                Kalyan · Milan · Rajdhani · Gali · Disawar — live auto-updates
               </p>
             </div>
           </div>
@@ -65,7 +65,7 @@ export function StarMarketsSection({ scroll, hideHeader }: Props) {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {stars.map((m) => (
             <StarMarketTile
               key={m.id}
