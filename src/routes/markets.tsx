@@ -61,6 +61,7 @@ function MarketsPage() {
   const today = todayIST();
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
+  const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
   useEnsureFreshResults();
 
   // Prefetch top-15 detail pages (bet + jodi) once markets are loaded so
