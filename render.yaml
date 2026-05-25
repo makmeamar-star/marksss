@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: lafxnga-web
+    runtime: node
+    plan: standard
+    region: singapore
+    branch: main
+    healthCheckPath: /api/public/hooks/health-check
+    buildCommand: bun install && bun run build
+    startCommand: node .output/server/index.mjs
+    autoDeploy: true
+    scaling:
+      minInstances: 2
+      maxInstances: 4
+      targetCPUPercent: 70
+    envVars:
+      - key: BUN_VERSION
+        value: 1.1.38
+      - key: NODE_VERSION
+        value: "20"
+      - key: PORT
+        value: "3000"
+      # --- public (build-time) ---
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_SUPABASE_PROJECT_ID
+        sync: false
+      # --- server-only secrets ---
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: LAFXNGA_ADMIN_PASSWORD
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
+      - key: PUSH_DISPATCH_SECRET
+        sync: false
