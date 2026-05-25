@@ -92,7 +92,7 @@ function WhatsAppCard({ contacts, loading }: { contacts: SupportContacts | null 
           </p>
           {enabled && wa && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <CopyButton text={wa} copied={copied} onCopy={() => setCopied(true)} />
+              <CopyButton text={wa} copied={copied} onChange={setCopied} />
               <a href={waHref ?? undefined} target="_blank" rel="noopener noreferrer">
                 <Button size="sm" className="bg-success hover:bg-success/90 text-background font-semibold gap-1.5">
                   Chat Now <ArrowRight className="h-4 w-4" />
