@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Store, Receipt, BarChart3, Wallet, Bell, User, LogOut, Crown, Trophy, Menu, Gift, Zap, ShieldCheck, SlidersHorizontal,
+  LayoutDashboard, Store, Receipt, BarChart3, Wallet, Bell, User, LogOut, Crown, Trophy, Menu, Gift, Zap, ShieldCheck, SlidersHorizontal, Headphones,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
