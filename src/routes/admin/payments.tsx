@@ -187,14 +187,25 @@ function ChannelDialog({ initial, onClose }: { initial: Partial<Channel>; onClos
     if (!c.label) return toast.error("Label required");
     if (c.type === "UPI" && !c.details?.vpa) return toast.error("UPI VPA required");
     if (c.type === "BANK" && (!c.details?.account_number || !c.details?.ifsc)) return toast.error("Account number + IFSC required");
+    if (c.type === "QR" && !file && !c.qr_image_url) return toast.error("QR image required");
 
     setBusy(true);
     try {
+      // Verify admin session is present (otherwise RLS will silently reject inserts/uploads)
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) throw new Error("Not signed in. Please log in to /admin-login again.");
+
       let qr_image_url = c.qr_image_url ?? null;
       if (file) {
-        const path = `${crypto.randomUUID()}-${file.name}`;
-        const up = await supabase.storage.from("payment-qr").upload(path, file, { upsert: false });
-        if (up.error) throw new Error(up.error.message);
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${crypto.randomUUID()}-${safeName}`;
+        const up = await supabase.storage
+          .from("payment-qr")
+          .upload(path, file, { upsert: true, contentType: file.type || "image/png" });
+        if (up.error) {
+          console.error("[payment-qr upload]", up.error);
+          throw new Error(`Image upload failed: ${up.error.message}`);
+        }
         qr_image_url = supabase.storage.from("payment-qr").getPublicUrl(up.data.path).data.publicUrl;
       }
       const payload = {
@@ -205,13 +216,20 @@ function ChannelDialog({ initial, onClose }: { initial: Partial<Channel>; onClos
         daily_cap: c.daily_cap ? Number(c.daily_cap) : null,
       };
       const r = c.id
-        ? await supabase.from("payment_channels").update(payload).eq("id", c.id)
-        : await supabase.from("payment_channels").insert(payload);
-      if (r.error) throw r.error;
+        ? await supabase.from("payment_channels").update(payload).eq("id", c.id).select()
+        : await supabase.from("payment_channels").insert(payload).select();
+      if (r.error) {
+        console.error("[payment_channels save]", r.error, payload);
+        throw new Error(r.error.message);
+      }
+      if (!r.data || r.data.length === 0) {
+        throw new Error("Save returned no rows — your account may not have admin permissions.");
+      }
       toast.success(c.id ? "Updated" : "Added");
       qc.invalidateQueries({ queryKey: ["admin-channels"] });
       onClose();
     } catch (e) {
+      console.error("[ChannelDialog.save]", e);
       toast.error(e instanceof Error ? e.message : "Save failed");
     } finally { setBusy(false); }
   };
