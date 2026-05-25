@@ -9,6 +9,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WinCelebration } from "@/components/WinCelebration";
+import { SupportFab } from "@/components/SupportFab";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated")({
