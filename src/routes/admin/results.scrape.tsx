@@ -1,3 +1,4 @@
+import { callAdminHook } from "@/lib/callAdminHook";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -64,7 +65,7 @@ function ScrapePage() {
 
   const runLive = useMutation({
     mutationFn: async () => {
-      const r = await fetch("/api/public/hooks/scrape-results", { method: "POST" });
+      const r = await callAdminHook("/api/public/hooks/scrape-results", { method: "POST" });
       if (!r.ok) throw new Error(await r.text());
       return r.json();
     },
@@ -77,7 +78,7 @@ function ScrapePage() {
 
   const backfill = useMutation({
     mutationFn: async () => {
-      const r = await fetch("/api/public/hooks/backfill-results", {
+      const r = await callAdminHook("/api/public/hooks/backfill-results", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ from: from || undefined, to: to || undefined }),
@@ -96,7 +97,7 @@ function ScrapePage() {
   const refreshOne = useMutation({
     mutationFn: async (marketId: string) => {
       setRefreshingId(marketId);
-      const r = await fetch("/api/public/hooks/scrape-results", {
+      const r = await callAdminHook("/api/public/hooks/scrape-results", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ market_id: marketId }),

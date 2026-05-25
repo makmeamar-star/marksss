@@ -1,3 +1,4 @@
+import { callAdminHook } from "@/lib/callAdminHook";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Pencil, Trash2, Power, RefreshCw, Settings2, Loader2 } from "lucide-react";
@@ -215,7 +216,7 @@ function MarketsAdmin() {
   async function backfillOne(m: Market) {
     setBackfilling(m.id);
     try {
-      const res = await fetch("/api/public/hooks/backfill-results", {
+      const res = await callAdminHook("/api/public/hooks/backfill-results", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ marketIds: [m.id] }),

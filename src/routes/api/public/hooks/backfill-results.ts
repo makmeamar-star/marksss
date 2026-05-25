@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { fetchAllForMarket, mapToRealDpbossDate, type SourceName } from "@/lib/scraper/index.server";
+import { requireHookSecret } from "@/lib/hookAuth";
 
 /**
  * Backfill historical results from scraper sources into market_results.
@@ -14,6 +15,8 @@ export const Route = createFileRoute("/api/public/hooks/backfill-results")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const denied = await requireHookSecret(request);
+        if (denied) return denied;
         const url = process.env.SUPABASE_URL!;
         const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
         const supabase = createClient(url, key, {

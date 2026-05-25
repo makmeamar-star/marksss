@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { requireHookSecret } from "@/lib/hookAuth";
 
 /**
  * Operational health check. Runs every 30 minutes.
@@ -10,11 +11,16 @@ import { createClient } from "@supabase/supabase-js";
  *  - HIGH_FETCH_ERROR_RATE: > 30% of last 100 scrape attempts errored
  *
  * Auto-resolves prior alerts of the same kind once conditions clear.
+ *
+ * NOTE: GET is left open as a liveness probe (used by Render healthCheckPath).
+ * POST requires HOOK_SECRET to prevent unauthenticated alert flooding.
  */
 export const Route = createFileRoute("/api/public/hooks/health-check")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const denied = await requireHookSecret(request);
+        if (denied) return denied;
         const supabase = createClient(
           process.env.SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
