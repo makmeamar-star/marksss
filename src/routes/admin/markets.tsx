@@ -32,6 +32,7 @@ type Market = {
   min_bet: number;
   max_bet: number;
   status: string;
+  is_core: boolean;
   payouts: Record<string, number>;
 };
 
