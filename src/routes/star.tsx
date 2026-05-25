@@ -12,10 +12,10 @@ import { pickStarMarkets } from "@/config/starMarkets";
 export const Route = createFileRoute("/star")({
   head: () => ({
     meta: [
-      { title: "Delhi Markets — Gali · Disawar · Faridabad · Ghaziabad" },
-      { name: "description", content: "Live results, today's number, and one-tap play for the most popular Delhi markets — Gali, Disawar, Faridabad and Ghaziabad." },
-      { property: "og:title", content: "Delhi Markets — Gali, Disawar, Faridabad, Ghaziabad" },
-      { property: "og:description", content: "Live Matka results for the four most-watched markets, with one-tap betting." },
+      { title: "Top Markets — Kalyan, Milan, Rajdhani, Gali, Disawar" },
+      { name: "description", content: "Live results for the top Matka markets: Kalyan, Milan Day/Night, Rajdhani Day/Night, Sridevi, Main Bazar, Main Mumbai, Time Bazar, Madhur, plus Delhi favourites Gali, Disawar, Faridabad and Ghaziabad." },
+      { property: "og:title", content: "Top Matka Markets — Kalyan, Milan, Rajdhani & Delhi" },
+      { property: "og:description", content: "Live results and one-tap play for the most-watched Matka markets." },
       { property: "og:url", content: "https://matka.world/star" },
     ],
     links: [{ rel: "canonical", href: "https://matka.world/star" }],
