@@ -40,9 +40,10 @@ export function useEnsureFreshResults() {
     if (Date.now() - last < COOLDOWN_MS) return;
     sessionStorage.setItem(KEY, String(Date.now()));
 
-    fetch("/api/public/hooks/scrape-results", { method: "POST" })
+    // Trigger a server-side scrape via the authenticated wrapper. Unauthenticated
+    // users no-op (cron picks up new results every 15 minutes regardless).
+    triggerFreshScrape()
       .then(() => {
-        // realtime will catch it, but invalidate as a belt-and-braces
         setTimeout(() => qc.invalidateQueries({ queryKey: ["results", today] }), 1500);
       })
       .catch(() => {});
