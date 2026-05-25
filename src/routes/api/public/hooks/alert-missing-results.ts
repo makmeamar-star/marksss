@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import webpush from "web-push";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireHookSecret } from "@/lib/hookAuth";
 
 /**
  * Periodically scans markets whose scheduled time for today has passed (plus
@@ -12,7 +13,9 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 export const Route = createFileRoute("/api/public/hooks/alert-missing-results")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const denied = requireHookSecret(request);
+        if (denied) return denied;
         const { data: missing, error } = await supabaseAdmin.rpc("find_missing_results");
         if (error) {
           console.error("find_missing_results", error);
