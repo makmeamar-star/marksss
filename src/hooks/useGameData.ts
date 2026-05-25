@@ -25,6 +25,7 @@ function rowToMarket(r: any): Market {
       openTime: r.open_time, closeTime: r.close_time,
       days: r.days, status: r.status,
     }),
+    isCore: !!r.is_core,
     minBet: Number(r.min_bet ?? 10),
     maxBet: Number(r.max_bet ?? 10000),
     payouts: { ...defaultPayouts, ...p },

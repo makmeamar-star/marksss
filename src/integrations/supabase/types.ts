@@ -585,6 +585,7 @@ export type Database = {
           days: string[]
           display_name: string
           id: string
+          is_core: boolean
           is_jodi_only: boolean
           max_bet: number
           min_bet: number
@@ -601,6 +602,7 @@ export type Database = {
           days: string[]
           display_name: string
           id: string
+          is_core?: boolean
           is_jodi_only?: boolean
           max_bet?: number
           min_bet?: number
@@ -617,6 +619,7 @@ export type Database = {
           days?: string[]
           display_name?: string
           id?: string
+          is_core?: boolean
           is_jodi_only?: boolean
           max_bet?: number
           min_bet?: number

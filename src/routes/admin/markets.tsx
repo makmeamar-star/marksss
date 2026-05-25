@@ -32,6 +32,7 @@ type Market = {
   min_bet: number;
   max_bet: number;
   status: string;
+  is_core: boolean;
   payouts: Record<string, number>;
 };
 
@@ -46,7 +47,7 @@ function emptyForm(defaults: Record<string, number>): Market {
     id: "", name: "", display_name: "",
     open_time: "10:00", close_time: "12:00", result_time: "12:15",
     days: [...ALL_DAYS], min_bet: 10, max_bet: 10000,
-    status: "ACTIVE", payouts: { ...defaults },
+    status: "ACTIVE", is_core: false, payouts: { ...defaults },
   };
 }
 
@@ -177,6 +178,20 @@ function MarketsAdmin() {
     else { toast.success(`${m.display_name} → ${next}`); load(); }
   }
 
+  async function toggleCore(m: Market) {
+    const next = !m.is_core;
+    // Optimistic update
+    setMarkets((prev) => prev.map((x) => (x.id === m.id ? { ...x, is_core: next } : x)));
+    const { error } = await supabase.from("markets")
+      .update({ is_core: next }).eq("id", m.id);
+    if (error) {
+      toast.error(error.message);
+      setMarkets((prev) => prev.map((x) => (x.id === m.id ? { ...x, is_core: !next } : x)));
+    } else {
+      toast.success(`${m.display_name} ${next ? "moved to Core" : "removed from Core"}`);
+    }
+  }
+
   async function bulkSetStatus(status: "ACTIVE" | "INACTIVE") {
     const ids = Array.from(selected);
     if (!ids.length) return;
@@ -289,16 +304,17 @@ function MarketsAdmin() {
                 <th className="text-left px-4 py-3">Time</th>
                 <th className="text-left px-4 py-3">Days</th>
                 <th className="text-left px-4 py-3">Bet Range</th>
+                <th className="text-left px-4 py-3">Core</th>
                 <th className="text-left px-4 py-3">Status</th>
                 <th className="text-right px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">Loading…</td></tr>
+                <tr><td colSpan={8} className="px-4 py-6 text-center text-muted-foreground">Loading…</td></tr>
               )}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">No markets match.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-6 text-center text-muted-foreground">No markets match.</td></tr>
               )}
               {filtered.map((m) => (
                 <tr key={m.id} className="border-t border-border/60">
@@ -312,6 +328,20 @@ function MarketsAdmin() {
                   <td className="px-4 py-3">{m.open_time} – {m.close_time}</td>
                   <td className="px-4 py-3 text-xs">{m.days.join(", ")}</td>
                   <td className="px-4 py-3">₹{m.min_bet} – ₹{m.max_bet}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleCore(m)}
+                      title={m.is_core ? "Core market — shown on Home/Star" : "Other market"}
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                        m.is_core
+                          ? "bg-amber-500/15 text-amber-400 border-amber-500/40 hover:bg-amber-500/25"
+                          : "border-border/60 text-muted-foreground hover:border-amber-500/40 hover:text-amber-400"
+                      }`}
+                    >
+                      {m.is_core ? "★ Core" : "Other"}
+                    </button>
+                  </td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       m.status === "ACTIVE"
