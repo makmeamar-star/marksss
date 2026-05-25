@@ -134,7 +134,7 @@ function TelegramCard({ contacts, loading }: { contacts: SupportContacts | null 
           </p>
           {enabled && tg && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <CopyButton text={tg} copied={copied} onCopy={() => setCopied(true)} />
+              <CopyButton text={tg} copied={copied} onChange={setCopied} />
               <a href={tgHref ?? undefined} target="_blank" rel="noopener noreferrer">
                 <Button size="sm" variant="outline" className="font-semibold gap-1.5">
                   Open Telegram <ArrowRight className="h-4 w-4" />
