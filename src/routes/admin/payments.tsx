@@ -93,31 +93,7 @@ function ChannelsTab() {
         {data && data.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">No deposit channels configured. Add one to start accepting deposits.</p>}
         <div className="grid md:grid-cols-2 gap-3">
           {data?.map((c) => (
-            <div key={c.id} className={`rounded-lg border p-4 space-y-2 ${c.active ? "border-border/60" : "border-border/30 opacity-60"}`}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <ChannelIcon type={c.type} />
-                  <div>
-                    <div className="font-semibold">{c.label}</div>
-                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{c.type} · priority {c.priority}</div>
-                  </div>
-                </div>
-                <Switch checked={c.active} onCheckedChange={() => toggleActive(c)} />
-              </div>
-              <div className="text-xs text-muted-foreground font-mono break-all">
-                {c.type === "UPI" && c.details.vpa}
-                {c.type === "BANK" && `${c.details.account_number ?? ""} · ${c.details.ifsc ?? ""} · ${c.details.bank_name ?? ""}`}
-                {c.type === "QR" && (c.qr_image_url ? "QR image uploaded" : "No QR uploaded")}
-              </div>
-              <div className="text-[11px] text-muted-foreground">
-                ₹{Number(c.min_amount).toLocaleString("en-IN")} – ₹{Number(c.max_amount).toLocaleString("en-IN")}
-                {c.daily_cap ? ` · cap ₹${Number(c.daily_cap).toLocaleString("en-IN")}/day` : ""}
-              </div>
-              <div className="flex gap-2 pt-1">
-                <Button size="sm" variant="outline" onClick={() => setEditing(c)}><Pencil className="h-3.5 w-3.5 mr-1" />Edit</Button>
-                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(c)}><Trash2 className="h-3.5 w-3.5" /></Button>
-              </div>
-            </div>
+            <ChannelCard key={c.id} channel={c} onToggle={() => toggleActive(c)} onEdit={() => setEditing(c)} onRemove={() => remove(c)} />
           ))}
         </div>
       </div>
