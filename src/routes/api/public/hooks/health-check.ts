@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/public/hooks/health-check")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const denied = requireHookSecret(request);
+        const denied = await requireHookSecret(request);
         if (denied) return denied;
         const supabase = createClient(
           process.env.SUPABASE_URL!,

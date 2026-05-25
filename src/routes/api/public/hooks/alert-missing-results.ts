@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/public/hooks/alert-missing-results")(
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const denied = requireHookSecret(request);
+        const denied = await requireHookSecret(request);
         if (denied) return denied;
         const { data: missing, error } = await supabaseAdmin.rpc("find_missing_results");
         if (error) {

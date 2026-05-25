@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/public/hooks/backfill-results")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const denied = requireHookSecret(request);
+        const denied = await requireHookSecret(request);
         if (denied) return denied;
         const url = process.env.SUPABASE_URL!;
         const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
