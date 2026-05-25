@@ -22,6 +22,7 @@ function Dashboard() {
   const { data: bets = [] } = useMyBets();
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
+  const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
 
   const userBets = bets;
   const todayBets = userBets.filter((b) => b.sessionDate === today);
