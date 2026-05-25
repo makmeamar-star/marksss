@@ -3,7 +3,7 @@ import { ArrowUpRight, Wallet, Receipt, Trophy, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/stores/authStore";
-import { useMarkets, useMyBets, useResultsForDate } from "@/hooks/useGameData";
+import { useMarkets, useMyBets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { todayIST } from "@/lib/marketTime";
 import { ResultCard } from "@/components/ResultCard";
 import { useEffect } from "react";
