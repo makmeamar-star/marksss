@@ -304,16 +304,17 @@ function MarketsAdmin() {
                 <th className="text-left px-4 py-3">Time</th>
                 <th className="text-left px-4 py-3">Days</th>
                 <th className="text-left px-4 py-3">Bet Range</th>
+                <th className="text-left px-4 py-3">Core</th>
                 <th className="text-left px-4 py-3">Status</th>
                 <th className="text-right px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">Loading…</td></tr>
+                <tr><td colSpan={8} className="px-4 py-6 text-center text-muted-foreground">Loading…</td></tr>
               )}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">No markets match.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-6 text-center text-muted-foreground">No markets match.</td></tr>
               )}
               {filtered.map((m) => (
                 <tr key={m.id} className="border-t border-border/60">
