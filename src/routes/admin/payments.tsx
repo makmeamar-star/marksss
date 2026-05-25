@@ -108,6 +108,72 @@ function ChannelIcon({ type }: { type: Channel["type"] }) {
   return type === "UPI" ? <Smartphone className={cls} /> : type === "BANK" ? <Banknote className={cls} /> : <QrCode className={cls} />;
 }
 
+function ChannelCard({ channel: c, onToggle, onEdit, onRemove }: { channel: Channel; onToggle: () => void; onEdit: () => void; onRemove: () => void }) {
+  const [copied, setCopied] = useState<string | null>(null);
+  const copy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(label);
+    toast.success(`${label} copied`);
+    setTimeout(() => setCopied((k) => (k === label ? null : k)), 2000);
+  };
+  return (
+    <div className={`rounded-lg border p-4 space-y-2 ${c.active ? "border-border/60" : "border-border/30 opacity-60"}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <ChannelIcon type={c.type} />
+          <div>
+            <div className="font-semibold">{c.label}</div>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{c.type} · priority {c.priority}</div>
+          </div>
+        </div>
+        <Switch checked={c.active} onCheckedChange={onToggle} />
+      </div>
+      <div className="text-xs text-muted-foreground font-mono break-all">
+        {c.type === "UPI" && (
+          <div className="flex items-center gap-2">
+            <span>{c.details.vpa}</span>
+            {c.details.vpa && (
+              <button onClick={() => copy(c.details.vpa, "UPI")} className="text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+                {copied === "UPI" ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+              </button>
+            )}
+          </div>
+        )}
+        {c.type === "BANK" && (
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span>A/C: {c.details.account_number}</span>
+              {c.details.account_number && (
+                <button onClick={() => copy(c.details.account_number, "A/C")} className="text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+                  {copied === "A/C" ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span>IFSC: {c.details.ifsc}</span>
+              {c.details.ifsc && (
+                <button onClick={() => copy(c.details.ifsc, "IFSC")} className="text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+                  {copied === "IFSC" ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                </button>
+              )}
+            </div>
+            <div>Bank: {c.details.bank_name}</div>
+          </div>
+        )}
+        {c.type === "QR" && (c.qr_image_url ? "QR image uploaded" : "No QR uploaded")}
+      </div>
+      <div className="text-[11px] text-muted-foreground">
+        ₹{Number(c.min_amount).toLocaleString("en-IN")} – ₹{Number(c.max_amount).toLocaleString("en-IN")}
+        {c.daily_cap ? ` · cap ₹${Number(c.daily_cap).toLocaleString("en-IN")}/day` : ""}
+      </div>
+      <div className="flex gap-2 pt-1">
+        <Button size="sm" variant="outline" onClick={onEdit}><Pencil className="h-3.5 w-3.5 mr-1" />Edit</Button>
+        <Button size="sm" variant="ghost" className="text-destructive" onClick={onRemove}><Trash2 className="h-3.5 w-3.5" /></Button>
+      </div>
+    </div>
+  );
+}
+
 function ChannelDialog({ initial, onClose }: { initial: Partial<Channel>; onClose: () => void }) {
   const qc = useQueryClient();
   const [c, setC] = useState<Partial<Channel>>(initial);
