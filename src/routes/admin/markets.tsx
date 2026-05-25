@@ -329,6 +329,20 @@ function MarketsAdmin() {
                   <td className="px-4 py-3 text-xs">{m.days.join(", ")}</td>
                   <td className="px-4 py-3">₹{m.min_bet} – ₹{m.max_bet}</td>
                   <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleCore(m)}
+                      title={m.is_core ? "Core market — shown on Home/Star" : "Other market"}
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                        m.is_core
+                          ? "bg-amber-500/15 text-amber-400 border-amber-500/40 hover:bg-amber-500/25"
+                          : "border-border/60 text-muted-foreground hover:border-amber-500/40 hover:text-amber-400"
+                      }`}
+                    >
+                      {m.is_core ? "★ Core" : "Other"}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       m.status === "ACTIVE"
                         ? "bg-primary/15 text-primary"
