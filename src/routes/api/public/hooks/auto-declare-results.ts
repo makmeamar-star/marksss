@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { requireHookSecret } from "@/lib/hookAuth";
 
 export const Route = createFileRoute("/api/public/hooks/auto-declare-results")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const denied = requireHookSecret(request);
+        if (denied) return denied;
         const url = process.env.SUPABASE_URL!;
         const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
         const supabase = createClient(url, key, {
