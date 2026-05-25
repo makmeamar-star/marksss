@@ -154,7 +154,7 @@ function CopyButton({ text, copied, onCopy }: { text: string; copied: boolean; o
       await navigator.clipboard.writeText(text);
       onCopy();
       toast.success("Copied to clipboard");
-      setTimeout(() => onCopy(), 200人0); // Reset copied state via parent
+      setTimeout(() => onCopy(), 2000); // Reset copied state via parent
     } catch {
       toast.error("Copy failed");
     }
