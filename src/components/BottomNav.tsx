@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, LayoutGrid, Star, Wallet, User } from "lucide-react";
+import { Home, LayoutGrid, BarChart3, Wallet, User } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 
 // Routes that already render their own navigation (auth shell, admin, auth pages).
@@ -13,11 +13,7 @@ const HIDDEN_PREFIXES = [
 
 /**
  * Mobile-first bottom navigation for PUBLIC pages. Hidden on md+ screens and
- * on routes that ship their own navigation. Center "Star" tab is the prominent
- * shortcut to the 4 featured markets (Gali / Disawar / Faridabad / Ghaziabad).
- * Formerly "Star Markets", now branded as "Delhi Markets".
- * When the visitor is signed in, the "Home" tab routes to their dashboard
- * instead of the public landing page so the back-button stays inside the app.
+ * on routes that ship their own navigation.
  */
 export function BottomNav() {
   const { pathname } = useLocation();
@@ -31,7 +27,6 @@ export function BottomNav() {
 
   return (
     <>
-      {/* Spacer so page content isn't hidden behind the fixed bar */}
       <div className="md:hidden h-16" aria-hidden />
 
       <nav
@@ -42,30 +37,7 @@ export function BottomNav() {
         <div className="relative grid grid-cols-5 h-14 items-center text-[10px]">
           <Tab to={homeTo} icon={<Home className="h-4 w-4" />} label="Home" active={isAuthed ? isActive("/dashboard") : isActive("/", true)} />
           <Tab to="/markets" icon={<LayoutGrid className="h-4 w-4" />} label="Markets" active={isActive("/markets")} />
-
-          {/* Center: prominent star tab, lifted above the bar */}
-          <Link
-            to="/star"
-            preload="intent"
-            className="relative -mt-5 mx-auto flex flex-col items-center"
-            aria-label="Delhi markets"
-          >
-            <span
-              className={`grid h-11 w-11 place-items-center rounded-full bg-gradient-gold text-background shadow-[0_6px_18px_-4px_color-mix(in_oklab,var(--primary)_70%,transparent)] ring-3 ring-background transition-transform ${
-                isActive("/star") ? "scale-105" : ""
-              }`}
-            >
-              <Star className="h-5 w-5 fill-current" strokeWidth={2.5} />
-            </span>
-            <span
-              className={`mt-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                isActive("/star") ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
-              Delhi
-            </span>
-          </Link>
-
+          <Tab to="/results" icon={<BarChart3 className="h-4 w-4" />} label="Results" active={isActive("/results")} />
           <Tab to="/wallet" icon={<Wallet className="h-4 w-4" />} label="Wallet" active={isActive("/wallet")} />
           <Tab to="/profile" icon={<User className="h-4 w-4" />} label="Profile" active={isActive("/profile")} />
         </div>
@@ -73,6 +45,7 @@ export function BottomNav() {
     </>
   );
 }
+
 
 function Tab({
   to,
