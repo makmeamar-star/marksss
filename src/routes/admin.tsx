@@ -84,6 +84,7 @@ const NAV = [
   { to: "/admin/deposits", label: "Deposits", icon: Wallet },
   { to: "/admin/withdrawals", label: "Withdrawals", icon: ArrowLeftRight },
   { to: "/admin/payments", label: "Payment Channels", icon: CreditCard },
+  { to: "/admin/support", label: "Customer Support", icon: MessageCircle },
   { to: "/admin/kyc", label: "KYC Review", icon: ShieldCheck },
   { to: "/admin/broadcasts", label: "Broadcasts", icon: Megaphone },
   { to: "/admin/risk", label: "Risk & Ops", icon: ShieldAlert },
