@@ -109,6 +109,7 @@ function AuthLayout() {
           <Outlet />
         </main>
         <WinCelebration amount={lastWin} onClose={() => setLastWin(null)} />
+        <SupportFab />
 
         {/* Mobile bottom nav */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur grid grid-cols-5">
