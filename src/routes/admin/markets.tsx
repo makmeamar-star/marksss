@@ -47,7 +47,7 @@ function emptyForm(defaults: Record<string, number>): Market {
     id: "", name: "", display_name: "",
     open_time: "10:00", close_time: "12:00", result_time: "12:15",
     days: [...ALL_DAYS], min_bet: 10, max_bet: 10000,
-    status: "ACTIVE", payouts: { ...defaults },
+    status: "ACTIVE", is_core: false, payouts: { ...defaults },
   };
 }
 
