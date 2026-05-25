@@ -77,10 +77,13 @@ export function useResultAlerts() {
     return () => clearInterval(id);
   }, []);
 
+  const isAuthed = useAuthStore((s) => !!s.user);
+
   const alertsQuery = useQuery({
     queryKey: ["market-alerts"],
     queryFn: () => fetchAlerts(),
     staleTime: 60_000,
+    enabled: isAuthed,
   });
 
   const enabledIds = useMemo(
