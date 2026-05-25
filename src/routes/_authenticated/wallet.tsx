@@ -232,7 +232,18 @@ function DepositForm({ userId }: { userId: string }) {
 }
 
 function ChannelDisplay({ channel }: { channel: Channel }) {
-  const copy = (text: string) => { navigator.clipboard.writeText(text); toast.success("Copied"); };
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const copy = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    toast.success(`${key} copied`);
+    setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 2000);
+  };
+
+  const bankDetails = channel.type === "BANK" && channel.details.account_number && channel.details.ifsc
+    ? `A/C: ${channel.details.account_number}\nIFSC: ${channel.details.ifsc}\nHolder: ${channel.details.holder ?? ""}\nBank: ${channel.details.bank_name ?? ""}`
+    : null;
+
   return (
     <div className="glass-gold rounded-xl p-5 space-y-3">
       <div className="flex items-center gap-2">
@@ -245,14 +256,23 @@ function ChannelDisplay({ channel }: { channel: Channel }) {
         <img src={channel.qr_image_url} alt="Pay QR" className="mx-auto h-44 w-44 object-contain rounded-lg bg-background/40 border border-primary/30 p-2" />
       )}
       {channel.type === "UPI" && channel.details.vpa && (
-        <CopyRow label="UPI" value={channel.details.vpa} onCopy={copy} />
+        <CopyRow label="UPI ID" value={channel.details.vpa} copied={copiedKey === "UPI ID"} onCopy={() => copy(channel.details.vpa, "UPI ID")} />
       )}
       {channel.type === "BANK" && (
-        <div className="space-y-1.5 text-sm">
+        <div className="space-y-2 text-sm">
           {channel.details.holder && <Row label="Holder" value={channel.details.holder} />}
-          {channel.details.account_number && <CopyRow label="A/C No" value={channel.details.account_number} onCopy={copy} />}
-          {channel.details.ifsc && <CopyRow label="IFSC" value={channel.details.ifsc} onCopy={copy} />}
+          {channel.details.account_number && (
+            <CopyRow label="Account No" value={channel.details.account_number} copied={copiedKey === "Account No"} onCopy={() => copy(channel.details.account_number!, "Account No")} />
+          )}
+          {channel.details.ifsc && (
+            <CopyRow label="IFSC" value={channel.details.ifsc} copied={copiedKey === "IFSC"} onCopy={() => copy(channel.details.ifsc!, "IFSC")} />
+          )}
           {channel.details.bank_name && <Row label="Bank" value={channel.details.bank_name} />}
+          {bankDetails && (
+            <Button size="sm" variant="outline" className="w-full mt-1 gap-1.5 text-xs" onClick={() => copy(bankDetails, "All Bank Details")}>
+              <Copy className="h-3.5 w-3.5" /> Copy All Bank Details
+            </Button>
+          )}
         </div>
       )}
       {channel.instructions && (
@@ -264,13 +284,16 @@ function ChannelDisplay({ channel }: { channel: Channel }) {
 function Row({ label, value }: { label: string; value: string }) {
   return <div className="flex justify-between gap-2"><span className="text-muted-foreground">{label}</span><span className="font-mono">{value}</span></div>;
 }
-function CopyRow({ label, value, onCopy }: { label: string; value: string; onCopy: (v: string) => void }) {
+function CopyRow({ label, value, copied, onCopy }: { label: string; value: string; copied: boolean; onCopy: () => void }) {
   return (
     <div className="flex items-center justify-between gap-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <div className="flex items-center gap-1.5">
-        <span className="font-mono text-primary">{value}</span>
-        <button onClick={() => onCopy(value)} className="text-muted-foreground hover:text-primary"><Copy className="h-3.5 w-3.5" /></button>
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-primary text-right max-w-[180px] truncate" title={value}>{value}</span>
+        <Button size="sm" variant="secondary" className="h-7 px-2 gap-1 text-xs" onClick={onCopy}>
+          {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? "Copied" : "Copy"}
+        </Button>
       </div>
     </div>
   );
