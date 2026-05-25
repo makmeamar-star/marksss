@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
+import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
 
@@ -29,6 +29,7 @@ function JodiPage() {
   const today = todayIST();
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
+  const { data: latestPerMarket = {} } = useLatestResultsPerMarket();
   useEnsureFreshResults();
 
   const jodiMarkets = useMemo(
@@ -62,7 +63,7 @@ function JodiPage() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {jodiMarkets.map((m) => {
-            const r = results.find((x) => x.marketId === m.id && x.sessionDate === today);
+            const r = results.find((x) => x.marketId === m.id && x.sessionDate === today) ?? latestPerMarket[m.id];
             return (
               <div key={m.id} className="glass rounded-xl p-5 space-y-3 hover:border-primary/50 border border-border/60 transition">
                 <div className="flex items-start justify-between">
