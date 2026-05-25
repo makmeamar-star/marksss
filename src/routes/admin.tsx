@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuthStore } from "@/stores/authStore";
 import { LiveClock } from "@/components/admin/LiveClock";
-import { requireAdmin } from "@/lib/adminGuard.functions";
+
 import { ShieldX } from "lucide-react";
 import { toast } from "sonner";
 
