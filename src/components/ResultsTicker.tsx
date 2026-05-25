@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
+import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { todayIST } from "@/lib/marketTime";
 import { splitTopMarkets } from "@/lib/topMarkets";
 
@@ -7,13 +7,14 @@ export function ResultsTicker() {
   const today = todayIST();
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
+  const { data: latestPerMarket = {} } = useLatestResultsPerMarket();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
   const items = useMemo(() => {
     const { top } = splitTopMarkets(markets);
     return top.map((m) => {
-      const r = results.find((x) => x.marketId === m.id);
+      const r = results.find((x) => x.marketId === m.id) ?? latestPerMarket[m.id];
       return {
         name: m.displayName,
         jodi: r?.jodi ?? "--",
@@ -21,7 +22,7 @@ export function ResultsTicker() {
         close: r?.closePana ?? "***",
       };
     });
-  }, [markets, results]);
+  }, [markets, results, latestPerMarket]);
 
   if (!mounted) {
     return <div className="border-y border-border/60 bg-surface/60 h-9" suppressHydrationWarning />;
