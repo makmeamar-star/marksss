@@ -1,127 +1,123 @@
-# SattaKing Pro — Next Version ("v2 Advance") Plan
 
-North star stays the same: **acquire more users, keep them coming back daily, and convert them into bettors**. v2 layers intelligence, virality, and trust on top of what already ships.
+# Deploy to Render — Migration Plan
 
----
-
-## 1. Goals for v2
-
-1. **Organic growth** — rank for "kalyan result today", "gali disawar chart", etc., and turn every result into a shareable artifact.
-2. **Daily retention** — give every user a reason to open the app at result time, every single day.
-3. **Smarter product** — use the data we already collect (results, bets, scrapes, PWA funnel) to power predictions, personalization, and risk controls.
-4. **Operator trust** — make the site feel safer, faster, and more "official" than the dpboss-style competitors.
+This project currently targets **Cloudflare Workers** (`wrangler.jsonc`, Vite Cloudflare preset). Render runs **Node.js**, so we need to (1) switch the build target, (2) move runtime config to Render env vars, and (3) size the service for ~10K users. The database stays on Lovable Cloud (Supabase) — no migration there.
 
 ---
 
-## 2. Workstreams
+## Step 1 — Get the code onto GitHub
 
-### A. Acquisition & SEO (highest ROI)
+1. In Lovable chat: **+ menu → GitHub → Connect project** → authorize → create a new repo.
+2. Clone locally: `git clone https://github.com/<you>/<repo>.git`
+3. `bun install` to verify it builds on your machine.
 
-1. **Per-market public pages** at `/markets/$marketId` and `/charts/$marketId`
-   - Today's result, last 30/60/90-day panel + jodi chart, schedule, payout calculator, FAQ schema.
-   - Per-route `head()` with unique title/description/canonical/og — derived from loader data.
-2. **Generated branded OG images** (1200×630) per market + per result day, stored in Supabase Storage, referenced from `head()`.
-3. **Programmatic content**: weekly/monthly "Kalyan result history — May 2026" pages auto-generated from results data.
-4. **Sitemap upgrade**: include every market + every chart month; ping search engines on declare.
-5. **JSON-LD**: `BreadcrumbList`, `FAQPage`, `Dataset` for chart pages.
-6. **Speed**: fix remaining hydration mismatches (`Stat`, `StarMarketsSection`), lazy-load `framer-motion`, drop double polling where realtime is already on.
+## Step 2 — Switch the build target to Node
 
-### B. Sharing & virality
+Edit `vite.config.ts`:
 
-7. **WhatsApp/Telegram share** on every `ResultCard`, per-market page, and post-win screen. Pre-filled text + short link.
-8. **Auto-generated "result card" image** (canvas/satori on the server) users can download/share — branded, watermarked.
-9. **Referral loop surfaced publicly**: homepage band + post-bet success + post-win celebration. Track k-factor.
-10. **PWA install nudge v2**: after 2nd visit OR after first win; A/B copy via the existing PWA funnel table.
+- Remove the `cloudflare` preset from the TanStack Start plugin.
+- Set the target to `node-server` (TanStack Start's Node adapter).
 
-### C. Retention & engagement
+Delete or ignore:
+- `wrangler.jsonc`
+- Any `import("cloudflare:*")` calls (none expected in this codebase, but grep to confirm).
 
-11. **Daily login streak** (`user_streaks` table + RPC), with bonus credit at 3/7/14/30 days.
-12. **Push notifications**: result-declared pushes per subscribed market (infra exists in `push.functions.ts` — finish UI + opt-in flow on each market page).
-13. **In-app result alerts** with sound (component exists — promote it).
-14. **Public leaderboard preview** on homepage (anonymized top winners today/week).
-15. **Achievements** — wire the existing `/achievements` route to real events (first bet, 7-day streak, first jodi win, etc.).
-16. **Hindi language toggle** (full i18n, not partial).
+Add a Render-friendly start script in `package.json`:
+```json
+"scripts": {
+  "build": "vite build",
+  "start": "node .output/server/index.mjs"
+}
+```
 
-### D. Smart features (data we already have)
+## Step 3 — Audit Worker-only code
 
-17. **Jodi/pana frequency & "hot/cold" insights** per market, computed from `market_results` — surfaced on chart pages and as a "Today's picks" widget (clearly labelled as statistical, not a prediction).
-18. **Personal stats dashboard upgrade**: win rate by market, best bet type, monthly P&L chart.
-19. **Smart bet suggestions** based on user's history + market hot numbers (opt-in).
-20. **AI result-explainer**: short auto-written summary per declared result ("Kalyan opened 240 → 6, closed 123 → 6, jodi 66") using Lovable AI for natural-language phrasing in Hindi/English.
+Check these paths for Node compatibility (most already use safe APIs):
+- `src/routes/api/public/hooks/*.ts` — uses `web-push` (Node-compatible ✓) and `crypto` (Node-compatible ✓).
+- `src/integrations/supabase/client.server.ts` — Supabase JS works on Node ✓.
+- `src/lib/scraper/*.server.ts` — uses `fetch`, available natively in Node 20+ ✓.
 
-### E. Trust, safety, compliance
+No code changes expected, but the build will surface anything Worker-specific.
 
-21. **"Last updated" + source badge** on every result (use `result_scrape_log`).
-22. **Public `/status` page** showing scraper health, uptime, last declare per market.
-23. **Responsible-gaming upgrades**: deposit/loss/session limits surfaced in onboarding, cooling-off period, self-exclusion.
-24. **Stronger age-gate** that blocks first paint (required for ad networks).
-25. **Run security scanner**, fix RLS gaps, rotate keys before any paid campaign.
+## Step 4 — Create the Render service
 
-### F. Admin & ops v2
+In Render dashboard:
 
-26. **Unified ops console**: one screen with scraper health, missing results, pending payouts, today's P&L, live PWA funnel (already built).
-27. **Risk dashboard**: heavy-exposure jodi/pana per market before close, so admin can suspend if needed.
-28. **Automation: auto-declare with confidence threshold** (two-source confirm exists — extend to auto-publish when confidence is high, queue for review otherwise).
-29. **Broadcast composer** with templates + scheduling (push + in-app + WhatsApp deep link).
-30. **Audit log search/filter** + CSV export.
+1. **New → Web Service** → connect the GitHub repo.
+2. **Runtime:** Node
+3. **Build command:** `bun install && bun run build`
+   *(Add a `BUN_VERSION` env var = `1.1.x` so Render uses Bun.)*
+4. **Start command:** `node .output/server/index.mjs`
+5. **Plan:** **Standard** ($25/mo, 2 GB RAM, 1 CPU) minimum — `Starter` will OOM under real load.
+6. **Region:** pick closest to your users (e.g. Singapore for India traffic).
+7. **Health check path:** `/api/public/hooks/health-check`
 
-### G. Monetization & wallet
+## Step 5 — Configure environment variables on Render
 
-31. **UPI auto-verify via UTR** (`utr-callback` exists — finish the loop with auto-credit + receipt).
-32. **Withdrawal SLA tracker** visible to user ("Avg 12 min today") — trust signal.
-33. **Promo/cashback engine** behind a single `promotions` table (component exists, no engine).
-34. **Refer-and-earn tiers**: bronze/silver/gold based on referred bettor volume.
+Copy these from Lovable into Render → **Environment**:
 
----
+**Public (used at build time too):**
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `VITE_SUPABASE_PROJECT_ID`
 
-## 3. Recommended sequencing (4 sprints)
+**Server-only secrets:**
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` *(get from Lovable Cloud → Database → API)*
+- `LAFXNGA_ADMIN_PASSWORD`
+- `VAPID_PUBLIC_KEY`
+- `VAPID_PRIVATE_KEY`
+- `VAPID_SUBJECT`
+- `PUSH_DISPATCH_SECRET`
 
-### Sprint 1 — Foundation & SEO (1 week)
-- Hydration fixes (Stat, StarMarketsSection, any `Date.now()` in render).
-- Per-route SEO + branded OG image + sitemap upgrade + JSON-LD.
-- Per-market public page (`/markets/$marketId`) with chart + share buttons.
-- "Last updated" + source badge on results.
+## Step 6 — Scale for ~10K users
 
-### Sprint 2 — Virality & retention loop (1 week)
-- WhatsApp share everywhere + auto-generated result-card image.
-- PWA install nudge v2 (A/B via funnel table already live).
-- Daily streak + 3/7/14/30 bonus.
-- Public leaderboard preview on homepage.
-- Push notifications opt-in on each market page.
+10K registered users ≠ 10K concurrent. Plan for ~500–1000 concurrent at peak.
 
-### Sprint 3 — Smart layer (1–2 weeks)
-- Hot/cold jodi & pana stats per market.
-- Personal stats dashboard upgrade.
-- AI result-explainer (Lovable AI Gateway, Gemini Flash).
-- Smart bet suggestions (opt-in).
-- Hindi full i18n.
+- **Render web service:** Standard plan + **Autoscaling 2–4 instances** (Render dashboard → Scaling). Trigger on 70% CPU.
+- **Database (the real bottleneck):** in Lovable Cloud → Overview → Advanced settings, bump the Postgres instance from Nano → **Small or Medium**. Monitor with `supabase--db_health`.
+- **Connection pooling:** the Supabase JS client uses HTTPS (PostgREST), not raw Postgres connections, so no PgBouncer config needed.
+- **Static assets:** Render auto-serves `dist/client` with gzip. For images, add a CDN (Cloudflare in front of Render) if traffic spikes.
+- **Realtime / cron:** the `/api/public/hooks/*` endpoints (auto-declare, scrape, alert-missing-results, dispatch-push) need to be triggered on a schedule. Either:
+  - Render **Cron Jobs** (separate service, ~$1/mo each), or
+  - Keep them triggered by Supabase `pg_cron` (already configured in migrations).
 
-### Sprint 4 — Trust, ops, monetization (1–2 weeks)
-- Public `/status` + risk dashboard + auto-declare with confidence.
-- Responsible-gaming controls + stronger age-gate + security scan.
-- UPI auto-credit finish + withdrawal SLA tracker.
-- Promo/cashback engine + referral tiers.
+## Step 7 — Custom domain + SSL
 
----
+1. Render → service → **Settings → Custom Domains** → add your domain.
+2. Add the CNAME at your registrar as Render instructs.
+3. SSL is auto-provisioned (Let's Encrypt).
 
-## 4. Technical notes
+## Step 8 — Post-deploy checks
 
-- **Hydration**: any "now"-derived value (badges, isOpen, isStale, stat counts) must render a server-safe default and update inside `useEffect`. Audit `Stat`, `StarMarketsSection`, ticker, countdowns.
-- **OG images**: server route `/api/og/market/$id.png` using `satori` + `resvg-wasm` (Worker-safe), cached in Storage by `(marketId, sessionDate)`.
-- **Hot/cold**: nightly server function aggregates last 30/90/365 days into a `market_number_stats` table; chart pages read from that, not raw results.
-- **AI explainer**: triggered from the existing declare flow; writes to `market_results.summary_en` / `summary_hi`. Use Gemini 2.5 Flash via Lovable AI Gateway — no key needed.
-- **Streaks**: `user_streaks (user_id, current, longest, last_login_date)` + RPC `record_daily_login` called from the `_authenticated` root loader.
-- **Push**: VAPID infra already exists; just wire per-market opt-in UI + dispatch on declare.
-- **Realtime vs polling**: prefer realtime + on-focus refetch; remove 30–60s intervals where realtime is subscribed.
-- **All server-side logic** stays in `createServerFn` (TanStack Start) — no Supabase Edge Functions for new work.
+- Hit `/` and `/admin` — confirm SSR renders.
+- Hit `/api/public/hooks/health-check` — should return 200.
+- Log in as admin using `LAFXNGA_ADMIN_PASSWORD`.
+- Trigger a test push notification — confirms VAPID keys work.
+- Watch Render **Metrics** tab for CPU/memory during first hour.
 
 ---
 
-## 5. What I want to confirm before I start building
+## Cost estimate (monthly)
 
-1. Which sprint do you want first — **SEO foundation** (slowest payoff, biggest long-term) or **virality/retention** (fastest visible impact)?
-2. Are public per-market SEO pages OK in your target geos compliance-wise?
-3. WhatsApp share OK, or Telegram-only?
-4. AI result-explainer in **Hindi + English** by default, or English only initially?
+| Item | Cost |
+|---|---|
+| Render Standard web service (2 instances) | ~$50 |
+| Render Cron jobs (×3) | ~$3 |
+| Lovable Cloud Postgres (Small) | ~$25 |
+| **Total** | **~$80/mo** |
 
-Once you pick, I'll start Sprint 1 immediately.
+For comparison: staying on Lovable Publish + bumping the DB to Small = ~$25/mo and zero migration work.
+
+---
+
+## What I'll do when you switch to build mode
+
+1. Edit `vite.config.ts` to use the `node-server` preset.
+2. Add the `start` script and `BUN_VERSION` to `package.json`.
+3. Create a `render.yaml` blueprint so you can one-click deploy.
+4. Add a brief `DEPLOY.md` with the env-var checklist.
+5. Leave `wrangler.jsonc` in place (harmless) unless you want it deleted.
+
+I will **not** touch database migrations, auth, or business logic.
