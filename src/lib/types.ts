@@ -31,6 +31,7 @@ export interface Market {
   days: Day[];
   status: MarketStatus;
   isOpen: boolean;
+  isCore: boolean;
   minBet: number;
   maxBet: number;
   payouts: {
