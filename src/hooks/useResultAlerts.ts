@@ -8,6 +8,7 @@ import {
   unsubscribePush,
 } from "@/lib/push.functions";
 import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/lib/vapidPublicKey";
+import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
 function isInIframe(): boolean {
