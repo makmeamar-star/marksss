@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Plus, Pencil, Trash2, QrCode, Banknote, Smartphone, Image as ImageIcon } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Copy, Check, QrCode, Banknote, Smartphone, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
