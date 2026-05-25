@@ -55,7 +55,7 @@ function StarPage() {
             Loading featured markets…
           </div>
         ) : (
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {stars.map((m) => (
               <StarMarketTile
                 key={m.id}
