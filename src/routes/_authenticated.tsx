@@ -36,6 +36,7 @@ const NAV = [
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/kyc", label: "Verify ID", icon: ShieldCheck },
   { to: "/settings/limits", label: "Play Limits", icon: SlidersHorizontal },
+  { to: "/support", label: "Support", icon: Headphones },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
