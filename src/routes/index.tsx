@@ -113,8 +113,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* DELHI MARKETS — pinned featured 4 */}
-      <StarMarketsSection />
 
       {/* LIVE RESULTS */}
       <section className="container mx-auto px-4 py-10">
