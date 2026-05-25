@@ -29,6 +29,7 @@ function JodiPage() {
   const today = todayIST();
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
+  const { data: latestPerMarket = {} } = useLatestResultsPerMarket();
   useEnsureFreshResults();
 
   const jodiMarkets = useMemo(
