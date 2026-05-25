@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuthStore } from "@/stores/authStore";
 import { LiveClock } from "@/components/admin/LiveClock";
-import { requireAdmin } from "@/lib/adminGuard.functions";
+
 import { ShieldX } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,7 +41,9 @@ export const Route = createFileRoute("/admin")({
       throw redirect({ to: "/login", search: { error: "forbidden" } as never });
     }
   },
-  loader: () => requireAdmin(),
+  // Admin check is done client-side in beforeLoad above (which has session access).
+  // Calling requireAdmin() as a server-fn loader fails during SSR/prerender (no Bearer
+  // token attached yet) and returns 403, blocking legit admins on hard navigation.
   errorComponent: () => <Forbidden403 />,
   head: () => ({ meta: [{ title: "Admin — SattaKing Pro" }] }),
   component: AdminLayout,
