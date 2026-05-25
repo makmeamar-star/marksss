@@ -178,6 +178,20 @@ function MarketsAdmin() {
     else { toast.success(`${m.display_name} → ${next}`); load(); }
   }
 
+  async function toggleCore(m: Market) {
+    const next = !m.is_core;
+    // Optimistic update
+    setMarkets((prev) => prev.map((x) => (x.id === m.id ? { ...x, is_core: next } : x)));
+    const { error } = await supabase.from("markets")
+      .update({ is_core: next }).eq("id", m.id);
+    if (error) {
+      toast.error(error.message);
+      setMarkets((prev) => prev.map((x) => (x.id === m.id ? { ...x, is_core: !next } : x)));
+    } else {
+      toast.success(`${m.display_name} ${next ? "moved to Core" : "removed from Core"}`);
+    }
+  }
+
   async function bulkSetStatus(status: "ACTIVE" | "INACTIVE") {
     const ids = Array.from(selected);
     if (!ids.length) return;
