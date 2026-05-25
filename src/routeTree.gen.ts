@@ -38,6 +38,7 @@ import { Route as AdminDepositsRouteImport } from './routes/admin/deposits'
 import { Route as AdminBroadcastsRouteImport } from './routes/admin/broadcasts'
 import { Route as AdminBetsRouteImport } from './routes/admin/bets'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedStarlineRouteImport } from './routes/_authenticated/starline'
 import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticated/rewards'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
@@ -212,6 +213,11 @@ const AdminBetsRoute = AdminBetsRouteImport.update({
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedStarlineRoute = AuthenticatedStarlineRouteImport.update({
@@ -413,6 +419,7 @@ export interface FileRoutesByFullPath {
   '/referrals': typeof AuthenticatedReferralsRoute
   '/rewards': typeof AuthenticatedRewardsRoute
   '/starline': typeof AuthenticatedStarlineRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
@@ -473,6 +480,7 @@ export interface FileRoutesByTo {
   '/referrals': typeof AuthenticatedReferralsRoute
   '/rewards': typeof AuthenticatedRewardsRoute
   '/starline': typeof AuthenticatedStarlineRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
@@ -536,6 +544,7 @@ export interface FileRoutesById {
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/rewards': typeof AuthenticatedRewardsRoute
   '/_authenticated/starline': typeof AuthenticatedStarlineRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/admin/bets': typeof AdminBetsRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
@@ -599,6 +608,7 @@ export interface FileRouteTypes {
     | '/referrals'
     | '/rewards'
     | '/starline'
+    | '/support'
     | '/wallet'
     | '/admin/bets'
     | '/admin/broadcasts'
@@ -659,6 +669,7 @@ export interface FileRouteTypes {
     | '/referrals'
     | '/rewards'
     | '/starline'
+    | '/support'
     | '/wallet'
     | '/admin/bets'
     | '/admin/broadcasts'
@@ -721,6 +732,7 @@ export interface FileRouteTypes {
     | '/_authenticated/referrals'
     | '/_authenticated/rewards'
     | '/_authenticated/starline'
+    | '/_authenticated/support'
     | '/_authenticated/wallet'
     | '/admin/bets'
     | '/admin/broadcasts'
@@ -989,6 +1001,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWalletRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/starline': {
       id: '/_authenticated/starline'
       path: '/starline'
@@ -1220,6 +1239,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedRewardsRoute: typeof AuthenticatedRewardsRoute
   AuthenticatedStarlineRoute: typeof AuthenticatedStarlineRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedBetMarketIdRoute: typeof AuthenticatedBetMarketIdRoute
   AuthenticatedJodiMarketIdRoute: typeof AuthenticatedJodiMarketIdRoute
@@ -1238,6 +1258,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedRewardsRoute: AuthenticatedRewardsRoute,
   AuthenticatedStarlineRoute: AuthenticatedStarlineRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedBetMarketIdRoute: AuthenticatedBetMarketIdRoute,
   AuthenticatedJodiMarketIdRoute: AuthenticatedJodiMarketIdRoute,
