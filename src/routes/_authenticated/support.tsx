@@ -148,13 +148,13 @@ function TelegramCard({ contacts, loading }: { contacts: SupportContacts | null 
   );
 }
 
-function CopyButton({ text, copied, onCopy }: { text: string; copied: boolean; onCopy: () => void }) {
+function CopyButton({ text, copied, onChange }: { text: string; copied: boolean; onChange: (v: boolean) => void }) {
   const handle = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      onCopy();
+      onChange(true);
       toast.success("Copied to clipboard");
-      setTimeout(() => onCopy(), 2000); // Reset copied state via parent
+      setTimeout(() => onChange(false), 2000);
     } catch {
       toast.error("Copy failed");
     }
