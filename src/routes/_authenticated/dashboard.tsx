@@ -3,7 +3,7 @@ import { ArrowUpRight, Wallet, Receipt, Trophy, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/stores/authStore";
-import { useMarkets, useMyBets, useResultsForDate } from "@/hooks/useGameData";
+import { useMarkets, useMyBets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
 import { todayIST } from "@/lib/marketTime";
 import { ResultCard } from "@/components/ResultCard";
 import { useEffect } from "react";
@@ -22,6 +22,7 @@ function Dashboard() {
   const { data: bets = [] } = useMyBets();
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
+  const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
 
   const userBets = bets;
   const todayBets = userBets.filter((b) => b.sessionDate === today);
@@ -86,7 +87,7 @@ function Dashboard() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {markets.slice(0, 6).map((m) => (
-            <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} />
+            <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
           ))}
         </div>
       </section>
