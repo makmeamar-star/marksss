@@ -26,7 +26,17 @@ export function ResultCard({
   previousError,
   onRetryPrevious,
 }: Props) {
-  const declared = result?.status === "DECLARED";
+  const rawDeclared = result?.status === "DECLARED";
+  // Ignore a pre-existing result row while the market is still accepting bets,
+  // so a prematurely-scraped result doesn't show "DECLARED" before the cutoff.
+  const [accepting, setAccepting] = useState(false);
+  useEffect(() => {
+    const check = () => setAccepting(isAcceptingBets(market));
+    check();
+    const id = setInterval(check, 15_000);
+    return () => clearInterval(id);
+  }, [market]);
+  const declared = rawDeclared && !accepting;
   const openText = result?.openPana && result?.openDigit !== undefined
     ? `${result.openPana}-${result.openDigit}`
     : undefined;
