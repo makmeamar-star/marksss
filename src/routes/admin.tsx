@@ -22,62 +22,110 @@ import { toast } from "sonner";
 
 import { requireAdminSSR } from "@/lib/adminGuardSSR.functions";
 
+type DiagCheck = { name: string; ok: boolean; detail: string };
+const DIAG_KEY = "admin_access_diag";
+
+function saveDiag(checks: DiagCheck[]) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(
+      DIAG_KEY,
+      JSON.stringify({ checks, at: new Date().toISOString() }),
+    );
+  } catch {}
+}
+
 export const Route = createFileRoute("/admin")({
-  // Robust admin gate. Order of checks:
-  //   1) Positive store fast-path (hydrated + role===ADMIN) → allow.
-  //   2) If not hydrated yet on the client, await bootstrap() before deciding.
-  //   3) Server check via requireAdminSSR (Bearer header or cookie).
-  //   4) Last-chance browser-side user_roles lookup (RLS allows users to
-  //      view their OWN roles) — covers the SSR-cookie-missing race.
-  //   5) Only then redirect with a toast.
   beforeLoad: async ({ location }) => {
-    // On the SERVER (SSR / direct URL hit), do NOT redirect — the Supabase
-    // session lives in localStorage on the client and the sb-access-token
-    // cookie may not yet be set on a first direct navigation. Let the page
-    // shell render; the client branch below gates access after hydration.
+    // Skip on SSR — gate runs client-side after hydration.
     if (typeof window === "undefined") return;
 
+    const checks: DiagCheck[] = [];
+
     try {
+      // 1) Auth store
       let { user, hydrated } = useAuthStore.getState();
       if (!hydrated) {
         await useAuthStore.getState().bootstrap();
         ({ user, hydrated } = useAuthStore.getState());
       }
-      if (hydrated && user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN")) {
-        return;
-      }
+      const storeOk = !!(hydrated && user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN"));
+      checks.push({
+        name: "Auth store role",
+        ok: storeOk,
+        detail: hydrated
+          ? user
+            ? `role=${user.role ?? "none"} (${user.email ?? user.username ?? "?"})`
+            : "hydrated, no user"
+          : "store not hydrated",
+      });
+      if (storeOk) return;
 
+      // 2) Server check (Bearer / cookie)
       try {
         const result = await requireAdminSSR();
+        checks.push({
+          name: "Server admin check",
+          ok: !!result?.ok,
+          detail: result?.ok ? "ok=true" : "ok=false (no token / not admin)",
+        });
         if (result?.ok) return;
       } catch (e) {
         if (isRedirect(e)) throw e;
+        checks.push({
+          name: "Server admin check",
+          ok: false,
+          detail: `error: ${(e as Error)?.message ?? "unknown"}`,
+        });
       }
 
+      // 3) Direct DB role lookup
       const { data: sess } = await supabase.auth.getSession();
       const uid = sess.session?.user?.id;
-      if (uid) {
-        const { data: roleRow } = await supabase
+      if (!uid) {
+        checks.push({
+          name: "DB user_roles lookup",
+          ok: false,
+          detail: "no client session (not signed in)",
+        });
+      } else {
+        const { data: roleRow, error: roleErr } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", uid)
           .eq("role", "admin")
           .maybeSingle();
-        if (roleRow) {
+        const dbOk = !!roleRow && !roleErr;
+        checks.push({
+          name: "DB user_roles lookup",
+          ok: dbOk,
+          detail: roleErr
+            ? `query error: ${roleErr.message}`
+            : roleRow
+              ? `admin row found for ${uid}`
+              : `no admin row for ${uid}`,
+        });
+        if (dbOk) {
           void useAuthStore.getState().refreshProfile();
           return;
         }
       }
     } catch (e) {
       if (isRedirect(e)) throw e;
+      checks.push({
+        name: "Gate exception",
+        ok: false,
+        detail: (e as Error)?.message ?? "unknown",
+      });
     }
 
+    saveDiag(checks);
     toast.error("Admin access required", {
-      description: "Please sign in with an admin account.",
+      description: "See the diagnostic panel for which checks failed.",
     });
     throw redirect({
-      to: "/login",
-      search: { redirect: location.href, error: "forbidden" } as never,
+      to: "/admin-forbidden",
+      search: { from: location.href } as never,
     });
   },
   errorComponent: () => <Forbidden403 />,
@@ -86,22 +134,14 @@ export const Route = createFileRoute("/admin")({
 });
 
 function Forbidden403() {
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (typeof window !== "undefined") window.location.replace("/login");
-    }, 1500);
-    return () => clearTimeout(t);
-  }, []);
   return (
-    <div className="min-h-screen grid place-items-center bg-background px-6">
+    <div className="min-h-screen grid place-items-center bg-background px-6 py-10">
       <div className="max-w-md text-center space-y-4">
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-destructive/15 text-destructive">
           <ShieldX className="h-8 w-8" />
         </div>
         <h1 className="text-3xl font-display font-bold">403 — Forbidden</h1>
-        <p className="text-muted-foreground">
-          Admin access required. Redirecting to the login page…
-        </p>
+        <p className="text-muted-foreground">Admin access required.</p>
         <Button onClick={() => window.location.replace("/login")}>Go to Login</Button>
       </div>
     </div>

@@ -22,6 +22,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as JodiRouteImport } from './routes/jodi'
 import { Route as ChartsRouteImport } from './routes/charts'
 import { Route as AdminLoginRouteImport } from './routes/admin-login'
+import { Route as AdminForbiddenRouteImport } from './routes/admin-forbidden'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -135,6 +136,11 @@ const ChartsRoute = ChartsRouteImport.update({
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin-login',
   path: '/admin-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminForbiddenRoute = AdminForbiddenRouteImport.update({
+  id: '/admin-forbidden',
+  path: '/admin-forbidden',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -403,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin-forbidden': typeof AdminForbiddenRoute
   '/admin-login': typeof AdminLoginRoute
   '/charts': typeof ChartsRoute
   '/jodi': typeof JodiRoute
@@ -465,6 +472,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-forbidden': typeof AdminForbiddenRoute
   '/admin-login': typeof AdminLoginRoute
   '/charts': typeof ChartsRoute
   '/jodi': typeof JodiRoute
@@ -530,6 +538,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin-forbidden': typeof AdminForbiddenRoute
   '/admin-login': typeof AdminLoginRoute
   '/charts': typeof ChartsRoute
   '/jodi': typeof JodiRoute
@@ -595,6 +604,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/admin-forbidden'
     | '/admin-login'
     | '/charts'
     | '/jodi'
@@ -657,6 +667,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/admin-forbidden'
     | '/admin-login'
     | '/charts'
     | '/jodi'
@@ -721,6 +732,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/admin'
+    | '/admin-forbidden'
     | '/admin-login'
     | '/charts'
     | '/jodi'
@@ -786,6 +798,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AdminForbiddenRoute: typeof AdminForbiddenRoute
   AdminLoginRoute: typeof AdminLoginRoute
   ChartsRoute: typeof ChartsRoute
   JodiRoute: typeof JodiRoute
@@ -900,6 +913,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-login'
       fullPath: '/admin-login'
       preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-forbidden': {
+      id: '/admin-forbidden'
+      path: '/admin-forbidden'
+      fullPath: '/admin-forbidden'
+      preLoaderRoute: typeof AdminForbiddenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -1345,6 +1365,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
+  AdminForbiddenRoute: AdminForbiddenRoute,
   AdminLoginRoute: AdminLoginRoute,
   ChartsRoute: ChartsRoute,
   JodiRoute: JodiRoute,
@@ -1371,3 +1392,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
