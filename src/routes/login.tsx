@@ -190,7 +190,7 @@ function LoginPage() {
         <div className="w-full max-w-sm space-y-5">
           <div>
             <h1 className="font-display text-3xl font-bold">Sign in</h1>
-            <p className="text-sm text-muted-foreground mt-1">Sign in to your SattaKing Pro account.</p>
+            <p className="text-sm text-muted-foreground mt-1">New here? You'll be signed up automatically.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
