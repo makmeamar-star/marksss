@@ -90,16 +90,21 @@ function SlipBody({ onClose }: { onClose?: () => void }) {
             Your bet slip is empty. Pick a number to add bets.
           </div>
         )}
-        {slip.map((b) => (
+        {slip.map((b) => {
+          const closed = !isItemSessionOpen(b.marketId, b.session);
+          return (
           <motion.div
             key={b.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass rounded-lg p-3"
+            className={`glass rounded-lg p-3 ${closed ? "ring-1 ring-danger/50" : ""}`}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-xs text-muted-foreground">{b.marketName} · {b.session}</div>
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  {b.marketName} · {b.session}
+                  {closed && <span className="text-danger font-semibold">· closed</span>}
+                </div>
                 <div className="font-display text-sm font-semibold truncate">{b.betType}</div>
                 <div className="font-mono text-primary text-lg text-glow-gold mt-0.5">{b.betNumber}</div>
               </div>
