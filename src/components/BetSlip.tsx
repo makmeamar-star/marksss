@@ -16,15 +16,32 @@ function SlipBody({ onClose }: { onClose?: () => void }) {
   const clear = useBetStore((s) => s.clearSlip);
   const balance = useAuthStore((s) => s.user?.balance ?? 0);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
+  const { data: markets = [] } = useMarkets();
   const qc = useQueryClient();
   const [submitting, setSubmitting] = useState(false);
 
   const total = slip.reduce((s, x) => s + x.amount, 0);
   const potential = slip.reduce((s, x) => s + x.amount * x.payout, 0);
 
+  const isItemSessionOpen = (marketId: string, session: string) => {
+    const m = markets.find((x) => x.id === marketId);
+    if (!m) return true; // let server decide
+    return session === "OPEN" ? isOpenSessionOpen(m) : isCloseSessionOpen(m);
+  };
+
   const submit = async () => {
     if (slip.length === 0) return;
-    // Group by marketId — single RPC per market
+
+    // Drop items whose session window has already closed client-side
+    const stale = slip.filter((b) => !isItemSessionOpen(b.marketId, b.session));
+    if (stale.length > 0) {
+      stale.forEach((b) => remove(b.id));
+      toast.error(
+        `Removed ${stale.length} bet${stale.length > 1 ? "s" : ""} — ${b_label(stale[0])} session closed`,
+      );
+      return;
+    }
+
     const byMarket = new Map<string, typeof slip>();
     slip.forEach((b) => {
       const arr = byMarket.get(b.marketId) ?? [];
