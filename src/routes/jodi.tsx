@@ -112,7 +112,25 @@ function JodiPage() {
           })}
         </div>
 
-        <div className="mt-10 glass rounded-xl p-5 text-sm text-muted-foreground max-w-3xl">
+        <div className="mt-10 glass rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-xl font-bold">Yesterday's Jodi</h2>
+            <span className="text-[11px] uppercase tracking-widest text-muted-foreground">{yesterday}</span>
+          </div>
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-8">
+            {jodiMarkets.map((m) => {
+              const y = yResults.find((x) => x.marketId === m.id);
+              return (
+                <div key={m.id} className="rounded-lg bg-background/40 border border-border/60 p-3 text-center">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground truncate">{m.displayName}</div>
+                  <div className="font-mono text-2xl font-bold text-primary mt-1">{y?.jodi ?? "--"}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-6 glass rounded-xl p-5 text-sm text-muted-foreground max-w-3xl">
           <h2 className="font-semibold text-foreground mb-2">How Jodi works</h2>
           <p>Pick any 2-digit number from <span className="font-mono text-primary">00</span> to <span className="font-mono text-primary">99</span> before the market closes. If your Jodi matches the declared result, you win <span className="text-primary font-semibold">90×</span> your stake. Markets run all 7 days a week.</p>
         </div>
