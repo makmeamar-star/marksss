@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useBetStore } from "@/stores/betStore";
 import { useAuthStore } from "@/stores/authStore";
-import { placeBets } from "@/hooks/useGameData";
+import { placeBets, useMarkets } from "@/hooks/useGameData";
+import { isOpenSessionOpen, isCloseSessionOpen } from "@/lib/marketTime";
 
 function SlipBody({ onClose }: { onClose?: () => void }) {
   const slip = useBetStore((s) => s.slip);
@@ -15,15 +16,31 @@ function SlipBody({ onClose }: { onClose?: () => void }) {
   const clear = useBetStore((s) => s.clearSlip);
   const balance = useAuthStore((s) => s.user?.balance ?? 0);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
+  const { data: markets = [] } = useMarkets();
   const qc = useQueryClient();
   const [submitting, setSubmitting] = useState(false);
 
   const total = slip.reduce((s, x) => s + x.amount, 0);
   const potential = slip.reduce((s, x) => s + x.amount * x.payout, 0);
 
+  const isItemSessionOpen = (marketId: string, session: string) => {
+    const m = markets.find((x) => x.id === marketId);
+    if (!m) return true; // let server decide
+    return session === "OPEN" ? isOpenSessionOpen(m) : isCloseSessionOpen(m);
+  };
+
   const submit = async () => {
     if (slip.length === 0) return;
-    // Group by marketId — single RPC per market
+
+    // Drop items whose session window has already closed client-side
+    const stale = slip.filter((b) => !isItemSessionOpen(b.marketId, b.session));
+    if (stale.length > 0) {
+      const sessions = Array.from(new Set(stale.map((s) => s.session))).join(" & ");
+      stale.forEach((b) => remove(b.id));
+      toast.error(`Removed ${stale.length} bet${stale.length > 1 ? "s" : ""} — ${sessions} session closed`);
+      return;
+    }
+
     const byMarket = new Map<string, typeof slip>();
     slip.forEach((b) => {
       const arr = byMarket.get(b.marketId) ?? [];
@@ -73,16 +90,21 @@ function SlipBody({ onClose }: { onClose?: () => void }) {
             Your bet slip is empty. Pick a number to add bets.
           </div>
         )}
-        {slip.map((b) => (
+        {slip.map((b) => {
+          const closed = !isItemSessionOpen(b.marketId, b.session);
+          return (
           <motion.div
             key={b.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass rounded-lg p-3"
+            className={`glass rounded-lg p-3 ${closed ? "ring-1 ring-danger/50" : ""}`}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-xs text-muted-foreground">{b.marketName} · {b.session}</div>
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  {b.marketName} · {b.session}
+                  {closed && <span className="text-danger font-semibold">· closed</span>}
+                </div>
                 <div className="font-display text-sm font-semibold truncate">{b.betType}</div>
                 <div className="font-mono text-primary text-lg text-glow-gold mt-0.5">{b.betNumber}</div>
               </div>
@@ -99,7 +121,8 @@ function SlipBody({ onClose }: { onClose?: () => void }) {
               <span className="font-mono text-success">₹{(b.amount * b.payout).toLocaleString("en-IN")}</span>
             </div>
           </motion.div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="border-t border-border/60 p-3 space-y-2">
