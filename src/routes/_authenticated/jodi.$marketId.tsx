@@ -132,7 +132,13 @@ function JodiBetPage() {
                 <Badge className="bg-primary/15 text-primary border-primary/40">Payout {payout}×</Badge>
               </div>
             </div>
-            <CountdownTimer targetTime={market.closeTime} label="Closes in" />
+            {canBet ? (
+              <CountdownTimer targetTime={market.closeTime} label="Closes in" />
+            ) : (
+              <Badge variant="outline" className="text-danger border-danger/40">
+                <Lock className="h-3 w-3 mr-1" /> Closed for today
+              </Badge>
+            )}
           </div>
 
           {/* Stake selector */}
