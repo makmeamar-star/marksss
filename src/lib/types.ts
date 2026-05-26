@@ -32,6 +32,7 @@ export interface Market {
   status: MarketStatus;
   isOpen: boolean;
   isCore?: boolean;
+  isJodiOnly?: boolean;
   minBet: number;
   maxBet: number;
   payouts: {
