@@ -20,20 +20,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { ShieldX } from "lucide-react";
 import { toast } from "sonner";
 
-import { requireAdminSSR } from "@/lib/adminGuardSSR.functions";
-
-type DiagCheck = { name: string; ok: boolean; detail: string };
-const DIAG_KEY = "admin_access_diag";
-
-function saveDiag(checks: DiagCheck[]) {
-  if (typeof window === "undefined") return;
-  try {
-    sessionStorage.setItem(
-      DIAG_KEY,
-      JSON.stringify({ checks, at: new Date().toISOString() }),
-    );
-  } catch {}
-}
 
 export const Route = createFileRoute("/admin")({
   // NOTE: Admin authorization is enforced server-side on every mutation
