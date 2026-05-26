@@ -1,42 +1,84 @@
-# Direct Sign-In as the Primary Entry Point
+## Goal
 
-Replace the "create an account" friction with a single sign-in surface. Every method (Google, Apple, email OTP, phone OTP, email+password) auto-creates the account on first use. The dedicated registration form stays available as a fallback but is no longer the default.
+1. **Add a hard-override** for declared results that admins can use anytime (not just within the 10-minute correction window), with confirmation + audit trail.
+2. **Run an end-to-end test pass** against the live preview using a fresh test account: signup → linked accounts → deposit → bet → admin declare → settlement → withdrawal → admin actions.
 
-## What changes for the user
+---
 
-- Landing CTA "Create Account" / "Sign Up" buttons → "Sign In" (single button everywhere).
-- `/register` no longer linked from the header, hero, or empty states. The route still exists for users who land on it via old links.
-- `/login` becomes the one-stop screen:
-  - **Continue with Google** (already wired)
-  - **Continue with Apple** (already wired, Lovable-managed)
-  - **Email** tab → email + 6-digit OTP (no password step; account is created automatically on first verify)
-  - **Phone** tab → mobile + 6-digit OTP (account auto-created)
-  - Small "Use password instead" link reveals the existing password form for returning users
-- Footer of `/login`: "New here? You'll be signed up automatically." (replaces "Don't have an account? Register")
+## Part 1 — Manual Result Override (build)
 
-## What stays the same
+### Backend
 
-- Auth backend, RLS, profile auto-creation trigger, admin role for khanchitku67@gmail.com.
-- `/forgot-password` and `/reset-password` flows.
-- `/register` route file (kept for deep links and for users who explicitly want the full form with referral code) — just hidden from primary nav.
+**New migration: `system_admin_override_result` DB function.**
+Same shape as the existing `correct_result` (admin gate, reason required, reverses settled bets, re-settles with new pana, writes `wallet_transactions` of type `CORRECTION_REVERSAL`), but:
 
-## Files to touch
+- No 10-minute window check.
+- Stricter inputs: requires `reason` length ≥ 20 chars + a confirmation token `confirm = 'I_UNDERSTAND_THIS_RESETTLES'` so it can't be triggered accidentally by the regular correction code path.
+- Tags audit metadata with `override = true`.
+- Inserts a `system_alerts` row (severity `warning`) so it's visible on the admin monitoring page.
 
-- `src/routes/login.tsx` — reorder tabs so Email-OTP is the default, demote password form behind a toggle, update footer copy, ensure social buttons are above tabs.
-- `src/routes/index.tsx` and `src/components/SiteHeader.tsx` (or equivalent) — change every "Create Account" / "Register" CTA to "Sign In" pointing at `/login`.
-- `src/routes/register.tsx` — add a top banner "Most people just sign in — it creates your account automatically. [Sign in instead]" linking to `/login`. No logic change.
-- Hydration mismatch fix on `/` (the `15` vs `0` counter on home) — wrap the dynamic number in a client-only render so SSR and CSR agree. Unrelated to auth but currently spamming the console.
+Audit row written to `audit_log`:
+```
+action          = 'ADMIN_HARD_OVERRIDE'
+previous_pana   = <old>
+pana            = <new>
+reason          = <admin's reason>
+metadata.override = true, metadata.affected_bets = N, metadata.payout_delta = X
+```
 
-## Out of scope
+**New server fn**: `src/lib/adminOverride.functions.ts` → `adminOverrideResult`
+- `requireSupabaseAuth` middleware
+- Re-checks admin role via service-role lookup (same pattern as `adminDeclareResult`)
+- Zod-validates `{ marketId, sessionDate, session, newPana, reason, confirm }`
+- Calls the new RPC, returns `{ ok, oldPana, newPana, winners, losers, payoutDelta }`
 
-- No DB migrations.
-- No changes to admin guard, results declare, or audit log.
-- SMS provider still not configured — phone OTP UI works but won't send until Twilio/MSG91 is added in Cloud → Auth.
+### Frontend
 
-## Acceptance
+**New component**: `src/components/admin/declare/HardOverrideDialog.tsx`
+- Red-themed Dialog (not the gold/glass styling of CorrectResultDialog).
+- Top banner: "⚠ Hard Override — bypasses the 10-minute window and re-settles all bets. Users may have already withdrawn winnings."
+- Fields: New Pana, Reason (min 20 chars), checkbox "I understand this re-settles all bets and may produce negative balances", text confirm `"OVERRIDE"`.
+- Submit button stays disabled until all three are satisfied.
+- On success: toast with payout delta, invalidate `["admin", "declared"]` and `["admin", "history"]` queries.
 
-1. Visiting `/` shows only "Sign In" (no "Create Account" anywhere primary).
-2. `/login` opens with Google + Apple buttons on top, Email OTP tab selected by default.
-3. Entering a brand-new email on the Email tab → receive OTP → verify → account is created (profile + role rows via existing trigger) and user lands on dashboard.
-4. Same for a brand-new phone number once SMS is configured.
-5. `/register` still works for anyone who reaches it directly.
+**Wiring**: In `DeclaredTodayPanel` and `results.history.tsx`, add a second row action "Hard override" (icon: `AlertTriangle`) next to the existing "Correct" button. The existing Correct button stays for the 10-min window; the new one is always enabled for declared rows.
+
+### Out of scope
+
+- No change to the existing `CorrectResultDialog` / `correct_result` flow.
+- No DB change to allow negative balances; the function will refund wins by reducing balance even if it goes negative — same behavior as today's `correct_result`.
+
+---
+
+## Part 2 — End-to-End Test Pass (build, after Part 1 ships)
+
+Test account: `qa+e2e@lovable.test`, password `TestPass!2026`. All actions performed via the browser tool against the preview URL.
+
+| # | Flow | Steps | What I verify |
+|---|------|-------|---------------|
+| 1 | Signup (email+password) | `/register` → fill form → submit | Account row in `auth.users`, `profiles` + `user_roles` rows auto-created |
+| 2 | Linked accounts | Sign in → `/linked-accounts` → confirm identities list loads, "Link Google" disabled state, email/phone OTP inputs render | UI renders, no console errors |
+| 3 | Forgot password | `/forgot-password` → enter email → check `auth_logs` | recovery email request logged |
+| 4 | Deposit | `/wallet` → request ₹500 deposit via UPI → admin approves in `/admin/deposits` | `deposit_requests.status='APPROVED'`, `profiles.balance += 500`, `wallet_transactions` row inserted |
+| 5 | Place bet | `/markets` → pick an open market → place ₹50 single-digit bet | `bets` row with status `PENDING`, balance debited |
+| 6 | Admin declare (normal path) | Log in as admin → `/admin/results/declare` → declare the market's session | Bets settle to `WON`/`LOST`, balances updated |
+| 7 | **Hard override (new)** | Same market → "Hard override" → enter different pana + reason | Old win reversed, new settlement applied, audit_log shows `ADMIN_HARD_OVERRIDE`, system_alerts row appears |
+| 8 | Quick play | `/play/quick` → place ₹20 quick bet → wait/admin-declare quick round | `quick_bets` settled |
+| 9 | Withdrawal | `/wallet` → request ₹200 withdrawal → admin approves in `/admin/withdrawals` | `withdrawal_requests.status='APPROVED'`, balance debited |
+| 10 | Self-exclusion | `/settings/limits` → set daily bet limit ₹100 → try to bet ₹500 | Bet blocked with limit message |
+| 11 | Admin panels smoke | Open every admin page (`bets`, `users`, `kyc`, `monitoring`, `risk`, `broadcasts`, `payments`, `support`) | Each loads without console errors |
+| 12 | Logout + remember-me | Log out → log back in with "remember me" off → close tab logic | Session cleared as expected |
+
+After the run I'll write a short report: ✅/❌ per flow, screenshots of any failures, and the test account's final DB state (balance, bet count, ledger entries) read via `supabase--read_query`. Test data is left in place per your choice.
+
+Destructive flows I'll skip without explicit OK: deleting the test user, hard-overriding any market that has real (non-test) bets attached.
+
+---
+
+## Files touched (Part 1)
+
+- `supabase/migrations/<new>_admin_override_result.sql` — new RPC + grants
+- `src/lib/adminOverride.functions.ts` — new server fn
+- `src/components/admin/declare/HardOverrideDialog.tsx` — new component
+- `src/components/admin/declare/DeclaredTodayPanel.tsx` — add action button
+- `src/routes/admin/results.history.tsx` — add action button
