@@ -5,6 +5,7 @@ import { NumberReveal } from "./NumberReveal";
 import { CountdownTimer } from "./CountdownTimer";
 import { ResultAlertBell } from "./ResultAlertBell";
 import type { Market, MarketResult } from "@/lib/types";
+import { isAcceptingBets } from "@/lib/marketTime";
 
 interface Props {
   market: Market;
