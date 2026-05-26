@@ -225,3 +225,31 @@ function humanizeError(msg: string): string {
   if (msg.includes("AUTH_REQUIRED")) return "Please log in.";
   return msg.replace(/^.*?:\s*/, "");
 }
+
+/* ---------------- Live "accepting bets" selector ---------------- */
+// Ticks every 15s so time-based UI (badges, sort order, sections) self-heals
+// without depending on the cached `market.isOpen` flag.
+export function useLiveTick(intervalMs = 15_000) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => setTick((t) => t + 1), intervalMs);
+    return () => clearInterval(i);
+  }, [intervalMs]);
+  return tick;
+}
+
+export function useLiveAcceptingMarkets() {
+  const { data: markets = [] } = useMarkets();
+  const tick = useLiveTick(15_000);
+  return useMemo(() => {
+    const accepting = markets
+      .filter((m) => isAcceptingBets(m))
+      .map((m) => ({ m, cutoff: nextCutoffHHMM(m) ?? "99:99" }))
+      .sort((a, b) => a.cutoff.localeCompare(b.cutoff))
+      .map((x) => x.m);
+    const acceptingIds = new Set(accepting.map((m) => m.id));
+    const others = markets.filter((m) => !acceptingIds.has(m.id));
+    return { accepting, others };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markets, tick]);
+}
