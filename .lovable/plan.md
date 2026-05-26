@@ -1,70 +1,76 @@
-## Goal
+# Simplify Admin + Harden Declare / Automation / Scrape
 
-Make login feel instant, the home/results pages snap on first paint, and the admin dashboard scroll/load without spinners — without changing any features.
+Goal: make the admin console focused on daily ops, and verify the three result-flow pages (Declare, Automation, Scrape) actually work end-to-end.
 
-## What's actually slow (measured from the code)
+---
 
-1. **Login does triple round-trips before navigating.** `authStore.login()` runs `signInWithPassword` → then `loadUserFor()` (2 sequential queries: `profiles` + `user_roles`) → then `onAuthStateChange` fires and runs the same `loadUserFor()` again → then `goByRole()` navigates → then `/login`'s `beforeLoad` and `/admin`'s `beforeLoad` each re-query roles. That's 4–6 serial DB calls per sign-in.
-2. **`/login` `beforeLoad` always hits the DB**, even for guests visiting the page, before showing the form.
-3. **Home page fires 3 separate Supabase queries on mount** (`useMarkets`, `useResultsForDate`, `useLatestResultsPerMarket`) and hydrates with empty data, so the markets grid + schedule pop in late. SSR can't help because they use the browser client.
-4. **Admin pages each open their own realtime channel + run queries with no `staleTime`** — every navigation refetches, every focus refetches.
-5. **Heavy libs imported eagerly** in many routes: `framer-motion`, `recharts`, `embla-carousel`, full `lucide-react` barrels in admin nav, `react-day-picker`. Bundle bloat = slow first paint, especially on 4G.
-6. **Image assets are JPG/PNG**, no AVIF/WebP variants, no `loading="lazy"` discipline, no `fetchpriority="high"` on the hero/LCP image.
+## 1. Hide demo + clutter from the admin dashboard
 
-## Plan
+**`src/routes/admin/index.tsx`**
+- Remove the `DemoLoginToggle` section entirely (component + render + `KeyRound` import + the `Switch`/`useQueryClient`/`useState`/`toast` imports it owns).
+- Trim Quick-action tiles to the daily-use set:
+  Markets, Declare, Automation, Scraper, History, Deposits, Withdrawals, Users.
+  Drop: Alerts, Observations, Automation Audit.
 
-### A. Auth flow — remove serial round-trips (biggest win)
+**`src/routes/admin.tsx` (sidebar `NAV`)**
+- Keep (in this order): Dashboard, Markets, Users, Bets Monitor, Declare Results, Result History, Automation, Scraper, Deposits, Withdrawals, Payment Channels, Customer Support, KYC Review.
+- Move into a collapsed "Advanced" group at the bottom (still reachable, just out of the way): Automation Runs, Automation Audit, Broadcasts, Risk & Ops, Monitoring, PWA Funnel.
 
-1. **Single source of truth.** Make `onAuthStateChange` the only place that calls `loadUserFor()`. `login()` just calls `signInWithPassword`, then awaits `hydrated` flipping or the next user update. No duplicate fetch.
-2. **Parallelise profile + roles** inside `loadUserFor` (already is, keep).
-3. **Combine profile + roles into one RPC** `get_me()` → `{ profile, is_admin }`. One round-trip instead of two. Add a Postgres function + `grant execute to authenticated`.
-4. **Drop the roles query in `/login` `beforeLoad`.** Read `useAuthStore.user.role` from the existing in-memory state (already populated by bootstrap); only fall back to DB if `!hydrated`.
-5. **Optimistic navigate-after-login.** Navigate immediately on `signInWithPassword` success; let the role-aware redirect happen in `/dashboard` or `/admin` `beforeLoad` if needed. No spinner-blocking on profile load.
-6. **`/admin` guard via context, not server-fn.** Replace the per-navigation `requireAdminSSR()` call with a `useAuthStore` context check (only fall back to DB on cold SSR).
+**`src/routes/admin/results.declare.tsx`**
+- Right column: keep `PendingTodayPanel` + `DeclaredTodayPanel`. Remove `PanaReferencePanel` and `ActivityFeedPanel`.
+- Bottom: remove `AuditLogPanel` and `ShortcutsLegend` (shortcuts still work, just no on-screen legend).
+- Keep `MissingResultsBanner`, header, `SessionSelectorCard`, `PanaInputCard`, `ImpactPreviewCard`, `DeclareButton`.
 
-### B. Home + results — instant first paint
+**`src/routes/admin/results.scrape.tsx`**
+- Drop "Backfill history" card (rarely used, confuses operators).
+- Drop "Per-market latest status" table — duplicated by Source coverage.
+- Keep: stat tiles, Source coverage with Refresh, "Run scraper now" button, Recent attempts table (limited to 20 rows for readability).
 
-1. **Migrate the three home queries to `ensureQueryData` + `useSuspenseQuery`** with a route-level loader, so the markets grid and schedule render with real data on first frame (no empty-state flash).
-2. **Increase `staleTime`** on `useMarkets` (already 5 min — keep), `useLatestResultsPerMarket` (set to 5 min), `useResultsForDate` (60s, realtime keeps it fresh).
-3. **Coalesce realtime channels.** One shared channel for `market_results` instead of one per hook instance. Reduces websocket churn.
-4. **Lazy-load below-the-fold sections** (Schedule table, Quick stats) with `React.lazy` + Suspense fallback skeletons sized to prevent CLS.
+**`src/routes/admin/results.automation.tsx`**
+- Remove "Grace (min)" column input and "Last run" column from the main table — leave only Market, Times, Auto OPEN, Auto CLOSE. Grace stays at default in DB.
+- Keep "Run scheduler now" button and the explanatory footer.
 
-### C. Admin dashboard — kill the spinners
+---
 
-1. **Default `staleTime: 30_000` + `refetchOnWindowFocus: false`** in the QueryClient so tab-switching doesn't refetch.
-2. **One shared admin realtime channel** per page family (results, payments, support) instead of per-query.
-3. **Code-split heavy admin widgets** (`recharts` on monitoring/analytics, `react-day-picker` on date filters) so the admin shell loads fast and the chart loads only when its tab opens.
-4. **Pre-fetch on hover** of admin nav links via TanStack's `preload="intent"` so clicks feel instant.
+## 2. Debug + harden Declare Result flow
 
-### D. Bundle + asset diet
+Current behaviour that breaks UX:
+- `DeclareButton.handleConfirm` calls `qc.invalidateQueries()` with no key → invalidates *every* query in the app, including auth/profile/markets. That's part of the post-declare lag and occasional UI flashes.
+- After a successful server declare, it also runs the local `declareResult()` mirror which can double-toast.
 
-1. **Targeted lucide imports** (`lucide-react/icons/zap`) in the admin sidebar and other icon-dense files. Saves ~80 KB gzipped.
-2. **`framer-motion` → `motion`** drop-in (lighter, tree-shakable) where the project uses only `motion.div` + simple variants. Keep `framer-motion` where layout/AnimatePresence is needed.
-3. **`vite-imagetools` AVIF/WebP variants** for hero + market thumbnails. Add `fetchpriority="high"` on the LCP image via `head().links`.
-4. **`loading="lazy"` and `decoding="async"`** on all below-the-fold `<img>` tags.
-5. **Defer `web-push` + service-worker registration** to `requestIdleCallback` so it doesn't compete with first paint.
+Fix:
+- Remove the catch-all `qc.invalidateQueries()`; keep only the targeted keys.
+- Only fall back to the local mirror if the server declare succeeded *and* you actually need the digit; otherwise just toast success once and invalidate.
+- Surface server error messages verbatim (the RPC returns useful text like "session already declared" — keep it).
+- Add a small "Result already declared" guard: before opening confirm dialog, check `DeclaredTodayPanel`'s data; if same market+session already has a pana, switch the CTA to "Correct" via the existing `CorrectResultDialog` path.
 
-### E. Polish (subtle, no feature changes)
+## 3. Debug + harden Automation
 
-1. **Skeletons that match real layout** for: home results grid, admin tables, jodi page sections. No more "Loading…" text.
-2. **View Transitions API** for route changes (progressive-enhancement: Chrome/Edge get the smooth cross-fade, others fall back).
-3. **Sonner toast variants tuned** — shorter durations for success, action button for retryable errors.
-4. **Persistent query cache** (already wired via `useQueryCachePersistence`) — verify it's actually mounted in `__root.tsx` and add a 24h max-age so cold reloads paint with cached data instantly.
+- The "Run scheduler now" button calls `run_due_auto_declarations` RPC directly. Wire the same call into a small server-fn (`runDueAutoDeclarations`) so it goes through `requireSupabaseAuth` middleware and shows a clear error toast on RLS failure (current direct RPC silently no-ops if the user role check fails).
+- Verify a `pg_cron` job exists hitting `/api/public/hooks/auto-declare-results` every minute. If missing, schedule it via the supabase insert tool (not a migration — it embeds the project URL).
+- On the page, show next-run countdown using `last_run_at` so admins can tell at a glance the scheduler is alive.
 
-### F. Verify
+## 4. Debug + harden Scrape
 
-- Add a one-time `browser--performance_profile` run before/after on `/`, `/login → /dashboard`, `/admin/results/declare` and report deltas (LCP, INP, JS heap, total transfer).
-- Sanity-check: no new hydration warnings, no spinner stuck > 300 ms on warm caches.
+- `runLive` mutation: surface `d.count` per-source breakdown in the toast (`OK: x, NOT_YET: y, ERROR: z`) so admins know whether nothing came back vs everything failed.
+- Add per-market Refresh failure path: today errors render as raw text — switch to the same `StatusBadge` styling.
+- Verify the `/api/public/hooks/scrape-results` cron job is scheduled every 2–3 minutes. If not, schedule it.
+- Verify `HOOK_SECRET` env var exists on the worker; if not, prompt to add via `add_secret` (blocks scrape from running).
 
-## Out of scope (call out, don't do)
+## 5. Verification
 
-- Backend schema redesigns beyond the one `get_me()` RPC.
-- Rewriting the realtime layer.
-- Visual redesign — palette, fonts, layout untouched.
+After the edits:
+1. Load `/admin` — confirm Demo toggle is gone, tile grid is 8 items, sidebar is shorter.
+2. Open `/admin/results/declare`, declare a test pana → single success toast, panels update without full-app refetch.
+3. Open `/admin/results/automation`, hit "Run scheduler now" → toast shows ran count.
+4. Open `/admin/results/scrape`, hit "Run scraper now" → toast shows attempt count + status breakdown.
+5. Check `cron.job` table to confirm scrape + auto-declare jobs are scheduled.
 
-## Expected outcomes
+---
 
-- Sign-in click → next page rendered: **~1.2 s → ~300 ms** on a warm network.
-- Home LCP: **~2.4 s → ~1.0 s** on 4G.
-- Admin route navigation: feels instant after the first visit (preload-on-hover + cached data).
-- Total JS shipped to a guest visitor: **~30–40 % smaller** after icon/motion/chart code-splitting.
+## Out of scope
+- Auth flow further tuning (already done in previous pass).
+- Re-skinning admin pages.
+- Adding new features beyond what's listed.
+
+If you want even fewer sidebar items or a different set of "daily use" tiles, say the word and I'll trim further before building.
