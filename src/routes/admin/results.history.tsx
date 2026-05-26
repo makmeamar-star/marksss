@@ -33,6 +33,7 @@ function ResultHistory() {
   const [marketId, setMarketId] = useState<string>("ALL");
   const [days, setDays] = useState<number>(30);
   const [search, setSearch] = useState("");
+  const [overriding, setOverriding] = useState<HardOverrideRow | null>(null);
 
   const { data: markets } = useQuery({
     queryKey: ["admin-markets-list"],
