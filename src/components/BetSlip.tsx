@@ -35,10 +35,9 @@ function SlipBody({ onClose }: { onClose?: () => void }) {
     // Drop items whose session window has already closed client-side
     const stale = slip.filter((b) => !isItemSessionOpen(b.marketId, b.session));
     if (stale.length > 0) {
+      const sessions = Array.from(new Set(stale.map((s) => s.session))).join(" & ");
       stale.forEach((b) => remove(b.id));
-      toast.error(
-        `Removed ${stale.length} bet${stale.length > 1 ? "s" : ""} — ${b_label(stale[0])} session closed`,
-      );
+      toast.error(`Removed ${stale.length} bet${stale.length > 1 ? "s" : ""} — ${sessions} session closed`);
       return;
     }
 
