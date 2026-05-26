@@ -17,7 +17,6 @@ function nowIST(): { hhmm: string; day: Day; date: string } {
   const parts = Object.fromEntries(fmt.formatToParts(new Date()).map((p) => [p.type, p.value]));
   const date = `${parts.year}-${parts.month}-${parts.day}`;
   const hhmm = `${parts.hour}:${parts.minute}`;
-  // weekday: "Mon", "Tue" etc.
   const wd = (parts.weekday || "Mon").slice(0, 3).toUpperCase();
   const day = (DAY_MAP.find((d) => d === wd) ?? "MON") as Day;
   return { hhmm, day, date };
@@ -27,9 +26,27 @@ export function todayIST(): string {
   return nowIST().date;
 }
 
-export function computeIsOpen(m: Pick<Market, "openTime" | "closeTime" | "days" | "status">): boolean {
+export function getNowHHMMIST(): string {
+  return nowIST().hhmm;
+}
+
+type MarketWindow = Pick<Market, "openTime" | "closeTime" | "days" | "status">;
+
+export function isOpenSessionOpen(m: MarketWindow): boolean {
   if (m.status !== "ACTIVE") return false;
   const { hhmm, day } = nowIST();
   if (!m.days.includes(day)) return false;
-  return hhmm >= m.openTime && hhmm < m.closeTime;
+  return hhmm < m.openTime;
+}
+
+export function isCloseSessionOpen(m: MarketWindow): boolean {
+  if (m.status !== "ACTIVE") return false;
+  const { hhmm, day } = nowIST();
+  if (!m.days.includes(day)) return false;
+  return hhmm < m.closeTime;
+}
+
+// "Open" = bettable today (either OPEN or CLOSE session still accepting bets).
+export function computeIsOpen(m: MarketWindow): boolean {
+  return isCloseSessionOpen(m);
 }
