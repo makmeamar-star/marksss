@@ -95,10 +95,10 @@ export function ResultCard({
         <div className="flex items-center gap-1 shrink-0">
           {declared ? (
             <Badge className="bg-primary/15 text-primary border-primary/40 text-[10px] px-1.5 py-0">DECLARED</Badge>
+          ) : accepting ? (
+            <Badge className="bg-success/15 text-success border-success/40 pulse-live text-[10px] px-1.5 py-0">OPEN</Badge>
           ) : isStale ? (
             <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/40 text-[10px] px-1.5 py-0">PENDING</Badge>
-          ) : market.isOpen ? (
-            <Badge className="bg-success/15 text-success border-success/40 pulse-live text-[10px] px-1.5 py-0">OPEN</Badge>
           ) : (
             <Badge variant="outline" className="text-muted-foreground text-[10px] px-1.5 py-0">CLOSED</Badge>
           )}
