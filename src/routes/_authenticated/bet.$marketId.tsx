@@ -148,6 +148,16 @@ function BetPage() {
             </div>
           </div>
 
+          {bothClosed && (
+            <div className="glass rounded-xl p-4 border border-danger/40 text-center">
+              <Lock className="h-5 w-5 mx-auto mb-2 text-danger" />
+              <p className="text-sm font-semibold text-danger">Betting closed for today</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Open cutoff {market.openTime} · Close cutoff {market.closeTime} (IST). New bets open in the next session.
+              </p>
+            </div>
+          )}
+
           {/* Bet type tabs */}
           <Tabs defaultValue="single" className="space-y-4">
             <TabsList className="bg-surface flex-wrap h-auto">
