@@ -1,0 +1,1 @@
+UPDATE public.markets SET is_jodi_only = true WHERE id IN ('ghaziabad','faridabad','gali','disawar','mohali','delhi_bazar','shri_ganesh','rajdhani_jodi');

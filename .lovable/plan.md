@@ -1,49 +1,44 @@
-## Problem
+## Goal
 
-For Kalyan, Sridevi Night (and any market whose result was prematurely written by the scraper), today's `market_results` row already has `open_pana` + `close_pana` even though the actual betting cutoffs (Kalyan 15:45/17:45, Sridevi Night 19:00/20:00) are still in the future. This breaks two things:
+Make Ghaziabad, Faridabad, Gali, Disawar, Mohali, Delhi Bazar, Shri Ganesh, and Rajdhani Jodi behave as Jodi + Single only (no Pana, no Sangam), keep auto-results running for them, and give you a clear list of which markets have auto-results vs which don't.
 
-1. **UI** shows a "DECLARED" badge and today's (wrong) numbers — users think the game is over.
-2. **`place_bets` RPC** flips `_open_session_open` / `_close_session_open` to `false` the moment a pana exists for that session, so every bet attempt fails with `OPEN_SESSION_CLOSED` / `CLOSE_SESSION_CLOSED`.
+## 1. DB migration — flag the 8 markets as Jodi-only
 
-The fix per the user's ask: while a session's cutoff hasn't passed, ignore today's pre-existing result, allow bets, badge OPEN, and show the previously declared result (with its date).
+Set `is_jodi_only = true` for: `ghaziabad`, `faridabad`, `gali`, `disawar`, `mohali`, `delhi_bazar`, `shri_ganesh`, `rajdhani_jodi`.
 
-## Plan
+Their `market_automation` rows already have `open_enabled = true` and `close_enabled = true`, and all 8 are wired to the `galidisawar` scraper source — so auto-declaration is already active. No automation change needed.
 
-### 1. `supabase/migrations/...sql` — relax `place_bets` time check
+## 2. Expose the flag in the app
 
-Replace the block:
+- `src/lib/types.ts` — add `isJodiOnly?: boolean` to `Market`.
+- `src/hooks/useGameData.ts` — map `r.is_jodi_only` → `isJodiOnly` alongside `isCore`.
 
-```sql
-IF FOUND AND _existing_result.open_pana  IS NOT NULL THEN _open_session_open  := false; END IF;
-IF FOUND AND _existing_result.close_pana IS NOT NULL THEN _close_session_open := false; END IF;
+## 3. Hide Pana / Half Sangam / Full Sangam on Jodi-only markets
+
+`src/routes/_authenticated/bet.$marketId.tsx` — when `market.isJodiOnly`:
+- Render only the **Single** and **Jodi** tabs in `TabsList`.
+- Drop the `TabsContent` for `pana`, `halfsangam`, `fullsangam`.
+- Keep the existing session/cutoff logic untouched.
+
+The standalone `/jodi/$marketId` route is already Jodi-only and needs no change.
+
+## 4. Auto-results coverage report
+
+You don't need new UI — your existing **Admin → Result Automation** page already shows per-market toggles. For convenience, here is the current state from your DB:
+
+**Auto-results ENABLED (44 markets)** — already declaring automatically:
+Delhi Bazar, Diamond, Diamond Night, Disawar, Faridabad, Gali, Ghaziabad, Kalyan, Kalyan Morning, Kalyan Night, Madhur Day, Madhur Night, Madhuri, Madhuri Night, Main Bazar, Main Bazar Day, Main Bazar Morning, Main Mumbai, Main Sridevi, Main Sridevi Day, Milan Day, Milan Morning, Milan Night, Mohali, New Time Bazar, Night Time Bazar, Prabhat, Puna Bazar, Puna Night, Rajdhani Day, Rajdhani Jodi, Rajdhani Morning, Rajdhani Night, Shri Ganesh, Sridevi, Sridevi Morning, Sridevi Night, Super Kalyan, Tara Mumbai Day, Tara Mumbai Night, Time Bazar, Time Bazar Day, Time Bazar Morning.
+
+**Auto-results DISABLED / no scraper source (29 markets)** — candidates to deactivate or delete:
+Banglore Day, Banglore Morning, Banglore Night, Bombay Day, Bombay Night, Central Mumbai, Jay Shree Day, Kalyan Sridevi, Kalyan Sridevi Night, Karnataka Day, Kuber Morning, Lucky Day, Maharani, Maharani Day, Maharani Night, Meena Bazar Day, Morning, Mumbai Day, Padmavathi, Padmavathi Night, Parel Day, Ratan Khatri, Shri Devi Day, Sri Dhanalaxmi, Star Tara Day, Star Tara Morning, Star Tara Night, Sunday Bazar, Super Goa Day, Worli Night.
+
+After you implement the plan, tell me which of the 29 to deactivate (sets `status = 'INACTIVE'`, keeps history) or delete (removes the row), and I'll prepare that migration.
+
+## Files touched
+
 ```
-
-with a time-gated version — a stale result only blocks a session *after* its cutoff has passed:
-
-```sql
-IF FOUND AND _existing_result.open_pana  IS NOT NULL AND _now_hhmm >= _market.open_time  THEN _open_session_open  := false; END IF;
-IF FOUND AND _existing_result.close_pana IS NOT NULL AND _now_hhmm >= _market.close_time THEN _close_session_open := false; END IF;
+supabase/migrations/<ts>_jodi_only_markets.sql   (new)
+src/lib/types.ts                                  (edit)
+src/hooks/useGameData.ts                          (edit)
+src/routes/_authenticated/bet.$marketId.tsx      (edit)
 ```
-
-Time remains the primary gate (the existing `_now_hhmm < open_time/close_time` checks above are untouched), so this is safe.
-
-### 2. `src/components/ResultCard.tsx` — treat today's result as not-yet-declared while accepting bets
-
-- Import `isAcceptingBets` from `@/lib/marketTime`.
-- Tick every 15 s (same pattern as `useLiveTick`) so the badge auto-flips at cutoff.
-- Compute `accepting = isAcceptingBets(market)`.
-- `const effectiveDeclared = result?.status === "DECLARED" && !accepting;` and use it everywhere `declared` was used.
-- Badge logic: if `accepting` → **OPEN** (green pulse), regardless of today's row. Otherwise keep the existing DECLARED / PENDING / CLOSED branches against `effectiveDeclared`.
-- Result body: when `accepting`, the existing `showFallbackSlot` / `usePrev` path already kicks in (since `effectiveDeclared` is false and dashboard passes `showPreviousFallback`), so the previous declared result + date label render automatically.
-
-### 3. No other UI changes
-
-`dashboard.tsx` already passes `showPreviousFallback` + `previousResult` + `previousLoading` / `previousError`, so the ResultCard change alone fixes the dashboard cards. `markets.tsx` badges already use the live `isAcceptingBets(m)` selector. `bet.$marketId.tsx` already uses live session windows — once the RPC is relaxed, submission works.
-
-## Result
-
-- Kalyan, Sridevi Night, and any other market whose time slot is still open will:
-  - Show **OPEN** badge.
-  - Show **yesterday's** (or latest previous) declared result with a "Prev · DD MMM" label.
-  - Accept bets through the bet page and bet slip without `*_SESSION_CLOSED` errors.
-- After the real cutoff passes, the existing DECLARED / PENDING logic resumes unchanged.
