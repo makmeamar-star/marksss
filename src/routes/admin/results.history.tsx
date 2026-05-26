@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Download, Search } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Download, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { HardOverrideDialog, type HardOverrideRow } from "@/components/admin/declare/HardOverrideDialog";
 
 export const Route = createFileRoute("/admin/results/history")({
   head: () => ({ meta: [{ title: "Result History — Admin" }] }),
