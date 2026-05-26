@@ -164,13 +164,14 @@ function ResultHistory() {
               <th className="px-4 py-3">Close</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Declared</th>
+              <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/40">
             {isLoading ? (
-              <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">Loading…</td></tr>
+              <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">Loading…</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">No results.</td></tr>
+              <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">No results.</td></tr>
             ) : filtered.map((r) => (
               <tr key={r.id} className="hover:bg-surface/40">
                 <td className="px-4 py-3 whitespace-nowrap">{r.session_date}</td>
@@ -192,12 +193,45 @@ function ResultHistory() {
                 <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                   {r.declared_at ? new Date(r.declared_at).toLocaleString() : "—"}
                 </td>
+                <td className="px-4 py-3 text-right whitespace-nowrap">
+                  <div className="inline-flex gap-2">
+                    {r.open_pana && (
+                      <button
+                        onClick={() => setOverriding({
+                          marketId: r.market_id,
+                          marketName: marketName(r.market_id),
+                          session: "OPEN",
+                          sessionDate: r.session_date,
+                          pana: r.open_pana!,
+                        })}
+                        className="text-[11px] text-destructive hover:underline inline-flex items-center gap-1"
+                      >
+                        <AlertTriangle className="h-3 w-3" /> Open
+                      </button>
+                    )}
+                    {r.close_pana && (
+                      <button
+                        onClick={() => setOverriding({
+                          marketId: r.market_id,
+                          marketName: marketName(r.market_id),
+                          session: "CLOSE",
+                          sessionDate: r.session_date,
+                          pana: r.close_pana!,
+                        })}
+                        className="text-[11px] text-destructive hover:underline inline-flex items-center gap-1"
+                      >
+                        <AlertTriangle className="h-3 w-3" /> Close
+                      </button>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       <div className="text-xs text-muted-foreground text-right">{filtered.length} rows</div>
+      <HardOverrideDialog row={overriding} onClose={() => setOverriding(null)} />
     </div>
   );
 }
