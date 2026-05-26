@@ -40,6 +40,14 @@ function JodiBetPage() {
 
   const payout = market.payouts.jodi;
 
+  // Tick so the close window recomputes live.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(i);
+  }, []);
+  const canBet = isCloseSessionOpen(market);
+
   const visibleJodis = useMemo(() => {
     switch (filter) {
       case "EVEN": return ALL_JODIS.filter((j) => Number(j) % 2 === 0);
