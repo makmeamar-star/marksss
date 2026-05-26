@@ -121,7 +121,8 @@ function SlipBody({ onClose }: { onClose?: () => void }) {
               <span className="font-mono text-success">₹{(b.amount * b.payout).toLocaleString("en-IN")}</span>
             </div>
           </motion.div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="border-t border-border/60 p-3 space-y-2">
