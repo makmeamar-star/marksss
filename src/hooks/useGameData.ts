@@ -27,6 +27,7 @@ function rowToMarket(r: any): Market {
       days: r.days, status: r.status,
     }),
     isCore: !!r.is_core,
+    isJodiOnly: !!r.is_jodi_only,
     minBet: Number(r.min_bet ?? 10),
     maxBet: Number(r.max_bet ?? 10000),
     payouts: { ...defaultPayouts, ...p },
