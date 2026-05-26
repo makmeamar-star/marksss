@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { format } from "date-fns";
-import { CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { declaredToday, type DeclaredMarketRow } from "@/lib/adminApi";
 import { CorrectResultDialog } from "./CorrectResultDialog";
+import { HardOverrideDialog, type HardOverrideRow } from "./HardOverrideDialog";
 
 export function DeclaredTodayPanel() {
   const { data = [] } = useQuery({
@@ -13,6 +14,7 @@ export function DeclaredTodayPanel() {
     refetchInterval: 30_000,
   });
   const [editing, setEditing] = useState<DeclaredMarketRow | null>(null);
+  const [overriding, setOverriding] = useState<HardOverrideRow | null>(null);
 
   return (
     <div className="rounded-2xl bg-card border border-border/60 p-4">
@@ -37,16 +39,32 @@ export function DeclaredTodayPanel() {
               <div className="text-[11px] text-muted-foreground ml-5">
                 By: {d.declaredBy}
               </div>
-              <div className="ml-5 mt-1">
+              <div className="ml-5 mt-1 flex items-center gap-3">
                 {d.correctionWindowOpen ? (
                   <button
                     onClick={() => setEditing(d)}
                     className="text-[11px] text-primary hover:underline"
                   >
-                    Correct Result ({Math.ceil(d.correctionRemainingMs / 60_000)}m left)
+                    Correct ({Math.ceil(d.correctionRemainingMs / 60_000)}m left)
                   </button>
                 ) : (
-                  <span className="text-[11px] text-muted-foreground">Correction window expired</span>
+                  <span className="text-[11px] text-muted-foreground">Window expired</span>
+                )}
+                {d.session !== "JODI" && (
+                  <button
+                    onClick={() =>
+                      setOverriding({
+                        marketId: d.marketId,
+                        marketName: d.marketName,
+                        session: d.session as "OPEN" | "CLOSE",
+                        sessionDate: new Date(d.declaredAt).toISOString().slice(0, 10),
+                        pana: d.pana,
+                      })
+                    }
+                    className="text-[11px] text-destructive hover:underline inline-flex items-center gap-1"
+                  >
+                    <AlertTriangle className="h-3 w-3" /> Hard override
+                  </button>
                 )}
               </div>
             </li>
@@ -55,6 +73,7 @@ export function DeclaredTodayPanel() {
       )}
 
       <CorrectResultDialog row={editing} onClose={() => setEditing(null)} />
+      <HardOverrideDialog row={overriding} onClose={() => setOverriding(null)} />
     </div>
   );
 }
