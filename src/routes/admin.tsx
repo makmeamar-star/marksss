@@ -124,7 +124,7 @@ export const Route = createFileRoute("/admin")({
       description: "See the diagnostic panel for which checks failed.",
     });
     throw redirect({
-      to: "/admin/forbidden",
+      to: "/admin-forbidden",
       search: { from: location.href } as never,
     });
   },

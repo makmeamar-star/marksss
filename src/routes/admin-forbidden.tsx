@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 type DiagCheck = { name: string; ok: boolean; detail: string };
 type DiagPayload = { checks: DiagCheck[]; at: string };
 
-export const Route = createFileRoute("/admin/forbidden")({
+export const Route = createFileRoute("/admin-forbidden")({
   validateSearch: (s: Record<string, unknown>) => ({
     from: typeof s.from === "string" ? s.from : "",
   }),
