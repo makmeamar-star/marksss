@@ -269,12 +269,12 @@ function JodiBetPage() {
             </div>
             <Button
               onClick={addAllToSlip}
-              disabled={picked.size === 0}
+              disabled={picked.size === 0 || !canBet}
               size="sm"
               className="h-8 text-xs bg-gradient-gold text-background font-bold hover:opacity-90 flex-1 max-w-xs"
             >
               <Plus className="h-4 w-4 mr-1" />
-              Add {picked.size > 0 ? `${picked.size} Jodi` : "to slip"}
+              {!canBet ? "Betting closed" : `Add ${picked.size > 0 ? `${picked.size} Jodi` : "to slip"}`}
             </Button>
           </div>
         </div>
