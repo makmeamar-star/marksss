@@ -31,16 +31,20 @@ export const Route = createFileRoute("/admin")({
   //      view their OWN roles) — covers the SSR-cookie-missing race.
   //   5) Only then redirect with a toast.
   beforeLoad: async ({ location }) => {
+    // On the SERVER (SSR / direct URL hit), do NOT redirect — the Supabase
+    // session lives in localStorage on the client and the sb-access-token
+    // cookie may not yet be set on a first direct navigation. Let the page
+    // shell render; the client branch below gates access after hydration.
+    if (typeof window === "undefined") return;
+
     try {
-      if (typeof window !== "undefined") {
-        let { user, hydrated } = useAuthStore.getState();
-        if (!hydrated) {
-          await useAuthStore.getState().bootstrap();
-          ({ user, hydrated } = useAuthStore.getState());
-        }
-        if (hydrated && user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN")) {
-          return;
-        }
+      let { user, hydrated } = useAuthStore.getState();
+      if (!hydrated) {
+        await useAuthStore.getState().bootstrap();
+        ({ user, hydrated } = useAuthStore.getState());
+      }
+      if (hydrated && user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN")) {
+        return;
       }
 
       try {
@@ -48,36 +52,29 @@ export const Route = createFileRoute("/admin")({
         if (result?.ok) return;
       } catch (e) {
         if (isRedirect(e)) throw e;
-        // fall through to last-chance check
       }
 
-      // Last-chance: query the DB directly as the current user.
-      if (typeof window !== "undefined") {
-        const { data: sess } = await supabase.auth.getSession();
-        const uid = sess.session?.user?.id;
-        if (uid) {
-          const { data: roleRow } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", uid)
-            .eq("role", "admin")
-            .maybeSingle();
-          if (roleRow) {
-            // Refresh the store so subsequent navs hit the fast path.
-            void useAuthStore.getState().refreshProfile();
-            return;
-          }
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user?.id;
+      if (uid) {
+        const { data: roleRow } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", uid)
+          .eq("role", "admin")
+          .maybeSingle();
+        if (roleRow) {
+          void useAuthStore.getState().refreshProfile();
+          return;
         }
       }
     } catch (e) {
       if (isRedirect(e)) throw e;
     }
 
-    if (typeof window !== "undefined") {
-      toast.error("Admin access required", {
-        description: "Please sign in with an admin account.",
-      });
-    }
+    toast.error("Admin access required", {
+      description: "Please sign in with an admin account.",
+    });
     throw redirect({
       to: "/login",
       search: { redirect: location.href, error: "forbidden" } as never,
