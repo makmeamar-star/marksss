@@ -18,28 +18,29 @@ import { LiveClock } from "@/components/admin/LiveClock";
 import { ShieldX } from "lucide-react";
 import { toast } from "sonner";
 
+import { requireAdminSSR } from "@/lib/adminGuardSSR.functions";
+
 export const Route = createFileRoute("/admin")({
+  // SSR-safe: runs on both server (reading sb-access-token cookie set by
+  // useAuthCookieSync) and client (via attached Bearer header). Returns
+  // { ok: boolean } so we redirect — never throws a 403 during SSR.
   beforeLoad: async ({ location }) => {
-    if (typeof window === "undefined") return;
-    const { supabase } = await import("@/integrations/supabase/client");
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      throw redirect({ to: "/login", search: { redirect: location.href } as never });
+    try {
+      const result = await requireAdminSSR();
+      if (result?.ok) return;
+    } catch {
+      // Treat any transport/runtime error as "not authorized" and redirect.
     }
-    const { data: roleRow } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", data.session.user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleRow) {
-      // Non-admin authenticated user — surface 403 then bounce to /login.
-      toast.error("403 — Admin access required", {
-        description: "You don't have permission to view this page.",
+    // On the client, surface a toast before bouncing for clearer UX.
+    if (typeof window !== "undefined") {
+      toast.error("Admin access required", {
+        description: "Please sign in with an admin account.",
       });
-      try { await supabase.auth.signOut(); } catch { /* noop */ }
-      throw redirect({ to: "/login", search: { error: "forbidden" } as never });
     }
+    throw redirect({
+      to: "/login",
+      search: { redirect: location.href, error: "forbidden" } as never,
+    });
   },
   // Admin check is done client-side in beforeLoad above (which has session access).
   // Calling requireAdmin() as a server-fn loader fails during SSR/prerender (no Bearer

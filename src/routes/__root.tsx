@@ -15,6 +15,7 @@ import { AgeGate } from "@/components/AgeGate";
 import { reportError } from "@/lib/errorReporter";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useQueryCachePersistence } from "@/components/PersistedQueryProvider";
+import { useAuthCookieSync } from "@/lib/authCookieSync";
 import { BottomNav } from "@/components/BottomNav";
 import { InstallPrompt } from "@/components/InstallPrompt";
 
@@ -149,6 +150,7 @@ function RootComponent() {
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const hydrated = useAuthStore((s) => s.hydrated);
   useQueryCachePersistence(queryClient);
+  useAuthCookieSync();
   useEffect(() => {
     if (!hydrated) void bootstrap();
   }, [hydrated, bootstrap]);
