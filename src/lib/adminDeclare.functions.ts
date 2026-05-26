@@ -77,14 +77,30 @@ export const adminDeclareResult = createServerFn({ method: "POST" })
       rpcRes = r;
     }
 
+    // Resolve actor email for traceability
+    let actorEmail: string | null = null;
+    try {
+      const { data: u } = await supabaseAdmin.auth.admin.getUserById(userId);
+      actorEmail = u?.user?.email ?? null;
+    } catch {
+      /* ignore */
+    }
+
     await supabaseAdmin.from("audit_log").insert({
       actor_id: userId,
+      actor_email: actorEmail,
       action: "ADMIN_MANUAL_DECLARE",
       market_id: data.marketId,
       session_date: data.sessionDate,
       session: data.session,
       pana: data.value,
       reason: "Manual admin declaration via Declare Results screen",
+      metadata: {
+        bet_type: data.session,
+        value: data.value,
+        declared_at: new Date().toISOString(),
+        rpc_result: rpcRes ?? null,
+      },
     });
 
     return { ok: true as const, result: rpcRes };

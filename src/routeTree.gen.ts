@@ -54,6 +54,7 @@ import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authent
 import { Route as AdminResultsScrapeRouteImport } from './routes/admin/results.scrape'
 import { Route as AdminResultsObservationsRouteImport } from './routes/admin/results.observations'
 import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
+import { Route as AdminResultsDeclareAuditRouteImport } from './routes/admin/results.declare-audit'
 import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.declare'
 import { Route as AdminResultsAutomationRunsRouteImport } from './routes/admin/results.automation-runs'
 import { Route as AdminResultsAutomationAuditRouteImport } from './routes/admin/results.automation-audit'
@@ -301,6 +302,12 @@ const AdminResultsHistoryRoute = AdminResultsHistoryRouteImport.update({
   path: '/results/history',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminResultsDeclareAuditRoute =
+  AdminResultsDeclareAuditRouteImport.update({
+    id: '/results/declare-audit',
+    path: '/results/declare-audit',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminResultsDeclareRoute = AdminResultsDeclareRouteImport.update({
   id: '/results/declare',
   path: '/results/declare',
@@ -457,6 +464,7 @@ export interface FileRoutesByFullPath {
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
+  '/admin/results/declare-audit': typeof AdminResultsDeclareAuditRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
   '/admin/results/observations': typeof AdminResultsObservationsRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
@@ -520,6 +528,7 @@ export interface FileRoutesByTo {
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
+  '/admin/results/declare-audit': typeof AdminResultsDeclareAuditRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
   '/admin/results/observations': typeof AdminResultsObservationsRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
@@ -586,6 +595,7 @@ export interface FileRoutesById {
   '/admin/results/automation-audit': typeof AdminResultsAutomationAuditRoute
   '/admin/results/automation-runs': typeof AdminResultsAutomationRunsRoute
   '/admin/results/declare': typeof AdminResultsDeclareRoute
+  '/admin/results/declare-audit': typeof AdminResultsDeclareAuditRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
   '/admin/results/observations': typeof AdminResultsObservationsRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
@@ -652,6 +662,7 @@ export interface FileRouteTypes {
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
+    | '/admin/results/declare-audit'
     | '/admin/results/history'
     | '/admin/results/observations'
     | '/admin/results/scrape'
@@ -715,6 +726,7 @@ export interface FileRouteTypes {
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
+    | '/admin/results/declare-audit'
     | '/admin/results/history'
     | '/admin/results/observations'
     | '/admin/results/scrape'
@@ -780,6 +792,7 @@ export interface FileRouteTypes {
     | '/admin/results/automation-audit'
     | '/admin/results/automation-runs'
     | '/admin/results/declare'
+    | '/admin/results/declare-audit'
     | '/admin/results/history'
     | '/admin/results/observations'
     | '/admin/results/scrape'
@@ -1139,6 +1152,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResultsHistoryRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/results/declare-audit': {
+      id: '/admin/results/declare-audit'
+      path: '/results/declare-audit'
+      fullPath: '/admin/results/declare-audit'
+      preLoaderRoute: typeof AdminResultsDeclareAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/results/declare': {
       id: '/admin/results/declare'
       path: '/results/declare'
@@ -1329,6 +1349,7 @@ interface AdminRouteChildren {
   AdminResultsAutomationAuditRoute: typeof AdminResultsAutomationAuditRoute
   AdminResultsAutomationRunsRoute: typeof AdminResultsAutomationRunsRoute
   AdminResultsDeclareRoute: typeof AdminResultsDeclareRoute
+  AdminResultsDeclareAuditRoute: typeof AdminResultsDeclareAuditRoute
   AdminResultsHistoryRoute: typeof AdminResultsHistoryRoute
   AdminResultsObservationsRoute: typeof AdminResultsObservationsRoute
   AdminResultsScrapeRoute: typeof AdminResultsScrapeRoute
@@ -1353,6 +1374,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminResultsAutomationAuditRoute: AdminResultsAutomationAuditRoute,
   AdminResultsAutomationRunsRoute: AdminResultsAutomationRunsRoute,
   AdminResultsDeclareRoute: AdminResultsDeclareRoute,
+  AdminResultsDeclareAuditRoute: AdminResultsDeclareAuditRoute,
   AdminResultsHistoryRoute: AdminResultsHistoryRoute,
   AdminResultsObservationsRoute: AdminResultsObservationsRoute,
   AdminResultsScrapeRoute: AdminResultsScrapeRoute,
