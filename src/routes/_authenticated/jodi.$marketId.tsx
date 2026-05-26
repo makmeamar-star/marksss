@@ -86,6 +86,7 @@ function JodiBetPage() {
   };
 
   const addAllToSlip = () => {
+    if (!canBet) return toast.error("Betting closed for today");
     if (picked.size === 0) return toast.error("Select at least one Jodi");
     if (amount < market.minBet) return toast.error(`Min bet ₹${market.minBet}`);
     if (amount > market.maxBet) return toast.error(`Max bet ₹${market.maxBet}`);
@@ -94,7 +95,8 @@ function JodiBetPage() {
       addToSlip({
         marketId: market.id,
         marketName: market.displayName,
-        session: "OPEN",
+        // Jodi settles with the CLOSE result, so the close-time cutoff applies.
+        session: "CLOSE",
         betType: "JODI",
         betNumber: num,
         amount,
