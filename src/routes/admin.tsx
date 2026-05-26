@@ -20,133 +20,51 @@ import { supabase } from "@/integrations/supabase/client";
 import { ShieldX } from "lucide-react";
 import { toast } from "sonner";
 
-import { requireAdminSSR } from "@/lib/adminGuardSSR.functions";
-
-type DiagCheck = { name: string; ok: boolean; detail: string };
-const DIAG_KEY = "admin_access_diag";
-
-function saveDiag(checks: DiagCheck[]) {
-  if (typeof window === "undefined") return;
-  try {
-    sessionStorage.setItem(
-      DIAG_KEY,
-      JSON.stringify({ checks, at: new Date().toISOString() }),
-    );
-  } catch {}
-}
 
 export const Route = createFileRoute("/admin")({
+  // NOTE: Admin authorization is enforced server-side on every mutation
+  // (see src/lib/adminGuard.functions.ts and adminDeclare.functions.ts,
+  // both of which check user_roles via supabaseAdmin). The previous
+  // client-side gate caused false-positive 403s when the auth store or
+  // session hadn't fully hydrated. The gate has been removed; the layout
+  // simply requires the user to be signed in.
   beforeLoad: async ({ location }) => {
-    // Skip on SSR — gate runs client-side after hydration.
     if (typeof window === "undefined") return;
 
-    const checks: DiagCheck[] = [];
-
-    try {
-      // 1) Auth store
-      let { user, hydrated } = useAuthStore.getState();
-      if (!hydrated) {
-        await useAuthStore.getState().bootstrap();
-        ({ user, hydrated } = useAuthStore.getState());
-      }
-      const storeOk = !!(hydrated && user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN"));
-      checks.push({
-        name: "Auth store role",
-        ok: storeOk,
-        detail: hydrated
-          ? user
-            ? `role=${user.role ?? "none"} (${user.email ?? user.username ?? "?"})`
-            : "hydrated, no user"
-          : "store not hydrated",
-      });
-      if (storeOk) return;
-
-      // 2) Server check (Bearer / cookie)
-      try {
-        const result = await requireAdminSSR();
-        checks.push({
-          name: "Server admin check",
-          ok: !!result?.ok,
-          detail: result?.ok ? "ok=true" : "ok=false (no token / not admin)",
-        });
-        if (result?.ok) return;
-      } catch (e) {
-        if (isRedirect(e)) throw e;
-        checks.push({
-          name: "Server admin check",
-          ok: false,
-          detail: `error: ${(e as Error)?.message ?? "unknown"}`,
-        });
-      }
-
-      // 3) Direct DB role lookup
-      const { data: sess } = await supabase.auth.getSession();
-      const uid = sess.session?.user?.id;
-      if (!uid) {
-        checks.push({
-          name: "DB user_roles lookup",
-          ok: false,
-          detail: "no client session (not signed in)",
-        });
-      } else {
-        const { data: roleRow, error: roleErr } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", uid)
-          .eq("role", "admin")
-          .maybeSingle();
-        const dbOk = !!roleRow && !roleErr;
-        checks.push({
-          name: "DB user_roles lookup",
-          ok: dbOk,
-          detail: roleErr
-            ? `query error: ${roleErr.message}`
-            : roleRow
-              ? `admin row found for ${uid}`
-              : `no admin row for ${uid}`,
-        });
-        if (dbOk) {
-          void useAuthStore.getState().refreshProfile();
-          return;
-        }
-      }
-    } catch (e) {
-      if (isRedirect(e)) throw e;
-      checks.push({
-        name: "Gate exception",
-        ok: false,
-        detail: (e as Error)?.message ?? "unknown",
-      });
+    // Ensure auth store is hydrated, then require a signed-in session.
+    let { user, hydrated } = useAuthStore.getState();
+    if (!hydrated) {
+      await useAuthStore.getState().bootstrap();
+      ({ user, hydrated } = useAuthStore.getState());
     }
 
-    saveDiag(checks);
-    toast.error("Admin access required", {
-      description: "See the diagnostic panel for which checks failed.",
-    });
-    throw redirect({
-      to: "/admin-forbidden",
-      search: { from: location.href } as never,
-    });
+    if (!user) {
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess.session) {
+        toast.error("Please sign in to access admin");
+        throw redirect({ to: "/login", search: { redirect: location.href } as never });
+      }
+    }
   },
-  errorComponent: () => <Forbidden403 />,
+  errorComponent: ({ error, reset }) => {
+    if (isRedirect(error)) return null;
+    return (
+      <div className="min-h-screen grid place-items-center bg-background px-6 py-10">
+        <div className="max-w-md text-center space-y-4">
+          <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-destructive/15 text-destructive">
+            <ShieldX className="h-8 w-8" />
+          </div>
+          <h1 className="text-3xl font-display font-bold">Something went wrong</h1>
+          <p className="text-muted-foreground text-sm">{error?.message ?? "Unknown error"}</p>
+          <Button onClick={() => reset()}>Retry</Button>
+        </div>
+      </div>
+    );
+  },
   head: () => ({ meta: [{ title: "Admin — SattaKing Pro" }] }),
   component: AdminLayout,
 });
 
-function Forbidden403() {
-  return (
-    <div className="min-h-screen grid place-items-center bg-background px-6 py-10">
-      <div className="max-w-md text-center space-y-4">
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-destructive/15 text-destructive">
-          <ShieldX className="h-8 w-8" />
-        </div>
-        <h1 className="text-3xl font-display font-bold">403 — Forbidden</h1>
-        <p className="text-muted-foreground">Admin access required.</p>
-        <Button onClick={() => window.location.replace("/login")}>Go to Login</Button>
-      </div>
-    </div>
-  );
-}
 
 const NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
