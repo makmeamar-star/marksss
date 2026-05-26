@@ -50,22 +50,20 @@ export function DeclaredTodayPanel() {
                 ) : (
                   <span className="text-[11px] text-muted-foreground">Window expired</span>
                 )}
-                {d.session !== "JODI" && (
-                  <button
-                    onClick={() =>
-                      setOverriding({
-                        marketId: d.marketId,
-                        marketName: d.marketName,
-                        session: d.session as "OPEN" | "CLOSE",
-                        sessionDate: new Date(d.declaredAt).toISOString().slice(0, 10),
-                        pana: d.pana,
-                      })
-                    }
-                    className="text-[11px] text-destructive hover:underline inline-flex items-center gap-1"
-                  >
-                    <AlertTriangle className="h-3 w-3" /> Hard override
-                  </button>
-                )}
+                <button
+                  onClick={() =>
+                    setOverriding({
+                      marketId: d.marketId,
+                      marketName: d.marketName,
+                      session: d.session,
+                      sessionDate: new Date(d.declaredAt).toISOString().slice(0, 10),
+                      pana: d.pana,
+                    })
+                  }
+                  className="text-[11px] text-destructive hover:underline inline-flex items-center gap-1"
+                >
+                  <AlertTriangle className="h-3 w-3" /> Hard override
+                </button>
               </div>
             </li>
           ))}
