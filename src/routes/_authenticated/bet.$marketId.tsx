@@ -106,16 +106,23 @@ function BetPage() {
           <div className="glass rounded-xl p-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-1 rounded-lg bg-surface p-1">
-                {(["OPEN", "CLOSE"] as const).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSession(s)}
-                    className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all
-                      ${session === s ? "bg-gradient-gold text-background" : "text-muted-foreground hover:text-foreground"}`}
-                  >
-                    {s} Session
-                  </button>
-                ))}
+                {(["OPEN", "CLOSE"] as const).map((s) => {
+                  const avail = s === "OPEN" ? openOpen : closeOpen;
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => avail && setSession(s)}
+                      disabled={!avail}
+                      title={!avail ? `${s} session closed` : undefined}
+                      className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-1
+                        ${session === s && avail ? "bg-gradient-gold text-background" : "text-muted-foreground hover:text-foreground"}
+                        ${!avail ? "opacity-40 cursor-not-allowed line-through" : ""}`}
+                    >
+                      {!avail && <Lock className="h-3 w-3" />}
+                      {s} Session
+                    </button>
+                  );
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs uppercase tracking-widest text-muted-foreground">Stake</span>
