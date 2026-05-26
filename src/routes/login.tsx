@@ -190,7 +190,7 @@ function LoginPage() {
         <div className="w-full max-w-sm space-y-5">
           <div>
             <h1 className="font-display text-3xl font-bold">Sign in</h1>
-            <p className="text-sm text-muted-foreground mt-1">Sign in to your SattaKing Pro account.</p>
+            <p className="text-sm text-muted-foreground mt-1">New here? You'll be signed up automatically.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -207,11 +207,11 @@ function LoginPage() {
             <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">or</span></div>
           </div>
 
-          <Tabs defaultValue="email" className="w-full">
+          <Tabs defaultValue="email-otp" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="email"><Mail className="mr-1.5 h-3.5 w-3.5" />Password</TabsTrigger>
-              <TabsTrigger value="email-otp"><Mail className="mr-1.5 h-3.5 w-3.5" />Email OTP</TabsTrigger>
+              <TabsTrigger value="email-otp"><Mail className="mr-1.5 h-3.5 w-3.5" />Email</TabsTrigger>
               <TabsTrigger value="phone"><Phone className="mr-1.5 h-3.5 w-3.5" />Phone</TabsTrigger>
+              <TabsTrigger value="email"><Mail className="mr-1.5 h-3.5 w-3.5" />Password</TabsTrigger>
             </TabsList>
 
             <TabsContent value="email" className="space-y-4 pt-4">
@@ -295,7 +295,7 @@ function LoginPage() {
           </Tabs>
 
           <p className="text-sm text-center text-muted-foreground">
-            Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
+            Prefer the full sign-up form? <Link to="/register" className="text-primary hover:underline">Create account</Link>
           </p>
 
           <div className="pt-3 border-t border-border/60">
