@@ -295,7 +295,7 @@ function LoginPage() {
           </Tabs>
 
           <p className="text-sm text-center text-muted-foreground">
-            Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
+            Prefer the full sign-up form? <Link to="/register" className="text-primary hover:underline">Create account</Link>
           </p>
 
           <div className="pt-3 border-t border-border/60">
