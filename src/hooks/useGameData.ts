@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Bet, BetStatus, Market, MarketResult, ResultStatus, SessionType, BetType, Day } from "@/lib/types";
-import { computeIsOpen, todayIST } from "@/lib/marketTime";
+import { computeIsOpen, isAcceptingBets, nextCutoffHHMM, todayIST } from "@/lib/marketTime";
 import { useAuthStore } from "@/stores/authStore";
+
 
 const defaultPayouts = {
   single: 9, jodi: 90, singlePana: 150, doublePana: 300,
