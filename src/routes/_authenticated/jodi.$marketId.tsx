@@ -1,5 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { isCloseSessionOpen } from "@/lib/marketTime";
+import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Shuffle, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
