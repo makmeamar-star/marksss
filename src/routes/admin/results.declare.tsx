@@ -57,6 +57,11 @@ function DeclarePage() {
               <HistoryIcon className="h-4 w-4 mr-1.5" /> History
             </Link>
           </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/admin/results/declare-audit">
+              <ShieldCheck className="h-4 w-4 mr-1.5" /> Audit Log
+            </Link>
+          </Button>
         </div>
       </div>
 
