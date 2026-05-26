@@ -93,7 +93,13 @@ function BetPage() {
                 <Badge variant="outline">Pana {market.payouts.singlePana}x</Badge>
               </div>
             </div>
-            <CountdownTimer targetTime={market.closeTime} label="Closes in" />
+            {bothClosed ? (
+              <Badge variant="outline" className="text-danger border-danger/40">
+                <Lock className="h-3 w-3 mr-1" /> Closed for today
+              </Badge>
+            ) : (
+              <CountdownTimer targetTime={countdownTarget} label={countdownLabel} />
+            )}
           </div>
 
           {/* Session toggle */}
