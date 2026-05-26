@@ -1,34 +1,63 @@
-# Expand `/jodi` to all 8 Jodi markets
+# End-to-End Test Plan: Admin Dashboard + User Experience
 
-All 8 markets you listed already exist in the database with auto-result scraping enabled (source: sattaking.in via the `galidisawar` scraper). The only thing missing is that `src/routes/jodi.tsx` currently hardcodes just 4 IDs (`gali, disawar, faridabad, ghaziabad`), so the other 4 are invisible on the Jodi page.
+I'll drive the live preview as both a regular user and an admin, exercise the full money flow, and capture any 403s, broken UI, or logic bugs. No code changes happen during testing — anything I find gets reported back with a separate fix plan.
 
-## What changes
+## Scope
 
-**`src/routes/jodi.tsx`** — extend the market list:
+**User-side flows**
+1. Signup / login (existing demo or new account)
+2. Wallet — view balance, transaction history
+3. Deposit request — pick channel, submit UTR + screenshot, see PENDING state
+4. Place a bet (Jodi market + a Pana market)
+5. Quick game round (place + observe settlement)
+6. Withdrawal request — submit, see PENDING
+7. Notifications, KYC submission, promo code redemption, referrals page
+8. Jodi page — verify the 8 markets + "Yesterday's Jodi" section render with live data
 
-```ts
-const JODI_MARKET_IDS = [
-  "gali", "disawar", "faridabad", "ghaziabad",
-  "mohali", "delhi_bazar", "shri_ganesh", "rajdhani_jodi",
-] as const;
-```
+**Admin-side flows** (all the routes that were 403'ing previously)
+1. `/admin` dashboard loads, no 403 during SSR or client nav
+2. Declare result — pick a market/session, set Pana, confirm Jodi auto-computes, see bets settle
+3. Automation panel — toggle open/close automation, change mode, save
+4. Payment channels — create/edit/disable a channel
+5. Deposit approvals — approve + reject a pending request, balance updates on user side
+6. Withdrawal approvals — approve + reject, balance + ledger correct
+7. Customer service / support views — open user detail, view bets/KYC/notes
+8. KYC review queue — approve/reject submission
+9. Promo codes — create/edit, view redemptions
+10. Audit log, system alerts, scrape log visible
 
-Grid already collapses to `sm:grid-cols-2 lg:grid-cols-4` — 8 cards lay out as 2 rows on desktop, no layout work needed.
+## Method
 
-**Previous-result fallback** — already wired. The page reads:
-```ts
-const r = results.find(x => x.marketId === m.id && x.sessionDate === today)
-       ?? latestPerMarket[m.id];
-```
-So if today's result isn't declared yet, the card shows the most recent declared Jodi from `useLatestResultsPerMarket()`. We'll add a tiny `"(yesterday)"` / date label under the number when falling back, so users can tell it's not today's number.
+For each flow I'll:
+1. Navigate via the browser tool (real preview, real DB).
+2. Capture a screenshot at the key state.
+3. Check console + network for 4xx/5xx, hydration mismatches, RLS errors.
+4. Cross-check DB rows via `supabase--read_query` where balance/ledger correctness matters.
+5. Check `stack_modern--server-function-logs` and `supabase--analytics_query` if a server fn fails.
 
-**Auto-result** — no change needed. All 8 markets already have:
-- `market_automation.mode = RANDOM`, both open/close enabled
-- `market_source_map` row pointing at the `galidisawar` (sattaking.in) scraper
-- The existing `pg_cron` scrape + auto-declare jobs already iterate every enabled source row
+## Destructive-action safety
 
-## Out of scope
+- I'll prefer the logged-in preview user for user-side actions.
+- For admin approvals I'll act on requests I just created myself in the same session (so no real user money is moved).
+- I will NOT delete users, mass-update balances, or touch unrelated production rows.
+- I'll explicitly call out anything I skip for safety.
 
-- No DB migrations (markets, sources, automation already seeded).
-- No scraper code changes — `src/lib/scraper/galidisawar.server.ts` already handles `mohali`, `delhi_bazar`, `shri_ganesh`, `rajdhani` slugs if sattaking.in lists them; if a site doesn't list one on a given day, the card falls back to the last declared result, which is exactly the behavior you asked for.
-- Other pages (Home, /markets, admin) already read from `markets` table dynamically and already include these markets.
+## Known issues already visible (will verify, not fix in this pass)
+
+- Runtime: `Unauthorized: No authorization header provided` — protected serverFn fired before session hydrated. Will confirm which route triggers it.
+- Runtime: SSR hydration mismatch on `HomePage` (date/time text rendered server-side differs from client IST). Will pinpoint the node.
+
+## Deliverable
+
+A single report grouped by area:
+- ✅ Works
+- ⚠️ Works but rough (UX, copy, slow)
+- ❌ Broken (with exact route, request, error, and suspected root cause)
+
+After you review the report, I'll write a focused fix plan for the ❌ items.
+
+## Need from you before I start
+
+1. **Admin credentials** to use in the preview (email + password), or confirmation that the currently logged-in preview session is already admin.
+2. **A test user account** (or permission to sign up a fresh one like `qa+<timestamp>@test.local`) for the user-side flows.
+3. Confirmation it's OK to create real PENDING deposit/withdrawal rows in the DB during the test (they'll be resolved by me in the same run).
