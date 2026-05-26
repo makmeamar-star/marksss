@@ -5,6 +5,7 @@ import { NumberReveal } from "./NumberReveal";
 import { CountdownTimer } from "./CountdownTimer";
 import { ResultAlertBell } from "./ResultAlertBell";
 import type { Market, MarketResult } from "@/lib/types";
+import { isAcceptingBets } from "@/lib/marketTime";
 
 interface Props {
   market: Market;
@@ -25,7 +26,17 @@ export function ResultCard({
   previousError,
   onRetryPrevious,
 }: Props) {
-  const declared = result?.status === "DECLARED";
+  const rawDeclared = result?.status === "DECLARED";
+  // Ignore a pre-existing result row while the market is still accepting bets,
+  // so a prematurely-scraped result doesn't show "DECLARED" before the cutoff.
+  const [accepting, setAccepting] = useState(false);
+  useEffect(() => {
+    const check = () => setAccepting(isAcceptingBets(market));
+    check();
+    const id = setInterval(check, 15_000);
+    return () => clearInterval(id);
+  }, [market]);
+  const declared = rawDeclared && !accepting;
   const openText = result?.openPana && result?.openDigit !== undefined
     ? `${result.openPana}-${result.openDigit}`
     : undefined;
@@ -84,10 +95,10 @@ export function ResultCard({
         <div className="flex items-center gap-1 shrink-0">
           {declared ? (
             <Badge className="bg-primary/15 text-primary border-primary/40 text-[10px] px-1.5 py-0">DECLARED</Badge>
+          ) : accepting ? (
+            <Badge className="bg-success/15 text-success border-success/40 pulse-live text-[10px] px-1.5 py-0">OPEN</Badge>
           ) : isStale ? (
             <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/40 text-[10px] px-1.5 py-0">PENDING</Badge>
-          ) : market.isOpen ? (
-            <Badge className="bg-success/15 text-success border-success/40 pulse-live text-[10px] px-1.5 py-0">OPEN</Badge>
           ) : (
             <Badge variant="outline" className="text-muted-foreground text-[10px] px-1.5 py-0">CLOSED</Badge>
           )}

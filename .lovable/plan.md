@@ -1,51 +1,49 @@
-## Goals
+## Problem
 
-1. Dashboard "Active Markets" should show only markets currently accepting bets in either OPEN or CLOSE session, refreshed live.
-2. Kalyan (and every other market) must accept CLOSE bets during its CLOSE window (e.g. 15:45–17:45 for Kalyan), not just before its OPEN cutoff.
-3. Across the dashboard and `/markets`, bet-accepting markets are sorted to the top.
+For Kalyan, Sridevi Night (and any market whose result was prematurely written by the scraper), today's `market_results` row already has `open_pana` + `close_pana` even though the actual betting cutoffs (Kalyan 15:45/17:45, Sridevi Night 19:00/20:00) are still in the future. This breaks two things:
 
-## Root cause for #2
+1. **UI** shows a "DECLARED" badge and today's (wrong) numbers — users think the game is over.
+2. **`place_bets` RPC** flips `_open_session_open` / `_close_session_open` to `false` the moment a pana exists for that session, so every bet attempt fails with `OPEN_SESSION_CLOSED` / `CLOSE_SESSION_CLOSED`.
 
-`market.isOpen` is computed once inside the `useMarkets` query mapper (`src/hooks/useGameData.ts` line 24) using `computeIsOpen`. That value is cached by React Query and never recomputes as the clock moves, so once Kalyan crosses its OPEN cutoff at 15:45 the cached `isOpen` and any UI that depends on it goes stale, and pages that gate "Bet Now" / session tabs on `market.isOpen` instead of a live `isCloseSessionOpen(market)` check treat Kalyan as closed for the rest of its CLOSE window.
-
-The DB `place_bets` RPC already allows CLOSE bets while `now() AT TIME ZONE 'Asia/Kolkata' < market.close_time`, so this is a pure client-side staleness bug.
+The fix per the user's ask: while a session's cutoff hasn't passed, ignore today's pre-existing result, allow bets, badge OPEN, and show the previously declared result (with its date).
 
 ## Plan
 
-### 1. `src/lib/marketTime.ts`
-- Add a single helper `isAcceptingBets(m)` = `isOpenSessionOpen(m) || isCloseSessionOpen(m)`.
-- Keep `computeIsOpen` returning `isCloseSessionOpen` (current behavior) — but no UI should rely on the cached value for hard gates anymore.
+### 1. `supabase/migrations/...sql` — relax `place_bets` time check
 
-### 2. `src/hooks/useGameData.ts`
-- Stop baking time-dependent flags into the cached Market. Remove `isOpen` from the mapped object (or compute it but mark it advisory only) and update `Market.isOpen` in `src/lib/types.ts` to `isOpen?: boolean` so existing reads still compile.
-- Reduce the cache window slightly (e.g. `staleTime: 30s`) so the badge eventually self-heals on refetch; live correctness comes from helpers below.
+Replace the block:
 
-### 3. New `useLiveAcceptingMarkets` hook (in `src/hooks/useGameData.ts`)
-- Reads `useMarkets()`, ticks every 15 seconds, returns `{ accepting, others }` where `accepting` is the subset where `isAcceptingBets(m)` is true, sorted by closest upcoming cutoff (`min(openTime if openOpen, closeTime if closeOpen)` ascending). `others` keeps original order.
+```sql
+IF FOUND AND _existing_result.open_pana  IS NOT NULL THEN _open_session_open  := false; END IF;
+IF FOUND AND _existing_result.close_pana IS NOT NULL THEN _close_session_open := false; END IF;
+```
 
-### 4. `src/routes/_authenticated/dashboard.tsx`
-- Replace the "Active Markets" section: title becomes "Markets accepting bets now", grid shows `accepting` (cap at 6). If `accepting.length === 0`, render an empty state ("No markets are accepting bets right now — check back soon") with a link to `/markets`.
-- Each card keeps the existing `ResultCard` + adds the "Bet Now" CTA (mirroring the home page) so users can act immediately.
+with a time-gated version — a stale result only blocks a session *after* its cutoff has passed:
 
-### 5. `src/routes/markets.tsx`
-- Add the same per-second/15s tick.
-- After the existing filter pipeline, sort the result so `isAcceptingBets(m)` markets come first (within that group sort by closest upcoming cutoff), then non-accepting markets in their current order.
-- Replace the existing `m.isOpen ? "Open" : "Closed"` badge with a live check using `isOpenSessionOpen`/`isCloseSessionOpen` so Kalyan shows "Open" through 17:45.
-- "Bet Now" button stays enabled whenever `isAcceptingBets(m)` is true (currently it always links through — keep it visible but gray out when not accepting).
+```sql
+IF FOUND AND _existing_result.open_pana  IS NOT NULL AND _now_hhmm >= _market.open_time  THEN _open_session_open  := false; END IF;
+IF FOUND AND _existing_result.close_pana IS NOT NULL AND _now_hhmm >= _market.close_time THEN _close_session_open := false; END IF;
+```
 
-### 6. `src/routes/_authenticated/bet.$marketId.tsx` (Kalyan fix verification)
-- The page already uses live `isOpenSessionOpen` / `isCloseSessionOpen` and auto-switches OPEN→CLOSE when OPEN closes, so functionally it should already accept Kalyan CLOSE bets between 15:45 and 17:45. Audit:
-  - Confirm the auto-switch effect runs before the user clicks (it does — runs on mount tick).
-  - Make sure the "Closed for today" banner only renders when **both** windows are closed (already correct).
-- No server-side change needed.
+Time remains the primary gate (the existing `_now_hhmm < open_time/close_time` checks above are untouched), so this is safe.
 
-### 7. Verification
-- During Kalyan CLOSE window (15:45–17:45 IST): bet page lands on CLOSE tab, OPEN tab locked, countdown targets 17:45, placing a CLOSE single succeeds.
-- Dashboard "Markets accepting bets now" lists Kalyan with a Bet Now button during that window and removes it after 17:45.
-- `/markets` lists Kalyan at the top with green "Open" badge during the CLOSE window, drops to the closed group after 17:45.
-- Markets with both sessions still open (e.g. before openTime) appear at the very top, sorted by which closes soonest.
+### 2. `src/components/ResultCard.tsx` — treat today's result as not-yet-declared while accepting bets
 
-## Out of scope
-- No DB/RPC changes.
-- No changes to the bet slip submission logic (already handled in the prior fix).
-- No new markets list page; just sort/badge tweaks.
+- Import `isAcceptingBets` from `@/lib/marketTime`.
+- Tick every 15 s (same pattern as `useLiveTick`) so the badge auto-flips at cutoff.
+- Compute `accepting = isAcceptingBets(market)`.
+- `const effectiveDeclared = result?.status === "DECLARED" && !accepting;` and use it everywhere `declared` was used.
+- Badge logic: if `accepting` → **OPEN** (green pulse), regardless of today's row. Otherwise keep the existing DECLARED / PENDING / CLOSED branches against `effectiveDeclared`.
+- Result body: when `accepting`, the existing `showFallbackSlot` / `usePrev` path already kicks in (since `effectiveDeclared` is false and dashboard passes `showPreviousFallback`), so the previous declared result + date label render automatically.
+
+### 3. No other UI changes
+
+`dashboard.tsx` already passes `showPreviousFallback` + `previousResult` + `previousLoading` / `previousError`, so the ResultCard change alone fixes the dashboard cards. `markets.tsx` badges already use the live `isAcceptingBets(m)` selector. `bet.$marketId.tsx` already uses live session windows — once the RPC is relaxed, submission works.
+
+## Result
+
+- Kalyan, Sridevi Night, and any other market whose time slot is still open will:
+  - Show **OPEN** badge.
+  - Show **yesterday's** (or latest previous) declared result with a "Prev · DD MMM" label.
+  - Accept bets through the bet page and bet slip without `*_SESSION_CLOSED` errors.
+- After the real cutoff passes, the existing DECLARED / PENDING logic resumes unchanged.
