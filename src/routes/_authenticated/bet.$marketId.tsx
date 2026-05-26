@@ -163,9 +163,9 @@ function BetPage() {
             <TabsList className="bg-surface flex-wrap h-auto">
               <TabsTrigger value="single">Single</TabsTrigger>
               <TabsTrigger value="jodi">Jodi</TabsTrigger>
-              <TabsTrigger value="pana">Pana</TabsTrigger>
-              <TabsTrigger value="halfsangam">Half Sangam</TabsTrigger>
-              <TabsTrigger value="fullsangam">Full Sangam</TabsTrigger>
+              {!market.isJodiOnly && <TabsTrigger value="pana">Pana</TabsTrigger>}
+              {!market.isJodiOnly && <TabsTrigger value="halfsangam">Half Sangam</TabsTrigger>}
+              {!market.isJodiOnly && <TabsTrigger value="fullsangam">Full Sangam</TabsTrigger>}
             </TabsList>
 
             <TabsContent value="single">
@@ -186,34 +186,38 @@ function BetPage() {
               </Section>
             </TabsContent>
 
-            <TabsContent value="pana" className="space-y-4">
-              <PanaSection
-                title="Single Pana"
-                payout={market.payouts.singlePana}
-                filter="SINGLE"
-                onPick={(n) => add("SINGLE_PANA", n)}
-              />
-              <PanaSection
-                title="Double Pana"
-                payout={market.payouts.doublePana}
-                filter="DOUBLE"
-                onPick={(n) => add("DOUBLE_PANA", n)}
-              />
-              <PanaSection
-                title="Triple Pana"
-                payout={market.payouts.triplePana}
-                filter="TRIPLE"
-                onPick={(n) => add("TRIPLE_PANA", n)}
-              />
-            </TabsContent>
+            {!market.isJodiOnly && (
+              <>
+                <TabsContent value="pana" className="space-y-4">
+                  <PanaSection
+                    title="Single Pana"
+                    payout={market.payouts.singlePana}
+                    filter="SINGLE"
+                    onPick={(n) => add("SINGLE_PANA", n)}
+                  />
+                  <PanaSection
+                    title="Double Pana"
+                    payout={market.payouts.doublePana}
+                    filter="DOUBLE"
+                    onPick={(n) => add("DOUBLE_PANA", n)}
+                  />
+                  <PanaSection
+                    title="Triple Pana"
+                    payout={market.payouts.triplePana}
+                    filter="TRIPLE"
+                    onPick={(n) => add("TRIPLE_PANA", n)}
+                  />
+                </TabsContent>
 
-            <TabsContent value="halfsangam">
-              <SangamHalf onAdd={(n) => add("HALF_SANGAM", n)} payout={market.payouts.halfSangam} />
-            </TabsContent>
+                <TabsContent value="halfsangam">
+                  <SangamHalf onAdd={(n) => add("HALF_SANGAM", n)} payout={market.payouts.halfSangam} />
+                </TabsContent>
 
-            <TabsContent value="fullsangam">
-              <SangamFull onAdd={(n) => add("FULL_SANGAM", n)} payout={market.payouts.fullSangam} />
-            </TabsContent>
+                <TabsContent value="fullsangam">
+                  <SangamFull onAdd={(n) => add("FULL_SANGAM", n)} payout={market.payouts.fullSangam} />
+                </TabsContent>
+              </>
+            )}
           </Tabs>
         </div>
 
