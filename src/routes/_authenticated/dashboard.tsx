@@ -3,7 +3,7 @@ import { ArrowUpRight, Wallet, Receipt, Trophy, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/stores/authStore";
-import { useMarkets, useMyBets, useResultsForDate, useLatestResultsPerMarket } from "@/hooks/useGameData";
+import { useMarkets, useMyBets, useResultsForDate, useLatestResultsPerMarket, useLiveAcceptingMarkets } from "@/hooks/useGameData";
 import { todayIST } from "@/lib/marketTime";
 import { ResultCard } from "@/components/ResultCard";
 import { useEffect } from "react";
@@ -21,6 +21,8 @@ function Dashboard() {
   const today = todayIST();
   const { data: bets = [] } = useMyBets();
   const { data: markets = [] } = useMarkets();
+  const { accepting } = useLiveAcceptingMarkets();
+
   const { data: results = [] } = useResultsForDate(today);
   const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
 
@@ -79,18 +81,33 @@ function Dashboard() {
         />
       </div>
 
-      {/* Active markets */}
+      {/* Markets accepting bets right now */}
       <section>
         <div className="flex items-end justify-between mb-4">
-          <h2 className="font-display text-2xl font-bold">Active Markets</h2>
+          <div>
+            <h2 className="font-display text-2xl font-bold">Markets accepting bets now</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Open & close sessions still live — sorted by closest cutoff.</p>
+          </div>
           <Link to="/markets" className="text-sm text-primary hover:underline">View all →</Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {markets.slice(0, 6).map((m) => (
-            <ResultCard key={m.id} market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
-          ))}
-        </div>
+        {accepting.length === 0 ? (
+          <div className="glass rounded-xl p-10 text-center text-muted-foreground">
+            No markets are accepting bets right now. <Link to="/markets" className="text-primary hover:underline">Browse all markets →</Link>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {accepting.slice(0, 6).map((m) => (
+              <div key={m.id} className="space-y-2">
+                <ResultCard market={m} result={results.find((r) => r.marketId === m.id && r.sessionDate === today)} previousResult={latestPerMarket[m.id]} showPreviousFallback previousLoading={prevLoading} previousError={prevError} onRetryPrevious={() => refetchPrev()} />
+                <Button asChild size="sm" className="w-full h-8 text-xs bg-gradient-gold text-background font-bold hover:opacity-90">
+                  <Link to="/bet/$marketId" params={{ marketId: m.id }} preload="intent">Bet Now</Link>
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
+
 
       {/* Today bets */}
       <section>

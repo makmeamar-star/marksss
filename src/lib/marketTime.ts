@@ -50,3 +50,16 @@ export function isCloseSessionOpen(m: MarketWindow): boolean {
 export function computeIsOpen(m: MarketWindow): boolean {
   return isCloseSessionOpen(m);
 }
+
+// True if the market is currently accepting bets in EITHER session.
+export function isAcceptingBets(m: MarketWindow): boolean {
+  return isOpenSessionOpen(m) || isCloseSessionOpen(m);
+}
+
+// HH:MM of the next bet cutoff today, or null if none.
+export function nextCutoffHHMM(m: MarketWindow): string | null {
+  if (isOpenSessionOpen(m)) return m.openTime;
+  if (isCloseSessionOpen(m)) return m.closeTime;
+  return null;
+}
+

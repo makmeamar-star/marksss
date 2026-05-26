@@ -6,10 +6,11 @@ import { z } from "zod";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultCard } from "@/components/ResultCard";
-import { useLatestResultsPerMarket } from "@/hooks/useGameData";
+import { useLatestResultsPerMarket, useLiveTick } from "@/hooks/useGameData";
 import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
-import { todayIST } from "@/lib/marketTime";
+import { isAcceptingBets, nextCutoffHHMM, todayIST } from "@/lib/marketTime";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -115,17 +116,35 @@ function MarketsPage() {
     });
   };
 
-  // Filtered list: by status, then by query (matches name + displayName).
+  // Live tick so accepting/closed status & sort order refresh as time passes.
+  const tick = useLiveTick(15_000);
+
+  // Filtered list: by status (live), then by query. Sorted so markets that
+  // currently accept bets float to the top, by closest upcoming cutoff.
   const filtered = useMemo(() => {
     const needle = normalize(qInput);
-    return markets.filter((m) => {
-      if (status === "open" && !m.isOpen) return false;
-      if (status === "closed" && m.isOpen) return false;
+    const out = markets.filter((m) => {
+      const live = isAcceptingBets(m);
+      if (status === "open" && !live) return false;
+      if (status === "closed" && live) return false;
       if (!needle) return true;
       const hay = `${normalize(m.displayName ?? "")} ${normalize(m.name ?? "")}`;
       return hay.includes(needle);
     });
-  }, [markets, qInput, status]);
+    return [...out].sort((a, b) => {
+      const aLive = isAcceptingBets(a);
+      const bLive = isAcceptingBets(b);
+      if (aLive !== bLive) return aLive ? -1 : 1;
+      if (aLive) {
+        const ac = nextCutoffHHMM(a) ?? "99:99";
+        const bc = nextCutoffHHMM(b) ?? "99:99";
+        return ac.localeCompare(bc);
+      }
+      return (a.displayName ?? "").localeCompare(b.displayName ?? "");
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markets, qInput, status, tick]);
+
 
   const isFiltering = qInput.trim().length > 0 || status !== "all";
   const { top, rest } = useMemo(() => splitTopMarkets(filtered), [filtered]);
@@ -302,11 +321,12 @@ function MarketsPage() {
                       <span className="truncate">{highlightMatch(label, qInput)}</span>
                       <span
                         className={`text-[10px] uppercase tracking-wider shrink-0 ${
-                          m.isOpen ? "text-emerald-400" : "text-muted-foreground"
+                          isAcceptingBets(m) ? "text-emerald-400" : "text-muted-foreground"
                         }`}
                       >
-                        {m.isOpen ? "Open" : "Closed"}
+                        {isAcceptingBets(m) ? "Open" : "Closed"}
                       </span>
+
                     </li>
                   );
                 })}

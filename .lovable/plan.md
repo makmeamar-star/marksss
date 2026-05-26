@@ -1,63 +1,51 @@
-## Problem
+## Goals
 
-Database `place_bets` RPC already enforces the correct rules:
-- OPEN-session bets must arrive before `market.open_time` (IST)
-- CLOSE-session bets must arrive before `market.close_time` (IST)
-- Once a result for the session is declared, that side closes immediately
+1. Dashboard "Active Markets" should show only markets currently accepting bets in either OPEN or CLOSE session, refreshed live.
+2. Kalyan (and every other market) must accept CLOSE bets during its CLOSE window (e.g. 15:45–17:45 for Kalyan), not just before its OPEN cutoff.
+3. Across the dashboard and `/markets`, bet-accepting markets are sorted to the top.
 
-But the **UI doesn't enforce the same windows**, so users can sit on the bet page after the OPEN cutoff has passed, build a slip, hit "Place", and get a generic `OPEN_SESSION_CLOSED` error — which feels like a broken timer. Specifically:
+## Root cause for #2
 
-1. `src/routes/_authenticated/bet.$marketId.tsx` always shows a countdown to `closeTime` and lets users keep the OPEN tab selected past `openTime`.
-2. The Jodi page (`jodi.$marketId.tsx`) places all bets as `session: "OPEN"` and counts down to `closeTime`, so after `openTime` every Jodi placement fails server-side.
-3. `src/lib/marketTime.ts` `computeIsOpen` reports a market as "Closed" before `openTime`, so the markets list hides perfectly bettable OPEN windows.
-4. Once `closeTime` passes, the page still accepts new slip entries instead of locking betting outright.
+`market.isOpen` is computed once inside the `useMarkets` query mapper (`src/hooks/useGameData.ts` line 24) using `computeIsOpen`. That value is cached by React Query and never recomputes as the clock moves, so once Kalyan crosses its OPEN cutoff at 15:45 the cached `isOpen` and any UI that depends on it goes stale, and pages that gate "Bet Now" / session tabs on `market.isOpen` instead of a live `isCloseSessionOpen(market)` check treat Kalyan as closed for the rest of its CLOSE window.
 
-## Fix (frontend / presentation only)
+The DB `place_bets` RPC already allows CLOSE bets while `now() AT TIME ZONE 'Asia/Kolkata' < market.close_time`, so this is a pure client-side staleness bug.
 
-### 1. `src/lib/marketTime.ts` — add session-aware helpers
+## Plan
 
-Keep `computeIsOpen` for general "market currently running" semantics, but extend it so the markets list considers a market open whenever **either** session is still bettable. Add:
+### 1. `src/lib/marketTime.ts`
+- Add a single helper `isAcceptingBets(m)` = `isOpenSessionOpen(m) || isCloseSessionOpen(m)`.
+- Keep `computeIsOpen` returning `isCloseSessionOpen` (current behavior) — but no UI should rely on the cached value for hard gates anymore.
 
-- `getNowHHMMIST()` — share the IST `HH:MM` string already computed in `nowIST`.
-- `isOpenSessionOpen(market)` → `status==='ACTIVE' && today is in days && hhmm < openTime`.
-- `isCloseSessionOpen(market)` → `status==='ACTIVE' && today is in days && hhmm < closeTime`.
-- Update `computeIsOpen` to return `isCloseSessionOpen(market)` (i.e. bettable today). This unblocks markets in the pre-open window and keeps them visible until close.
+### 2. `src/hooks/useGameData.ts`
+- Stop baking time-dependent flags into the cached Market. Remove `isOpen` from the mapped object (or compute it but mark it advisory only) and update `Market.isOpen` in `src/lib/types.ts` to `isOpen?: boolean` so existing reads still compile.
+- Reduce the cache window slightly (e.g. `staleTime: 30s`) so the badge eventually self-heals on refetch; live correctness comes from helpers below.
 
-### 2. `src/routes/_authenticated/bet.$marketId.tsx`
+### 3. New `useLiveAcceptingMarkets` hook (in `src/hooks/useGameData.ts`)
+- Reads `useMarkets()`, ticks every 15 seconds, returns `{ accepting, others }` where `accepting` is the subset where `isAcceptingBets(m)` is true, sorted by closest upcoming cutoff (`min(openTime if openOpen, closeTime if closeOpen)` ascending). `others` keeps original order.
 
-- Tick a 1-second clock and recompute `openOpen` / `closeOpen` each tick.
-- Auto-switch session: if user is on OPEN and `openOpen` becomes false, flip to CLOSE; if both are false, leave selection but disable inputs.
-- Disable the OPEN tab button (with a "Closed" badge) once `openOpen` is false; same for CLOSE.
-- Replace the single `CountdownTimer targetTime={closeTime}` with a session-aware timer that targets `openTime` when OPEN is selected and `closeTime` when CLOSE is selected. Label it "Open closes in" / "Close closes in".
-- In `add()`, short-circuit with a toast `"OPEN session closed"` / `"CLOSE session closed"` when the relevant window has passed (covers SINGLE/PANA/SANGAM tabs that use the current session).
-- When both sessions are closed, show a "Betting closed for today" banner over the tabs and disable the "Add to slip" buttons in Sangam sections.
+### 4. `src/routes/_authenticated/dashboard.tsx`
+- Replace the "Active Markets" section: title becomes "Markets accepting bets now", grid shows `accepting` (cap at 6). If `accepting.length === 0`, render an empty state ("No markets are accepting bets right now — check back soon") with a link to `/markets`.
+- Each card keeps the existing `ResultCard` + adds the "Bet Now" CTA (mirroring the home page) so users can act immediately.
 
-### 3. `src/routes/_authenticated/jodi.$marketId.tsx`
+### 5. `src/routes/markets.tsx`
+- Add the same per-second/15s tick.
+- After the existing filter pipeline, sort the result so `isAcceptingBets(m)` markets come first (within that group sort by closest upcoming cutoff), then non-accepting markets in their current order.
+- Replace the existing `m.isOpen ? "Open" : "Closed"` badge with a live check using `isOpenSessionOpen`/`isCloseSessionOpen` so Kalyan shows "Open" through 17:45.
+- "Bet Now" button stays enabled whenever `isAcceptingBets(m)` is true (currently it always links through — keep it visible but gray out when not accepting).
 
-Jodi is a single-result bet that the existing RPC validates against `_close_session_open` for the CLOSE jodi flow, but this page submits with `session: "OPEN"`. Two corrections:
+### 6. `src/routes/_authenticated/bet.$marketId.tsx` (Kalyan fix verification)
+- The page already uses live `isOpenSessionOpen` / `isCloseSessionOpen` and auto-switches OPEN→CLOSE when OPEN closes, so functionally it should already accept Kalyan CLOSE bets between 15:45 and 17:45. Audit:
+  - Confirm the auto-switch effect runs before the user clicks (it does — runs on mount tick).
+  - Make sure the "Closed for today" banner only renders when **both** windows are closed (already correct).
+- No server-side change needed.
 
-- Change `session: "OPEN"` → `session: "CLOSE"` for JODI bets (Jodi resolves with the close result; `close_time` is the correct cutoff and matches the existing countdown).
-- Disable the "Add all to slip" button and show a "Betting closed" notice once `hhmm >= closeTime`.
+### 7. Verification
+- During Kalyan CLOSE window (15:45–17:45 IST): bet page lands on CLOSE tab, OPEN tab locked, countdown targets 17:45, placing a CLOSE single succeeds.
+- Dashboard "Markets accepting bets now" lists Kalyan with a Bet Now button during that window and removes it after 17:45.
+- `/markets` lists Kalyan at the top with green "Open" badge during the CLOSE window, drops to the closed group after 17:45.
+- Markets with both sessions still open (e.g. before openTime) appear at the very top, sorted by which closes soonest.
 
-### 4. `src/routes/markets.tsx`
-
-No code change needed beyond #1 — once `computeIsOpen` is session-aware, the "Open / Closed" pill and the `status==='open'` filter automatically reflect pre-open windows correctly.
-
-### Out of scope
-
-- Server logic (`place_bets`, `quick_rounds`, admin declare) is already correct and stays untouched.
-- Starline/Quick play already drive timing off `opens_at` / `closes_at` per round — no changes.
-- Admin declare window logic, scrapers, and result correction flows are unchanged.
-
-## Files touched
-
-- `src/lib/marketTime.ts` — add helpers, update `computeIsOpen`
-- `src/routes/_authenticated/bet.$marketId.tsx` — session-aware UI, dynamic countdown, guards
-- `src/routes/_authenticated/jodi.$marketId.tsx` — submit as CLOSE, lock UI after close_time
-
-## Verification
-
-- Pick a market whose `open_time` is in the past but `close_time` is in the future: OPEN tab disabled, CLOSE tab live, countdown targets close_time, placing a CLOSE bet succeeds.
-- Pick a market with `open_time` in the future: both tabs enabled, OPEN tab shows countdown to open_time, placing an OPEN bet succeeds.
-- After `close_time`: both tabs disabled, banner shown, server is never called.
-- Jodi page after `close_time`: Add button disabled, no failing RPC calls.
+## Out of scope
+- No DB/RPC changes.
+- No changes to the bet slip submission logic (already handled in the prior fix).
+- No new markets list page; just sort/badge tweaks.
