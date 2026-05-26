@@ -218,68 +218,13 @@ function ScrapePage() {
         )}
       </Card>
 
-      <Card className="p-5">
-        <div className="font-display text-lg font-bold mb-3">Per-market latest status</div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-muted-foreground border-b">
-                <th className="py-2">Market</th>
-                <th>Session</th>
-                <th>Status</th>
-                <th>Pana</th>
-                <th>Source</th>
-                <th>Last attempt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {perMarketRows.map((r: any) => (
-                <tr key={`${r.market_id}-${r.session}`} className="border-b border-border/40">
-                  <td className="py-2 font-medium">{r.market_id}</td>
-                  <td>{r.session}</td>
-                  <td><StatusBadge status={r.status} /></td>
-                  <td>{r.pana ?? "—"}</td>
-                  <td className="text-xs text-muted-foreground">{r.source}</td>
-                  <td className="text-xs text-muted-foreground">{timeAgo(r.run_at)}</td>
-                </tr>
-              ))}
-              {!perMarketRows.length && (
-                <tr><td colSpan={6} className="py-6 text-center text-muted-foreground">No attempts yet.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
       <Card className="p-5 space-y-4">
         <div className="font-display text-lg font-bold">Live scrape (today)</div>
         <p className="text-sm text-muted-foreground">
-          Fetches today's panel for every enabled market, calls system_auto_declare
-          when a pana is published, and credits winners.
+          Fetches today's panel for every enabled market and auto-declares confirmed results.
         </p>
         <Button onClick={() => runLive.mutate()} disabled={runLive.isPending}>
           {runLive.isPending ? "Running…" : "Run scraper now"}
-        </Button>
-      </Card>
-
-      <Card className="p-5 space-y-4">
-        <div className="font-display text-lg font-bold">Backfill history</div>
-        <p className="text-sm text-muted-foreground">
-          Imports historical panas into market_results. Skips dates already declared.
-          Does not re-settle bets.
-        </p>
-        <div className="flex gap-3 flex-wrap">
-          <div>
-            <label className="text-xs text-muted-foreground">From</label>
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground">To</label>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-          </div>
-        </div>
-        <Button onClick={() => backfill.mutate()} disabled={backfill.isPending}>
-          {backfill.isPending ? "Backfilling…" : "Run backfill"}
         </Button>
       </Card>
 
