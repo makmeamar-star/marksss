@@ -48,6 +48,7 @@ import { Route as AuthenticatedReferralsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyBetsRouteImport } from './routes/_authenticated/my-bets'
+import { Route as AuthenticatedLinkedAccountsRouteImport } from './routes/_authenticated/linked-accounts'
 import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -270,6 +271,12 @@ const AuthenticatedMyBetsRoute = AuthenticatedMyBetsRouteImport.update({
   path: '/my-bets',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedLinkedAccountsRoute =
+  AuthenticatedLinkedAccountsRouteImport.update({
+    id: '/linked-accounts',
+    path: '/linked-accounts',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedLeaderboardRoute =
   AuthenticatedLeaderboardRouteImport.update({
     id: '/leaderboard',
@@ -441,6 +448,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
+  '/linked-accounts': typeof AuthenticatedLinkedAccountsRoute
   '/my-bets': typeof AuthenticatedMyBetsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -506,6 +514,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
+  '/linked-accounts': typeof AuthenticatedLinkedAccountsRoute
   '/my-bets': typeof AuthenticatedMyBetsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -574,6 +583,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
+  '/_authenticated/linked-accounts': typeof AuthenticatedLinkedAccountsRoute
   '/_authenticated/my-bets': typeof AuthenticatedMyBetsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -642,6 +652,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kyc'
     | '/leaderboard'
+    | '/linked-accounts'
     | '/my-bets'
     | '/notifications'
     | '/profile'
@@ -707,6 +718,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kyc'
     | '/leaderboard'
+    | '/linked-accounts'
     | '/my-bets'
     | '/notifications'
     | '/profile'
@@ -774,6 +786,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/kyc'
     | '/_authenticated/leaderboard'
+    | '/_authenticated/linked-accounts'
     | '/_authenticated/my-bets'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
@@ -1123,6 +1136,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyBetsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/linked-accounts': {
+      id: '/_authenticated/linked-accounts'
+      path: '/linked-accounts'
+      fullPath: '/linked-accounts'
+      preLoaderRoute: typeof AuthenticatedLinkedAccountsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/leaderboard': {
       id: '/_authenticated/leaderboard'
       path: '/leaderboard'
@@ -1313,6 +1333,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
+  AuthenticatedLinkedAccountsRoute: typeof AuthenticatedLinkedAccountsRoute
   AuthenticatedMyBetsRoute: typeof AuthenticatedMyBetsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -1332,6 +1353,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
+  AuthenticatedLinkedAccountsRoute: AuthenticatedLinkedAccountsRoute,
   AuthenticatedMyBetsRoute: AuthenticatedMyBetsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
