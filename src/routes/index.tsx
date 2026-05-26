@@ -159,10 +159,11 @@ function HomePage() {
                 </tr>
               </thead>
               <tbody>
-                {topMarkets.map((m) => (
+                {mounted && topMarkets.map((m) => (
                   <ScheduleRow key={m.id} m={m} />
                 ))}
               </tbody>
+
             </table>
           </div>
         </div>
