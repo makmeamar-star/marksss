@@ -21,6 +21,8 @@ function Dashboard() {
   const today = todayIST();
   const { data: bets = [] } = useMyBets();
   const { data: markets = [] } = useMarkets();
+  const { accepting } = useLiveAcceptingMarkets();
+
   const { data: results = [] } = useResultsForDate(today);
   const { data: latestPerMarket = {}, isLoading: prevLoading, isError: prevError, refetch: refetchPrev } = useLatestResultsPerMarket();
 
