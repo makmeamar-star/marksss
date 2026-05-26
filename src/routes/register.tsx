@@ -91,6 +91,11 @@ function RegisterPage() {
             <p className="text-sm text-muted-foreground mt-1">Takes less than a minute.</p>
           </div>
 
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground">
+            Most people just sign in — an account is created automatically.{" "}
+            <Link to="/login" className="text-primary font-semibold hover:underline">Sign in instead →</Link>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <Field label="Full name" v={form.name} onChange={set("name")} placeholder="Rohan Sharma" />
             <Field label="Username *" v={form.username} onChange={set("username")} placeholder="rohan99" />
