@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useBetStore } from "@/stores/betStore";
 import { useAuthStore } from "@/stores/authStore";
-import { placeBets } from "@/hooks/useGameData";
+import { placeBets, useMarkets } from "@/hooks/useGameData";
+import { isOpenSessionOpen, isCloseSessionOpen } from "@/lib/marketTime";
 
 function SlipBody({ onClose }: { onClose?: () => void }) {
   const slip = useBetStore((s) => s.slip);
