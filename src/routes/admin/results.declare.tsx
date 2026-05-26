@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Trophy, ChevronRight, History as HistoryIcon } from "lucide-react";
+import { Trophy, ChevronRight, History as HistoryIcon, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { LiveClock } from "@/components/admin/LiveClock";
