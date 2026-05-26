@@ -3,6 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMarkets, useResultsForDate } from "./useGameData";
 import { todayIST } from "@/lib/marketTime";
 import { triggerFreshScrape } from "@/lib/scrapeTrigger.functions";
+import { supabase } from "@/integrations/supabase/client";
+
 
 const COOLDOWN_MS = 90_000; // don't ping more than once every 90s per device
 const KEY = "scrape-ping-at";
