@@ -51,14 +51,9 @@ export function SiteHeader() {
               <Link to="/dashboard">Dashboard</Link>
             </Button>
           ) : (
-            <>
-              <Button asChild variant="ghost" size="sm" className="text-foreground">
-                <Link to="/login">Login</Link>
-              </Button>
-              <Button asChild size="sm" className="bg-gradient-gold text-background font-semibold hover:opacity-90">
-                <Link to="/register">Register</Link>
-              </Button>
-            </>
+            <Button asChild size="sm" className="bg-gradient-gold text-background font-semibold hover:opacity-90">
+              <Link to="/login">Sign In</Link>
+            </Button>
           )}
         </div>
       </div>
