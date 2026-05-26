@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Loader2, Zap, PlayCircle, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/results/automation")({
@@ -116,8 +115,6 @@ function AutomationPage() {
                 <th className="text-left p-3">Times (IST)</th>
                 <th className="text-center p-3">Auto OPEN</th>
                 <th className="text-center p-3">Auto CLOSE</th>
-                <th className="text-center p-3">Grace (min)</th>
-                <th className="text-left p-3">Last run</th>
               </tr>
             </thead>
             <tbody>
@@ -138,19 +135,6 @@ function AutomationPage() {
                       checked={row.close_enabled}
                       onCheckedChange={(v) => update(row.market_id, { close_enabled: v })}
                     />
-                  </td>
-                  <td className="p-3 text-center">
-                    <Input
-                      type="number"
-                      min={0}
-                      max={120}
-                      value={row.grace_minutes}
-                      onChange={(e) => update(row.market_id, { grace_minutes: Number(e.target.value) || 0 })}
-                      className="w-20 mx-auto text-center"
-                    />
-                  </td>
-                  <td className="p-3 text-xs text-muted-foreground">
-                    {row.last_run_at ? new Date(row.last_run_at).toLocaleString() : "—"}
                   </td>
                 </tr>
               ))}

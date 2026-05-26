@@ -1,13 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useEffect } from "react";
 import {
-  Trophy, Zap, Wallet, ArrowDownToLine, History, FileSearch, Store, Globe,
-  Users, TrendingUp, TrendingDown, Activity, AlertTriangle, ArrowRight, KeyRound, Eye,
+  Trophy, Zap, Wallet, ArrowDownToLine, History, Store, Globe,
+  Users, TrendingUp, TrendingDown, Activity, AlertTriangle, ArrowRight,
 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { getAdminOverview } from "@/lib/adminDashboard.functions";
 import { getMissingResults } from "@/lib/missingResults.functions";
 import { MissingResultsBanner } from "@/components/admin/MissingResultsBanner";
@@ -20,14 +18,12 @@ export const Route = createFileRoute("/admin/")({
 const tiles = [
   { to: "/admin/markets" as const, icon: Store, title: "Markets" },
   { to: "/admin/results/declare" as const, icon: Trophy, title: "Declare" },
-  { to: "/admin/results/alerts" as const, icon: AlertTriangle, title: "Alerts" },
-  { to: "/admin/results/observations" as const, icon: Eye, title: "Observations" },
   { to: "/admin/results/automation" as const, icon: Zap, title: "Automation" },
   { to: "/admin/results/scrape" as const, icon: Globe, title: "Scraper" },
   { to: "/admin/results/history" as const, icon: History, title: "History" },
-  { to: "/admin/results/automation-audit" as const, icon: FileSearch, title: "Audit" },
   { to: "/admin/deposits" as const, icon: Wallet, title: "Deposits" },
   { to: "/admin/withdrawals" as const, icon: ArrowDownToLine, title: "Withdrawals" },
+  { to: "/admin/users" as const, icon: Users, title: "Users" },
 ];
 
 const inr = (n: number) =>
@@ -57,7 +53,6 @@ function AdminHome() {
   });
   const missingCount = missingQ.data?.rows.length ?? 0;
 
-  // Realtime invalidation on key tables
   useEffect(() => {
     const ch = supabase
       .channel("admin-overview")
@@ -90,7 +85,6 @@ function AdminHome() {
         )}
       </div>
 
-      {/* KPI strip */}
       <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         <Kpi icon={Users} label="Active users today" value={k ? String(k.activeUsers) : "—"} sub={`${k?.newSignups ?? 0} new signups (24h)`} />
         <Kpi icon={Activity} label="Bets placed" value={k ? String(k.bets) : "—"} sub={inr(k?.betVolume ?? 0) + " volume"} />
@@ -103,10 +97,9 @@ function AdminHome() {
       </div>
 
       <div className="mt-8 grid lg:grid-cols-3 gap-4">
-        {/* Today's markets */}
         <div className="lg:col-span-2 rounded-2xl glass-gold p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-lg font-bold">Today’s markets</h2>
+            <h2 className="font-display text-lg font-bold">Today's markets</h2>
             <Link to="/admin/results/declare" className="text-xs text-primary hover:underline">Declare →</Link>
           </div>
           <div className="overflow-x-auto -mx-2">
@@ -148,7 +141,6 @@ function AdminHome() {
           </div>
         </div>
 
-        {/* Activity feed */}
         <div className="rounded-2xl glass-gold p-4 sm:p-5">
           <h2 className="font-display text-lg font-bold mb-3">Recent activity</h2>
           <ul className="space-y-2 max-h-96 overflow-y-auto pr-1">
@@ -171,12 +163,6 @@ function AdminHome() {
         </div>
       </div>
 
-      {/* Demo login toggle */}
-      <div className="mt-8">
-        <DemoLoginToggle />
-      </div>
-
-      {/* Quick links */}
       <div className="mt-8">
         <h2 className="font-display text-lg font-bold mb-3">Quick actions</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -214,62 +200,6 @@ function AdminHome() {
       {q.error && (
         <p className="mt-6 text-sm text-destructive">Failed to load overview: {(q.error as Error).message}</p>
       )}
-    </div>
-  );
-}
-
-function DemoLoginToggle() {
-  const qc = useQueryClient();
-  const [enabled, setEnabled] = useState<boolean | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    supabase.from("app_settings").select("value").eq("key", "demo_login_enabled").maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return;
-        const v = (data?.value as { enabled?: boolean } | null)?.enabled;
-        setEnabled(v ?? true);
-      });
-    return () => { cancelled = true; };
-  }, []);
-
-  const onToggle = async (next: boolean) => {
-    setBusy(true);
-    const prev = enabled;
-    setEnabled(next);
-    const { error } = await supabase
-      .from("app_settings")
-      .upsert({ key: "demo_login_enabled", value: { enabled: next } }, { onConflict: "key" });
-    setBusy(false);
-    if (error) {
-      setEnabled(prev);
-      toast.error(error.message);
-      return;
-    }
-    toast.success(next ? "Demo login enabled" : "Demo login disabled");
-    qc.invalidateQueries({ queryKey: ["app_settings", "demo_login_enabled"] });
-  };
-
-  return (
-    <div className="rounded-2xl glass-gold p-4 sm:p-5 flex items-center justify-between gap-4">
-      <div className="flex items-start gap-3 min-w-0">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-gold text-background shrink-0">
-          <KeyRound className="h-4 w-4" />
-        </span>
-        <div className="min-w-0">
-          <div className="font-display text-base font-bold">Demo login buttons</div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            When off, the Demo User and Demo Admin buttons are hidden from the public login page.
-          </p>
-        </div>
-      </div>
-      <Switch
-        checked={!!enabled}
-        disabled={busy || enabled === null}
-        onCheckedChange={onToggle}
-        aria-label="Toggle demo login"
-      />
     </div>
   );
 }

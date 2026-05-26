@@ -97,13 +97,18 @@ const NAV = [
   { to: "/admin/results/history", label: "Result History", icon: History },
   { to: "/admin/results/automation", label: "Automation", icon: Zap },
   { to: "/admin/results/scrape", label: "Scraper", icon: Globe },
-  { to: "/admin/results/automation-runs", label: "Automation Runs", icon: History },
-  { to: "/admin/results/automation-audit", label: "Automation Audit", icon: FileSearch },
   { to: "/admin/deposits", label: "Deposits", icon: Wallet },
   { to: "/admin/withdrawals", label: "Withdrawals", icon: ArrowLeftRight },
   { to: "/admin/payments", label: "Payment Channels", icon: CreditCard },
   { to: "/admin/support", label: "Customer Support", icon: MessageCircle },
   { to: "/admin/kyc", label: "KYC Review", icon: ShieldCheck },
+] as const;
+
+const ADVANCED_NAV = [
+  { to: "/admin/results/automation-runs", label: "Automation Runs", icon: History },
+  { to: "/admin/results/automation-audit", label: "Automation Audit", icon: FileSearch },
+  { to: "/admin/results/alerts", label: "Result Alerts", icon: ShieldAlert },
+  { to: "/admin/results/observations", label: "Observations", icon: FileSearch },
   { to: "/admin/broadcasts", label: "Broadcasts", icon: Megaphone },
   { to: "/admin/risk", label: "Risk & Ops", icon: ShieldAlert },
   { to: "/admin/monitoring", label: "Monitoring", icon: ShieldAlert },
@@ -170,27 +175,35 @@ function SidebarHeader() {
 
 function SidebarNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const [advOpen, setAdvOpen] = useState(false);
+  const renderLink = (n: { to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean }) => {
+    const active = n.exact ? path === n.to : path === n.to || path.startsWith(n.to + "/");
+    const Icon = n.icon;
+    return (
+      <Link
+        key={n.to}
+        to={n.to}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors
+          ${active
+            ? "bg-primary/15 text-primary border border-primary/30"
+            : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"}`}
+      >
+        <Icon className="h-4 w-4" />
+        <span className="flex-1">{n.label}</span>
+      </Link>
+    );
+  };
   return (
     <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
-      {NAV.map((n) => {
-        const active = "exact" in n && n.exact
-          ? path === n.to
-          : path === n.to || path.startsWith(n.to + "/");
-        const Icon = n.icon;
-        return (
-          <Link
-            key={n.to}
-            to={n.to}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors
-              ${active
-                ? "bg-primary/15 text-primary border border-primary/30"
-                : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"}`}
-          >
-            <Icon className="h-4 w-4" />
-            <span className="flex-1">{n.label}</span>
-          </Link>
-        );
-      })}
+      {NAV.map((n) => renderLink(n as never))}
+      <button
+        type="button"
+        onClick={() => setAdvOpen((v) => !v)}
+        className="w-full text-left mt-3 px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+      >
+        {advOpen ? "▾" : "▸"} Advanced
+      </button>
+      {advOpen && ADVANCED_NAV.map((n) => renderLink(n as never))}
     </nav>
   );
 }

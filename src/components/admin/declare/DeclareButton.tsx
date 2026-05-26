@@ -25,12 +25,10 @@ export function DeclareButton() {
   const router = useRouter();
 
   async function refreshAfterDeclare() {
-    // Invalidate every admin/result-related query so observation lists,
-    // declared-today, pending-today, missing-results banner, public result
-    // cards, etc. all reload from the database immediately.
     await Promise.all([
       qc.invalidateQueries({ queryKey: ["admin", "today-observations"] }),
       qc.invalidateQueries({ queryKey: ["admin", "missing-results"] }),
+      qc.invalidateQueries({ queryKey: ["admin", "overview"] }),
       qc.invalidateQueries({ queryKey: ["declared-today"] }),
       qc.invalidateQueries({ queryKey: ["pending-today"] }),
       qc.invalidateQueries({ queryKey: ["pending-today", "selector"] }),
@@ -38,10 +36,7 @@ export function DeclareButton() {
       qc.invalidateQueries({ queryKey: ["results"] }),
       qc.invalidateQueries({ queryKey: ["market-results"] }),
       qc.invalidateQueries({ queryKey: ["recent-results"] }),
-      qc.invalidateQueries(), // catch-all for anything keyed differently
     ]);
-    // Re-run route loaders so SSR-fetched data (e.g. results page loaders)
-    // refreshes too.
     await router.invalidate();
   }
 
