@@ -140,7 +140,18 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           data: { username, phone },
         },
       });
-      if (error || !data.user) throw new Error(error?.message ?? "Sign up failed");
+      if (error) {
+        const msg = error.message || "";
+        if (/already|registered|exists/i.test(msg)) {
+          throw new Error("An account with this email already exists. Try signing in or reset your password.");
+        }
+        throw new Error(msg || "Sign up failed");
+      }
+      if (!data.user) throw new Error("Sign up failed");
+      // Email confirmation flow: no session yet.
+      if (!data.session) {
+        throw new Error("CONFIRM_EMAIL");
+      }
       // Trigger creates profile + role. Allow a brief moment, then load.
       await new Promise((r) => setTimeout(r, 400));
       const u = await loadUserFor(data.user.id, data.user.email ?? null);
