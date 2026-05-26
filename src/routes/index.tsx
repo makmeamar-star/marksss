@@ -95,7 +95,7 @@ function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-6">
               <Button asChild size="sm" className="bg-gradient-india text-background font-bold shadow-[0_0_40px_-8px_var(--saffron)] hover:opacity-90">
-                <Link to="/register">Play Now <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
+                <Link to="/login">Sign In to Play <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10">
                 <Link to="/results">View Results</Link>
