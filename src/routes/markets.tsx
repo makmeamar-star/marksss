@@ -321,11 +321,12 @@ function MarketsPage() {
                       <span className="truncate">{highlightMatch(label, qInput)}</span>
                       <span
                         className={`text-[10px] uppercase tracking-wider shrink-0 ${
-                          m.isOpen ? "text-emerald-400" : "text-muted-foreground"
+                          isAcceptingBets(m) ? "text-emerald-400" : "text-muted-foreground"
                         }`}
                       >
-                        {m.isOpen ? "Open" : "Closed"}
+                        {isAcceptingBets(m) ? "Open" : "Closed"}
                       </span>
+
                     </li>
                   );
                 })}
