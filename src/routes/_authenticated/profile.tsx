@@ -95,14 +95,19 @@ function ProfilePage() {
           </div>
           <Switch checked={twoFA} onCheckedChange={(v) => { setTwoFA(v); toast.success(v ? "2FA enabled" : "2FA disabled"); }} />
         </div>
-        <Button variant="outline" onClick={async () => {
-          if (!user.email) return toast.error("No email on file");
-          const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-            redirectTo: `${window.location.origin}/reset-password`,
-          });
-          if (error) return toast.error(error.message);
-          toast.success("Password reset email sent");
-        }}>Change password</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={async () => {
+            if (!user.email) return toast.error("No email on file");
+            const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+              redirectTo: `${window.location.origin}/reset-password`,
+            });
+            if (error) return toast.error(error.message);
+            toast.success("Password reset email sent");
+          }}>Change password</Button>
+          <Button variant="outline" asChild>
+            <Link to="/linked-accounts"><Link2 className="h-4 w-4 mr-1" /> Linked accounts</Link>
+          </Button>
+        </div>
       </section>
 
       {/* Preferences */}
