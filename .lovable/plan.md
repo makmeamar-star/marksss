@@ -1,37 +1,53 @@
-## Problem
+## What's wrong today
 
-Admin (lafxnga@gmail.com — confirmed `admin` row in `user_roles`) opens `/admin/results/declare` and is bounced with **403 → /login**. The `Declare Result` feature itself stays — we just need to stop the guard from wrongly rejecting real admins.
-
-Root cause is in `src/routes/admin.tsx` `beforeLoad`:
-
-1. **Fast path is too aggressive.** If `hydrated && user && user.role !== "ADMIN"`, it *immediately* redirects with no server check. On a fresh page load the auth store can become `hydrated` before the user object is replaced by the freshly-loaded admin profile (or briefly carries a stale `USER` role), so a real admin gets bounced without any server verification.
-2. **SSR fallback is fragile.** When `requireAdminSSR()` runs during SSR/preview prerender, the `sb-access-token` cookie set by `useAuthCookieSync` isn't present yet (cookie is written client-side after mount), and no Bearer header is attached during `beforeLoad`. It returns `{ok:false}` → redirect.
-3. **`try/catch` swallows `redirect()`.** The outer `try { await requireAdminSSR() } catch {}` would also swallow any thrown TanStack `redirect`, masking signal.
+This app uses **Supabase Auth via Lovable Cloud** (email+password, Google & Apple via the Lovable broker, phone OTP UI already present). The "account already exists" error happens because the `handle_new_user` trigger creates a `profiles` row using `split_part(email,'@',1)` as the username when none is provided. `profiles.username` is `NOT NULL` (and unique in app logic), so the **second** person whose email local-part collides (e.g. two different `rohan@...` addresses) — OR a returning user whose previous signup half-completed — gets a duplicate-key error that surfaces as "already exists". `register()` in `authStore` then bubbles the Supabase error verbatim. Email confirmation is also on, so re-attempting with an unverified email also looks like "already exists".
 
 ## Plan
 
-### 1. Harden `/admin` beforeLoad (`src/routes/admin.tsx`)
-- Remove the "fast-path auto-redirect when role !== ADMIN" branch. Only treat the store as authoritative for the **positive** case (role IS admin → allow). On negative/unknown, fall through to a server check.
-- If `!hydrated` on the client, `await useAuthStore.getState().bootstrap()` (idempotent) before deciding, so we never make the redirect decision on a half-loaded store.
-- After the server check, on failure, re-query `user_roles` one more time via the browser supabase client as a last-chance check (RLS already allows users to view own roles). This catches the SSR-cookie-missing case without a false 403.
-- Use `isRedirect(e)` in the `catch` so redirects aren't swallowed.
+### 1. Fix the signup trigger (DB migration)
+- Make `handle_new_user` generate a **unique username** by appending a short random suffix when there's a collision (loop until insert succeeds, max 5 tries, fallback to `user_<6hex>`).
+- Make it idempotent: `INSERT ... ON CONFLICT (user_id) DO NOTHING` for both `profiles` and `user_roles`, so re-sent confirmations / OAuth merges don't 23505.
+- Same loop used for OAuth signups (Google/Apple have no username in metadata).
 
-### 2. Make `requireAdminSSR` also accept the standard Bearer header path reliably
-- Already does; but add a small change: when neither header nor cookie is present, return `{ok:false, reason:"no-token"}` so the client can distinguish "really not admin" vs "no session yet" and avoid an immediate redirect on the latter.
+### 2. Fix `/register` UX
+- Catch Supabase `user_already_exists` / `email_exists` and show a friendly message with a "Sign in instead" + "Forgot password?" link, instead of the raw error.
+- Show a clear "Check your email to confirm" state when sign-up succeeds but session is null (email confirmation pending).
 
-### 3. Keep `Declare Result` UI and manual declare flow exactly as-is
-- No changes to `src/routes/admin/results.declare.tsx`, `DeclareButton.tsx`, or `adminDeclareResult.functions.ts`. Manual admin declare stays the primary way to publish a result.
+### 3. Forgot-password & account recovery
+- Already partly there: `/login` has a "Forgot password?" button and `/reset-password` exists. Polish:
+  - Build a dedicated **`/forgot-password`** route (email input → `supabase.auth.resetPasswordForEmail` with `redirectTo=/reset-password`) with success state.
+  - Harden **`/reset-password`** to detect the `type=recovery` URL hash, exchange it for a session, then allow `updateUser({ password })`. Error if opened without a recovery token.
+  - Add a "Recover via phone OTP" link on `/forgot-password` (uses the same phone-OTP flow — once verified, user can set a new password from `/reset-password`).
+  - Link both from `/login` and `/register`.
 
-### 4. Verify
-- After edit, hard-refresh `/admin/results/declare` while logged in as `lafxnga@gmail.com`; confirm page loads (no 403).
-- Trigger a manual declare on any pending market and confirm: declared row appears, settlement runs, toast success.
-- Sign out and visit `/admin/results/declare` → still correctly redirected to `/login` with toast (true negative still works).
+### 4. Email OTP signup/login (passwordless option, keeping password too)
+- Add a new **"Email OTP"** tab on `/login` next to Email / Phone.
+- Flow: user enters email → `supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })` → 6-digit code screen → `supabase.auth.verifyOtp({ email, token, type: 'email' })`.
+- On first-time verify, the existing trigger creates the profile; the unique-username loop auto-generates a handle like `rohan_a1b2`. User lands on `/dashboard` immediately.
+- Keep the existing password form on the "Email" tab unchanged.
 
-## Out of scope
-- Scraper / auto-declare cron (already addressed in previous turn, awaiting publish).
-- Hydration mismatch warning on `HomePage` ("15" vs "0") — separate issue.
-- Any restyle of the declare page.
+### 5. Direct mobile OTP login
+- The UI already exists on the Phone tab — keep it.
+- Wire `shouldCreateUser: true` on the `signInWithOtp({ phone })` call so first-time phone users get auto-registered (the trigger fills profile/username from phone digits when email is null — small tweak to `handle_new_user` for the no-email branch).
+- Add the same OTP UI on `/register` so phone-first signup works there too.
+- ⚠️ SMS won't actually send until you configure a provider (Twilio/MSG91) in Cloud → Auth settings. UI will show "SMS not configured" toast if Supabase returns that error. (You chose "configure later".)
 
-## Files touched
-- `src/routes/admin.tsx` — relax fast-path, add bootstrap await, add fallback role re-check, respect `isRedirect`.
-- `src/lib/adminGuardSSR.functions.ts` — return reason flag (tiny additive change).
+### 6. Google + Apple
+- Already wired via `lovable.auth.signInWithOAuth("google" | "apple")`. Apple uses **Lovable managed** credentials (your choice — zero setup).
+- I'll call `supabase--configure_social_auth` with `providers: ["google", "apple"]` to make sure both are enabled server-side (prevents the "Unsupported provider" error on first click).
+
+### 7. Misc
+- Fix the React error #418 in the runtime errors (an SSR/CSR markup mismatch — likely the conditional inside `/login`'s `beforeLoad` redirect path). Will investigate during build.
+- Auto-confirm email signups will stay **off** (default), so users still verify their email — matches the policy in the system prompt.
+
+## Files to touch
+
+- `supabase/migrations/<new>.sql` — rewrite `handle_new_user` (unique-username loop, ON CONFLICT, no-email branch).
+- `src/routes/register.tsx` — friendly duplicate handling, "confirm your email" state.
+- `src/routes/login.tsx` — add Email-OTP tab; ensure phone OTP uses `shouldCreateUser: true`.
+- `src/routes/forgot-password.tsx` — new route.
+- `src/routes/reset-password.tsx` — recovery-token guard.
+- `src/stores/authStore.ts` — surface clean error codes from `register()`.
+- Call `supabase--configure_social_auth` with `["google","apple"]`.
+
+No changes to backend RLS, admin flow, or business logic.
