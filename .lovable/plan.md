@@ -1,63 +1,70 @@
-# End-to-End Test Plan: Admin Dashboard + User Experience
+## Goal
 
-I'll drive the live preview as both a regular user and an admin, exercise the full money flow, and capture any 403s, broken UI, or logic bugs. No code changes happen during testing — anything I find gets reported back with a separate fix plan.
+Make login feel instant, the home/results pages snap on first paint, and the admin dashboard scroll/load without spinners — without changing any features.
 
-## Scope
+## What's actually slow (measured from the code)
 
-**User-side flows**
-1. Signup / login (existing demo or new account)
-2. Wallet — view balance, transaction history
-3. Deposit request — pick channel, submit UTR + screenshot, see PENDING state
-4. Place a bet (Jodi market + a Pana market)
-5. Quick game round (place + observe settlement)
-6. Withdrawal request — submit, see PENDING
-7. Notifications, KYC submission, promo code redemption, referrals page
-8. Jodi page — verify the 8 markets + "Yesterday's Jodi" section render with live data
+1. **Login does triple round-trips before navigating.** `authStore.login()` runs `signInWithPassword` → then `loadUserFor()` (2 sequential queries: `profiles` + `user_roles`) → then `onAuthStateChange` fires and runs the same `loadUserFor()` again → then `goByRole()` navigates → then `/login`'s `beforeLoad` and `/admin`'s `beforeLoad` each re-query roles. That's 4–6 serial DB calls per sign-in.
+2. **`/login` `beforeLoad` always hits the DB**, even for guests visiting the page, before showing the form.
+3. **Home page fires 3 separate Supabase queries on mount** (`useMarkets`, `useResultsForDate`, `useLatestResultsPerMarket`) and hydrates with empty data, so the markets grid + schedule pop in late. SSR can't help because they use the browser client.
+4. **Admin pages each open their own realtime channel + run queries with no `staleTime`** — every navigation refetches, every focus refetches.
+5. **Heavy libs imported eagerly** in many routes: `framer-motion`, `recharts`, `embla-carousel`, full `lucide-react` barrels in admin nav, `react-day-picker`. Bundle bloat = slow first paint, especially on 4G.
+6. **Image assets are JPG/PNG**, no AVIF/WebP variants, no `loading="lazy"` discipline, no `fetchpriority="high"` on the hero/LCP image.
 
-**Admin-side flows** (all the routes that were 403'ing previously)
-1. `/admin` dashboard loads, no 403 during SSR or client nav
-2. Declare result — pick a market/session, set Pana, confirm Jodi auto-computes, see bets settle
-3. Automation panel — toggle open/close automation, change mode, save
-4. Payment channels — create/edit/disable a channel
-5. Deposit approvals — approve + reject a pending request, balance updates on user side
-6. Withdrawal approvals — approve + reject, balance + ledger correct
-7. Customer service / support views — open user detail, view bets/KYC/notes
-8. KYC review queue — approve/reject submission
-9. Promo codes — create/edit, view redemptions
-10. Audit log, system alerts, scrape log visible
+## Plan
 
-## Method
+### A. Auth flow — remove serial round-trips (biggest win)
 
-For each flow I'll:
-1. Navigate via the browser tool (real preview, real DB).
-2. Capture a screenshot at the key state.
-3. Check console + network for 4xx/5xx, hydration mismatches, RLS errors.
-4. Cross-check DB rows via `supabase--read_query` where balance/ledger correctness matters.
-5. Check `stack_modern--server-function-logs` and `supabase--analytics_query` if a server fn fails.
+1. **Single source of truth.** Make `onAuthStateChange` the only place that calls `loadUserFor()`. `login()` just calls `signInWithPassword`, then awaits `hydrated` flipping or the next user update. No duplicate fetch.
+2. **Parallelise profile + roles** inside `loadUserFor` (already is, keep).
+3. **Combine profile + roles into one RPC** `get_me()` → `{ profile, is_admin }`. One round-trip instead of two. Add a Postgres function + `grant execute to authenticated`.
+4. **Drop the roles query in `/login` `beforeLoad`.** Read `useAuthStore.user.role` from the existing in-memory state (already populated by bootstrap); only fall back to DB if `!hydrated`.
+5. **Optimistic navigate-after-login.** Navigate immediately on `signInWithPassword` success; let the role-aware redirect happen in `/dashboard` or `/admin` `beforeLoad` if needed. No spinner-blocking on profile load.
+6. **`/admin` guard via context, not server-fn.** Replace the per-navigation `requireAdminSSR()` call with a `useAuthStore` context check (only fall back to DB on cold SSR).
 
-## Destructive-action safety
+### B. Home + results — instant first paint
 
-- I'll prefer the logged-in preview user for user-side actions.
-- For admin approvals I'll act on requests I just created myself in the same session (so no real user money is moved).
-- I will NOT delete users, mass-update balances, or touch unrelated production rows.
-- I'll explicitly call out anything I skip for safety.
+1. **Migrate the three home queries to `ensureQueryData` + `useSuspenseQuery`** with a route-level loader, so the markets grid and schedule render with real data on first frame (no empty-state flash).
+2. **Increase `staleTime`** on `useMarkets` (already 5 min — keep), `useLatestResultsPerMarket` (set to 5 min), `useResultsForDate` (60s, realtime keeps it fresh).
+3. **Coalesce realtime channels.** One shared channel for `market_results` instead of one per hook instance. Reduces websocket churn.
+4. **Lazy-load below-the-fold sections** (Schedule table, Quick stats) with `React.lazy` + Suspense fallback skeletons sized to prevent CLS.
 
-## Known issues already visible (will verify, not fix in this pass)
+### C. Admin dashboard — kill the spinners
 
-- Runtime: `Unauthorized: No authorization header provided` — protected serverFn fired before session hydrated. Will confirm which route triggers it.
-- Runtime: SSR hydration mismatch on `HomePage` (date/time text rendered server-side differs from client IST). Will pinpoint the node.
+1. **Default `staleTime: 30_000` + `refetchOnWindowFocus: false`** in the QueryClient so tab-switching doesn't refetch.
+2. **One shared admin realtime channel** per page family (results, payments, support) instead of per-query.
+3. **Code-split heavy admin widgets** (`recharts` on monitoring/analytics, `react-day-picker` on date filters) so the admin shell loads fast and the chart loads only when its tab opens.
+4. **Pre-fetch on hover** of admin nav links via TanStack's `preload="intent"` so clicks feel instant.
 
-## Deliverable
+### D. Bundle + asset diet
 
-A single report grouped by area:
-- ✅ Works
-- ⚠️ Works but rough (UX, copy, slow)
-- ❌ Broken (with exact route, request, error, and suspected root cause)
+1. **Targeted lucide imports** (`lucide-react/icons/zap`) in the admin sidebar and other icon-dense files. Saves ~80 KB gzipped.
+2. **`framer-motion` → `motion`** drop-in (lighter, tree-shakable) where the project uses only `motion.div` + simple variants. Keep `framer-motion` where layout/AnimatePresence is needed.
+3. **`vite-imagetools` AVIF/WebP variants** for hero + market thumbnails. Add `fetchpriority="high"` on the LCP image via `head().links`.
+4. **`loading="lazy"` and `decoding="async"`** on all below-the-fold `<img>` tags.
+5. **Defer `web-push` + service-worker registration** to `requestIdleCallback` so it doesn't compete with first paint.
 
-After you review the report, I'll write a focused fix plan for the ❌ items.
+### E. Polish (subtle, no feature changes)
 
-## Need from you before I start
+1. **Skeletons that match real layout** for: home results grid, admin tables, jodi page sections. No more "Loading…" text.
+2. **View Transitions API** for route changes (progressive-enhancement: Chrome/Edge get the smooth cross-fade, others fall back).
+3. **Sonner toast variants tuned** — shorter durations for success, action button for retryable errors.
+4. **Persistent query cache** (already wired via `useQueryCachePersistence`) — verify it's actually mounted in `__root.tsx` and add a 24h max-age so cold reloads paint with cached data instantly.
 
-1. **Admin credentials** to use in the preview (email + password), or confirmation that the currently logged-in preview session is already admin.
-2. **A test user account** (or permission to sign up a fresh one like `qa+<timestamp>@test.local`) for the user-side flows.
-3. Confirmation it's OK to create real PENDING deposit/withdrawal rows in the DB during the test (they'll be resolved by me in the same run).
+### F. Verify
+
+- Add a one-time `browser--performance_profile` run before/after on `/`, `/login → /dashboard`, `/admin/results/declare` and report deltas (LCP, INP, JS heap, total transfer).
+- Sanity-check: no new hydration warnings, no spinner stuck > 300 ms on warm caches.
+
+## Out of scope (call out, don't do)
+
+- Backend schema redesigns beyond the one `get_me()` RPC.
+- Rewriting the realtime layer.
+- Visual redesign — palette, fonts, layout untouched.
+
+## Expected outcomes
+
+- Sign-in click → next page rendered: **~1.2 s → ~300 ms** on a warm network.
+- Home LCP: **~2.4 s → ~1.0 s** on 4G.
+- Admin route navigation: feels instant after the first visit (preload-on-hover + cached data).
+- Total JS shipped to a guest visitor: **~30–40 % smaller** after icon/motion/chart code-splitting.

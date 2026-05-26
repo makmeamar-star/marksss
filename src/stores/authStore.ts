@@ -49,6 +49,10 @@ async function loadUserFor(userId: string, fallbackEmail: string | null): Promis
   };
 }
 
+// Track the last user id whose profile we just loaded so onAuthStateChange
+// doesn't re-run loadUserFor() right after login()/register()/bootstrap.
+let lastLoadedFor: string | null = null;
+
 export const useAuthStore = create<AuthState>()((set, get) => ({
   user: null,
   loading: false,
@@ -78,6 +82,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       const session = data.session;
       if (session) {
         const u = await loadUserFor(session.user.id, session.user.email ?? null);
+        lastLoadedFor = session.user.id;
         set({ user: u });
       } else {
         set({ user: null });
@@ -90,9 +95,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     }
     supabase.auth.onAuthStateChange(async (_event, sess) => {
       if (sess) {
+        // Skip reloading if login()/register()/bootstrap just loaded this user.
+        if (lastLoadedFor === sess.user.id && get().user?.id === sess.user.id) return;
         const u = await loadUserFor(sess.user.id, sess.user.email ?? null);
+        lastLoadedFor = sess.user.id;
         set({ user: u });
       } else {
+        lastLoadedFor = null;
         set({ user: null });
       }
     });
@@ -112,6 +121,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       if (error || !data.user) throw new Error(error?.message ?? "Login failed");
       const u = await loadUserFor(data.user.id, data.user.email ?? null);
       if (!u) throw new Error("Profile not found");
+      lastLoadedFor = data.user.id;
       set({ user: u });
       return u;
     } finally {
@@ -135,6 +145,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       await new Promise((r) => setTimeout(r, 400));
       const u = await loadUserFor(data.user.id, data.user.email ?? null);
       if (!u) throw new Error("Profile creation pending — try logging in.");
+      lastLoadedFor = data.user.id;
       set({ user: u });
       return u;
     } finally {

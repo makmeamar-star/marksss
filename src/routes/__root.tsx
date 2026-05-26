@@ -157,6 +157,7 @@ function RootComponent() {
 
   // Register PWA service worker — but never inside the Lovable editor preview
   // iframe or on preview hosts (it would cache stale builds).
+  // Deferred to idle time so it doesn't compete with first paint.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;
@@ -167,14 +168,20 @@ function RootComponent() {
       host.includes("lovableproject.com") ||
       host === "localhost" ||
       host === "127.0.0.1";
-    if (inIframe || isPreview) {
-      // Aggressively unregister any SW that may have been installed earlier.
-      navigator.serviceWorker.getRegistrations().then((regs) => {
-        regs.forEach((r) => r.unregister());
-      }).catch(() => {});
-      return;
-    }
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
+    const run = () => {
+      if (inIframe || isPreview) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((r) => r.unregister());
+        }).catch(() => {});
+        return;
+      }
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    };
+    const ric = (window as any).requestIdleCallback as
+      | ((cb: () => void, opts?: { timeout: number }) => number)
+      | undefined;
+    if (ric) ric(run, { timeout: 2000 });
+    else setTimeout(run, 1200);
   }, []);
 
   return (

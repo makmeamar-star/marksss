@@ -25,13 +25,28 @@ export const Route = createFileRoute("/admin")({
   // useAuthCookieSync) and client (via attached Bearer header). Returns
   // { ok: boolean } so we redirect — never throws a 403 during SSR.
   beforeLoad: async ({ location }) => {
+    // Fast path: on the client, if the auth store already knows we're an admin
+    // (loaded by bootstrap or login), skip the server round-trip entirely.
+    if (typeof window !== "undefined") {
+      const { user, hydrated } = useAuthStore.getState();
+      if (hydrated && user) {
+        if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") return;
+        // Hydrated but not admin → bounce immediately, no server call.
+        toast.error("Admin access required", {
+          description: "Please sign in with an admin account.",
+        });
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href, error: "forbidden" } as never,
+        });
+      }
+    }
     try {
       const result = await requireAdminSSR();
       if (result?.ok) return;
     } catch {
       // Treat any transport/runtime error as "not authorized" and redirect.
     }
-    // On the client, surface a toast before bouncing for clearer UX.
     if (typeof window !== "undefined") {
       toast.error("Admin access required", {
         description: "Please sign in with an admin account.",
