@@ -88,7 +88,9 @@ function JodiPage() {
                 </div>
 
                 <div className="rounded-lg bg-background/40 border border-primary/20 py-4 text-center">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Today's Jodi</div>
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {r && r.sessionDate === today ? "Today's Jodi" : r ? `Last result · ${r.sessionDate}` : "Today's Jodi"}
+                  </div>
                   <div className="font-mono text-4xl font-bold text-primary text-glow-gold mt-1">
                     {r?.jodi ?? "--"}
                   </div>
