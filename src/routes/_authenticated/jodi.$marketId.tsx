@@ -1,5 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { isCloseSessionOpen } from "@/lib/marketTime";
+import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Shuffle, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +39,14 @@ function JodiBetPage() {
   if (!market) throw notFound();
 
   const payout = market.payouts.jodi;
+
+  // Tick so the close window recomputes live.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(i);
+  }, []);
+  const canBet = isCloseSessionOpen(market);
 
   const visibleJodis = useMemo(() => {
     switch (filter) {
@@ -76,6 +86,7 @@ function JodiBetPage() {
   };
 
   const addAllToSlip = () => {
+    if (!canBet) return toast.error("Betting closed for today");
     if (picked.size === 0) return toast.error("Select at least one Jodi");
     if (amount < market.minBet) return toast.error(`Min bet ₹${market.minBet}`);
     if (amount > market.maxBet) return toast.error(`Max bet ₹${market.maxBet}`);
@@ -84,7 +95,8 @@ function JodiBetPage() {
       addToSlip({
         marketId: market.id,
         marketName: market.displayName,
-        session: "OPEN",
+        // Jodi settles with the CLOSE result, so the close-time cutoff applies.
+        session: "CLOSE",
         betType: "JODI",
         betNumber: num,
         amount,
@@ -120,7 +132,13 @@ function JodiBetPage() {
                 <Badge className="bg-primary/15 text-primary border-primary/40">Payout {payout}×</Badge>
               </div>
             </div>
-            <CountdownTimer targetTime={market.closeTime} label="Closes in" />
+            {canBet ? (
+              <CountdownTimer targetTime={market.closeTime} label="Closes in" />
+            ) : (
+              <Badge variant="outline" className="text-danger border-danger/40">
+                <Lock className="h-3 w-3 mr-1" /> Closed for today
+              </Badge>
+            )}
           </div>
 
           {/* Stake selector */}
@@ -251,12 +269,12 @@ function JodiBetPage() {
             </div>
             <Button
               onClick={addAllToSlip}
-              disabled={picked.size === 0}
+              disabled={picked.size === 0 || !canBet}
               size="sm"
               className="h-8 text-xs bg-gradient-gold text-background font-bold hover:opacity-90 flex-1 max-w-xs"
             >
               <Plus className="h-4 w-4 mr-1" />
-              Add {picked.size > 0 ? `${picked.size} Jodi` : "to slip"}
+              {!canBet ? "Betting closed" : `Add ${picked.size > 0 ? `${picked.size} Jodi` : "to slip"}`}
             </Button>
           </div>
         </div>

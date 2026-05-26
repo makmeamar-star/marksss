@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Lock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +14,7 @@ import { useBetStore } from "@/stores/betStore";
 import { PANA_CHART, panaType } from "@/lib/panaChart";
 import type { BetType, SessionType } from "@/lib/types";
 import { payoutFor } from "@/lib/settlement";
+import { isOpenSessionOpen, isCloseSessionOpen } from "@/lib/marketTime";
 
 export const Route = createFileRoute("/_authenticated/bet/$marketId")({
   head: ({ params }) => ({ meta: [{ title: `Place Bet · ${params.marketId} — SattaKing Pro` }] }),
@@ -30,10 +31,31 @@ function BetPage() {
 
   const [session, setSession] = useState<SessionType>("OPEN");
   const [amount, setAmount] = useState<number>(10);
+  // Tick every second so session windows recompute live.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(i);
+  }, []);
 
   if (!market) throw notFound();
 
+  const openOpen = isOpenSessionOpen(market);
+  const closeOpen = isCloseSessionOpen(market);
+  const bothClosed = !openOpen && !closeOpen;
+
+  // Auto-switch if currently selected session is no longer bettable.
+  useEffect(() => {
+    if (session === "OPEN" && !openOpen && closeOpen) setSession("CLOSE");
+  }, [session, openOpen, closeOpen]);
+
+  const sessionAvailable = session === "OPEN" ? openOpen : closeOpen;
+  const countdownTarget = session === "OPEN" ? market.openTime : market.closeTime;
+  const countdownLabel = session === "OPEN" ? "Open closes in" : "Close closes in";
+
   const add = (betType: BetType, betNumber: string) => {
+    if (bothClosed) return toast.error("Betting closed for today");
+    if (!sessionAvailable) return toast.error(`${session} session closed`);
     if (amount < market.minBet) return toast.error(`Minimum bet is ₹${market.minBet}`);
     if (amount > market.maxBet) return toast.error(`Maximum bet is ₹${market.maxBet}`);
     addToSlip({
@@ -71,23 +93,36 @@ function BetPage() {
                 <Badge variant="outline">Pana {market.payouts.singlePana}x</Badge>
               </div>
             </div>
-            <CountdownTimer targetTime={market.closeTime} label="Closes in" />
+            {bothClosed ? (
+              <Badge variant="outline" className="text-danger border-danger/40">
+                <Lock className="h-3 w-3 mr-1" /> Closed for today
+              </Badge>
+            ) : (
+              <CountdownTimer targetTime={countdownTarget} label={countdownLabel} />
+            )}
           </div>
 
           {/* Session toggle */}
           <div className="glass rounded-xl p-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-1 rounded-lg bg-surface p-1">
-                {(["OPEN", "CLOSE"] as const).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSession(s)}
-                    className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all
-                      ${session === s ? "bg-gradient-gold text-background" : "text-muted-foreground hover:text-foreground"}`}
-                  >
-                    {s} Session
-                  </button>
-                ))}
+                {(["OPEN", "CLOSE"] as const).map((s) => {
+                  const avail = s === "OPEN" ? openOpen : closeOpen;
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => avail && setSession(s)}
+                      disabled={!avail}
+                      title={!avail ? `${s} session closed` : undefined}
+                      className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-1
+                        ${session === s && avail ? "bg-gradient-gold text-background" : "text-muted-foreground hover:text-foreground"}
+                        ${!avail ? "opacity-40 cursor-not-allowed line-through" : ""}`}
+                    >
+                      {!avail && <Lock className="h-3 w-3" />}
+                      {s} Session
+                    </button>
+                  );
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs uppercase tracking-widest text-muted-foreground">Stake</span>
@@ -112,6 +147,16 @@ function BetPage() {
               </div>
             </div>
           </div>
+
+          {bothClosed && (
+            <div className="glass rounded-xl p-4 border border-danger/40 text-center">
+              <Lock className="h-5 w-5 mx-auto mb-2 text-danger" />
+              <p className="text-sm font-semibold text-danger">Betting closed for today</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Open cutoff {market.openTime} · Close cutoff {market.closeTime} (IST). New bets open in the next session.
+              </p>
+            </div>
+          )}
 
           {/* Bet type tabs */}
           <Tabs defaultValue="single" className="space-y-4">
