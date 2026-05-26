@@ -43,6 +43,8 @@ function LoginPage() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [emailOtp, setEmailOtp] = useState("");
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
   const [remember, setRemember] = useState(true);
@@ -100,7 +102,7 @@ function LoginPage() {
     if (!phone || phone.length < 8) return toast.error("Enter a valid phone number with country code (e.g. +91…)");
     setBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({ phone });
+      const { error } = await supabase.auth.signInWithOtp({ phone, options: { shouldCreateUser: true } });
       if (error) throw error;
       setOtpSent(true);
       toast.success("OTP sent to your phone");
@@ -121,6 +123,39 @@ function LoginPage() {
       navigate({ to: "/dashboard" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Invalid OTP");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sendEmailOtp = async () => {
+    if (!email || !email.includes("@")) return toast.error("Enter a valid email");
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/dashboard` },
+      });
+      if (error) throw error;
+      setEmailOtpSent(true);
+      toast.success("6-digit code sent to your email");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send code");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verifyEmailOtp = async () => {
+    if (!emailOtp) return toast.error("Enter the code from your email");
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token: emailOtp, type: "email" });
+      if (error) throw error;
+      toast.success("Signed in!");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Invalid code");
     } finally {
       setBusy(false);
     }

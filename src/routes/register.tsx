@@ -47,7 +47,13 @@ function RegisterPage() {
       toast.success(`Welcome ${form.username}! ₹1,000 bonus credited.`);
       navigate({ to: "/dashboard" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Sign up failed");
+      const msg = err instanceof Error ? err.message : "Sign up failed";
+      if (msg === "CONFIRM_EMAIL") {
+        toast.success("Account created — check your email to confirm before signing in.");
+        navigate({ to: "/login" });
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setBusy(false);
     }
