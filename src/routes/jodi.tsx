@@ -34,10 +34,18 @@ export const Route = createFileRoute("/jodi")({
   component: JodiPage,
 });
 
+function yesterdayIST() {
+  const d = new Date(todayIST() + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
 function JodiPage() {
   const today = todayIST();
+  const yesterday = useMemo(() => yesterdayIST(), []);
   const { data: markets = [] } = useMarkets();
   const { data: results = [] } = useResultsForDate(today);
+  const { data: yResults = [] } = useResultsForDate(yesterday);
   const { data: latestPerMarket = {} } = useLatestResultsPerMarket();
   useEnsureFreshResults();
 
