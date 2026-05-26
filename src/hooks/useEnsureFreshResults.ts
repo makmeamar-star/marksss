@@ -3,6 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMarkets, useResultsForDate } from "./useGameData";
 import { todayIST } from "@/lib/marketTime";
 import { triggerFreshScrape } from "@/lib/scrapeTrigger.functions";
+import { supabase } from "@/integrations/supabase/client";
+
 
 const COOLDOWN_MS = 90_000; // don't ping more than once every 90s per device
 const KEY = "scrape-ping-at";
@@ -41,12 +43,19 @@ export function useEnsureFreshResults() {
     if (Date.now() - last < COOLDOWN_MS) return;
     sessionStorage.setItem(KEY, String(Date.now()));
 
-    // Trigger a server-side scrape via the authenticated wrapper. Unauthenticated
-    // users no-op (cron picks up new results every 15 minutes regardless).
-    triggerFreshScrape()
-      .then(() => {
+    // Trigger a server-side scrape via the authenticated wrapper. Only call
+    // when the user has a session — the serverFn requires auth and would throw
+    // "Unauthorized" otherwise. Cron picks up new results every 15 min regardless.
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      try {
+        await triggerFreshScrape();
         setTimeout(() => qc.invalidateQueries({ queryKey: ["results", today] }), 1500);
-      })
-      .catch(() => {});
+      } catch {
+        // swallow
+      }
+    })();
+
   }, [markets, results, today, qc]);
 }
