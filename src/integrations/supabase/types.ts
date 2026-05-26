@@ -1713,6 +1713,17 @@ export type Database = {
           username: string
         }[]
       }
+      admin_override_result: {
+        Args: {
+          _confirm: string
+          _market_id: string
+          _new_pana: string
+          _reason: string
+          _session: string
+          _session_date: string
+        }
+        Returns: Json
+      }
       admin_risk_summary: { Args: never; Returns: Json }
       admin_set_user_status: {
         Args: { _reason: string; _status: string; _user_id: string }
