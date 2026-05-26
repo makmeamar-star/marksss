@@ -138,7 +138,7 @@ function HomePage() {
         </div>
 
         <div className="mt-4 text-center text-xs text-muted-foreground">
-          Showing top {topMarkets.length} markets ·{" "}
+          Showing top {mounted ? topMarkets.length : "—"} markets ·{" "}
           <Link to="/markets" className="text-primary hover:underline">View all markets</Link>
         </div>
       </section>
