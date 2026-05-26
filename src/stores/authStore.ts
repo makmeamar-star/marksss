@@ -145,6 +145,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       await new Promise((r) => setTimeout(r, 400));
       const u = await loadUserFor(data.user.id, data.user.email ?? null);
       if (!u) throw new Error("Profile creation pending — try logging in.");
+      lastLoadedFor = data.user.id;
       set({ user: u });
       return u;
     } finally {

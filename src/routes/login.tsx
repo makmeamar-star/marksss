@@ -13,6 +13,14 @@ import { lovable } from "@/integrations/lovable";
 export const Route = createFileRoute("/login")({
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
+    // Fast path: trust the in-memory auth store if it's already hydrated.
+    const { user, hydrated } = useAuthStore.getState();
+    if (hydrated) {
+      if (!user) return;
+      const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
+      throw redirect({ to: isAdmin ? "/admin" : "/dashboard" });
+    }
+    // Cold load — fall back to a single round-trip to decide.
     const { data } = await supabase.auth.getSession();
     if (!data.session) return;
     const { data: roleRow } = await supabase
