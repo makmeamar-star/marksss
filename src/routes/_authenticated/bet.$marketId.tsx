@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Lock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +14,7 @@ import { useBetStore } from "@/stores/betStore";
 import { PANA_CHART, panaType } from "@/lib/panaChart";
 import type { BetType, SessionType } from "@/lib/types";
 import { payoutFor } from "@/lib/settlement";
+import { isOpenSessionOpen, isCloseSessionOpen } from "@/lib/marketTime";
 
 export const Route = createFileRoute("/_authenticated/bet/$marketId")({
   head: ({ params }) => ({ meta: [{ title: `Place Bet · ${params.marketId} — SattaKing Pro` }] }),
@@ -30,10 +31,31 @@ function BetPage() {
 
   const [session, setSession] = useState<SessionType>("OPEN");
   const [amount, setAmount] = useState<number>(10);
+  // Tick every second so session windows recompute live.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(i);
+  }, []);
 
   if (!market) throw notFound();
 
+  const openOpen = isOpenSessionOpen(market);
+  const closeOpen = isCloseSessionOpen(market);
+  const bothClosed = !openOpen && !closeOpen;
+
+  // Auto-switch if currently selected session is no longer bettable.
+  useEffect(() => {
+    if (session === "OPEN" && !openOpen && closeOpen) setSession("CLOSE");
+  }, [session, openOpen, closeOpen]);
+
+  const sessionAvailable = session === "OPEN" ? openOpen : closeOpen;
+  const countdownTarget = session === "OPEN" ? market.openTime : market.closeTime;
+  const countdownLabel = session === "OPEN" ? "Open closes in" : "Close closes in";
+
   const add = (betType: BetType, betNumber: string) => {
+    if (bothClosed) return toast.error("Betting closed for today");
+    if (!sessionAvailable) return toast.error(`${session} session closed`);
     if (amount < market.minBet) return toast.error(`Minimum bet is ₹${market.minBet}`);
     if (amount > market.maxBet) return toast.error(`Maximum bet is ₹${market.maxBet}`);
     addToSlip({
