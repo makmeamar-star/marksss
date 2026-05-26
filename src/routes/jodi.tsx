@@ -9,7 +9,16 @@ import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hook
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
 
-const JODI_MARKET_IDS = ["gali", "disawar", "faridabad", "ghaziabad"] as const;
+const JODI_MARKET_IDS = [
+  "gali",
+  "disawar",
+  "faridabad",
+  "ghaziabad",
+  "mohali",
+  "delhi_bazar",
+  "shri_ganesh",
+  "rajdhani_jodi",
+] as const;
 
 export const Route = createFileRoute("/jodi")({
   head: () => ({
