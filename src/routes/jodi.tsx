@@ -9,7 +9,16 @@ import { useMarkets, useResultsForDate, useLatestResultsPerMarket } from "@/hook
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
 import { todayIST } from "@/lib/marketTime";
 
-const JODI_MARKET_IDS = ["gali", "disawar", "faridabad", "ghaziabad"] as const;
+const JODI_MARKET_IDS = [
+  "gali",
+  "disawar",
+  "faridabad",
+  "ghaziabad",
+  "mohali",
+  "delhi_bazar",
+  "shri_ganesh",
+  "rajdhani_jodi",
+] as const;
 
 export const Route = createFileRoute("/jodi")({
   head: () => ({
@@ -79,7 +88,9 @@ function JodiPage() {
                 </div>
 
                 <div className="rounded-lg bg-background/40 border border-primary/20 py-4 text-center">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Today's Jodi</div>
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {r && r.sessionDate === today ? "Today's Jodi" : r ? `Last result · ${r.sessionDate}` : "Today's Jodi"}
+                  </div>
                   <div className="font-mono text-4xl font-bold text-primary text-glow-gold mt-1">
                     {r?.jodi ?? "--"}
                   </div>
