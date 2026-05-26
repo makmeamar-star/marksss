@@ -1621,6 +1621,30 @@ export type Database = {
       }
     }
     Views: {
+      active_promo_codes: {
+        Row: {
+          bonus_amount: number | null
+          code: string | null
+          description: string | null
+          expires_at: string | null
+          min_deposit: number | null
+        }
+        Insert: {
+          bonus_amount?: number | null
+          code?: string | null
+          description?: string | null
+          expires_at?: string | null
+          min_deposit?: number | null
+        }
+        Update: {
+          bonus_amount?: number | null
+          code?: string | null
+          description?: string | null
+          expires_at?: string | null
+          min_deposit?: number | null
+        }
+        Relationships: []
+      }
       leaderboard_winnings: {
         Row: {
           month_won: number | null
