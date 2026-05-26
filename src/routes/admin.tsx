@@ -3,6 +3,7 @@ import {
   Link,
   Outlet,
   redirect,
+  isRedirect,
   useRouterState,
 } from "@tanstack/react-router";
 import {
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuthStore } from "@/stores/authStore";
 import { LiveClock } from "@/components/admin/LiveClock";
+import { supabase } from "@/integrations/supabase/client";
 
 import { ShieldX } from "lucide-react";
 import { toast } from "sonner";
@@ -21,32 +23,56 @@ import { toast } from "sonner";
 import { requireAdminSSR } from "@/lib/adminGuardSSR.functions";
 
 export const Route = createFileRoute("/admin")({
-  // SSR-safe: runs on both server (reading sb-access-token cookie set by
-  // useAuthCookieSync) and client (via attached Bearer header). Returns
-  // { ok: boolean } so we redirect — never throws a 403 during SSR.
+  // Robust admin gate. Order of checks:
+  //   1) Positive store fast-path (hydrated + role===ADMIN) → allow.
+  //   2) If not hydrated yet on the client, await bootstrap() before deciding.
+  //   3) Server check via requireAdminSSR (Bearer header or cookie).
+  //   4) Last-chance browser-side user_roles lookup (RLS allows users to
+  //      view their OWN roles) — covers the SSR-cookie-missing race.
+  //   5) Only then redirect with a toast.
   beforeLoad: async ({ location }) => {
-    // Fast path: on the client, if the auth store already knows we're an admin
-    // (loaded by bootstrap or login), skip the server round-trip entirely.
-    if (typeof window !== "undefined") {
-      const { user, hydrated } = useAuthStore.getState();
-      if (hydrated && user) {
-        if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") return;
-        // Hydrated but not admin → bounce immediately, no server call.
-        toast.error("Admin access required", {
-          description: "Please sign in with an admin account.",
-        });
-        throw redirect({
-          to: "/login",
-          search: { redirect: location.href, error: "forbidden" } as never,
-        });
-      }
-    }
     try {
-      const result = await requireAdminSSR();
-      if (result?.ok) return;
-    } catch {
-      // Treat any transport/runtime error as "not authorized" and redirect.
+      if (typeof window !== "undefined") {
+        let { user, hydrated } = useAuthStore.getState();
+        if (!hydrated) {
+          await useAuthStore.getState().bootstrap();
+          ({ user, hydrated } = useAuthStore.getState());
+        }
+        if (hydrated && user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN")) {
+          return;
+        }
+      }
+
+      try {
+        const result = await requireAdminSSR();
+        if (result?.ok) return;
+      } catch (e) {
+        if (isRedirect(e)) throw e;
+        // fall through to last-chance check
+      }
+
+      // Last-chance: query the DB directly as the current user.
+      if (typeof window !== "undefined") {
+        const { data: sess } = await supabase.auth.getSession();
+        const uid = sess.session?.user?.id;
+        if (uid) {
+          const { data: roleRow } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", uid)
+            .eq("role", "admin")
+            .maybeSingle();
+          if (roleRow) {
+            // Refresh the store so subsequent navs hit the fast path.
+            void useAuthStore.getState().refreshProfile();
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      if (isRedirect(e)) throw e;
     }
+
     if (typeof window !== "undefined") {
       toast.error("Admin access required", {
         description: "Please sign in with an admin account.",
@@ -57,9 +83,6 @@ export const Route = createFileRoute("/admin")({
       search: { redirect: location.href, error: "forbidden" } as never,
     });
   },
-  // Admin check is done client-side in beforeLoad above (which has session access).
-  // Calling requireAdmin() as a server-fn loader fails during SSR/prerender (no Bearer
-  // token attached yet) and returns 403, blocking legit admins on hard navigation.
   errorComponent: () => <Forbidden403 />,
   head: () => ({ meta: [{ title: "Admin — SattaKing Pro" }] }),
   component: AdminLayout,

@@ -1,76 +1,37 @@
-# Simplify Admin + Harden Declare / Automation / Scrape
+## Problem
 
-Goal: make the admin console focused on daily ops, and verify the three result-flow pages (Declare, Automation, Scrape) actually work end-to-end.
+Admin (lafxnga@gmail.com — confirmed `admin` row in `user_roles`) opens `/admin/results/declare` and is bounced with **403 → /login**. The `Declare Result` feature itself stays — we just need to stop the guard from wrongly rejecting real admins.
 
----
+Root cause is in `src/routes/admin.tsx` `beforeLoad`:
 
-## 1. Hide demo + clutter from the admin dashboard
+1. **Fast path is too aggressive.** If `hydrated && user && user.role !== "ADMIN"`, it *immediately* redirects with no server check. On a fresh page load the auth store can become `hydrated` before the user object is replaced by the freshly-loaded admin profile (or briefly carries a stale `USER` role), so a real admin gets bounced without any server verification.
+2. **SSR fallback is fragile.** When `requireAdminSSR()` runs during SSR/preview prerender, the `sb-access-token` cookie set by `useAuthCookieSync` isn't present yet (cookie is written client-side after mount), and no Bearer header is attached during `beforeLoad`. It returns `{ok:false}` → redirect.
+3. **`try/catch` swallows `redirect()`.** The outer `try { await requireAdminSSR() } catch {}` would also swallow any thrown TanStack `redirect`, masking signal.
 
-**`src/routes/admin/index.tsx`**
-- Remove the `DemoLoginToggle` section entirely (component + render + `KeyRound` import + the `Switch`/`useQueryClient`/`useState`/`toast` imports it owns).
-- Trim Quick-action tiles to the daily-use set:
-  Markets, Declare, Automation, Scraper, History, Deposits, Withdrawals, Users.
-  Drop: Alerts, Observations, Automation Audit.
+## Plan
 
-**`src/routes/admin.tsx` (sidebar `NAV`)**
-- Keep (in this order): Dashboard, Markets, Users, Bets Monitor, Declare Results, Result History, Automation, Scraper, Deposits, Withdrawals, Payment Channels, Customer Support, KYC Review.
-- Move into a collapsed "Advanced" group at the bottom (still reachable, just out of the way): Automation Runs, Automation Audit, Broadcasts, Risk & Ops, Monitoring, PWA Funnel.
+### 1. Harden `/admin` beforeLoad (`src/routes/admin.tsx`)
+- Remove the "fast-path auto-redirect when role !== ADMIN" branch. Only treat the store as authoritative for the **positive** case (role IS admin → allow). On negative/unknown, fall through to a server check.
+- If `!hydrated` on the client, `await useAuthStore.getState().bootstrap()` (idempotent) before deciding, so we never make the redirect decision on a half-loaded store.
+- After the server check, on failure, re-query `user_roles` one more time via the browser supabase client as a last-chance check (RLS already allows users to view own roles). This catches the SSR-cookie-missing case without a false 403.
+- Use `isRedirect(e)` in the `catch` so redirects aren't swallowed.
 
-**`src/routes/admin/results.declare.tsx`**
-- Right column: keep `PendingTodayPanel` + `DeclaredTodayPanel`. Remove `PanaReferencePanel` and `ActivityFeedPanel`.
-- Bottom: remove `AuditLogPanel` and `ShortcutsLegend` (shortcuts still work, just no on-screen legend).
-- Keep `MissingResultsBanner`, header, `SessionSelectorCard`, `PanaInputCard`, `ImpactPreviewCard`, `DeclareButton`.
+### 2. Make `requireAdminSSR` also accept the standard Bearer header path reliably
+- Already does; but add a small change: when neither header nor cookie is present, return `{ok:false, reason:"no-token"}` so the client can distinguish "really not admin" vs "no session yet" and avoid an immediate redirect on the latter.
 
-**`src/routes/admin/results.scrape.tsx`**
-- Drop "Backfill history" card (rarely used, confuses operators).
-- Drop "Per-market latest status" table — duplicated by Source coverage.
-- Keep: stat tiles, Source coverage with Refresh, "Run scraper now" button, Recent attempts table (limited to 20 rows for readability).
+### 3. Keep `Declare Result` UI and manual declare flow exactly as-is
+- No changes to `src/routes/admin/results.declare.tsx`, `DeclareButton.tsx`, or `adminDeclareResult.functions.ts`. Manual admin declare stays the primary way to publish a result.
 
-**`src/routes/admin/results.automation.tsx`**
-- Remove "Grace (min)" column input and "Last run" column from the main table — leave only Market, Times, Auto OPEN, Auto CLOSE. Grace stays at default in DB.
-- Keep "Run scheduler now" button and the explanatory footer.
-
----
-
-## 2. Debug + harden Declare Result flow
-
-Current behaviour that breaks UX:
-- `DeclareButton.handleConfirm` calls `qc.invalidateQueries()` with no key → invalidates *every* query in the app, including auth/profile/markets. That's part of the post-declare lag and occasional UI flashes.
-- After a successful server declare, it also runs the local `declareResult()` mirror which can double-toast.
-
-Fix:
-- Remove the catch-all `qc.invalidateQueries()`; keep only the targeted keys.
-- Only fall back to the local mirror if the server declare succeeded *and* you actually need the digit; otherwise just toast success once and invalidate.
-- Surface server error messages verbatim (the RPC returns useful text like "session already declared" — keep it).
-- Add a small "Result already declared" guard: before opening confirm dialog, check `DeclaredTodayPanel`'s data; if same market+session already has a pana, switch the CTA to "Correct" via the existing `CorrectResultDialog` path.
-
-## 3. Debug + harden Automation
-
-- The "Run scheduler now" button calls `run_due_auto_declarations` RPC directly. Wire the same call into a small server-fn (`runDueAutoDeclarations`) so it goes through `requireSupabaseAuth` middleware and shows a clear error toast on RLS failure (current direct RPC silently no-ops if the user role check fails).
-- Verify a `pg_cron` job exists hitting `/api/public/hooks/auto-declare-results` every minute. If missing, schedule it via the supabase insert tool (not a migration — it embeds the project URL).
-- On the page, show next-run countdown using `last_run_at` so admins can tell at a glance the scheduler is alive.
-
-## 4. Debug + harden Scrape
-
-- `runLive` mutation: surface `d.count` per-source breakdown in the toast (`OK: x, NOT_YET: y, ERROR: z`) so admins know whether nothing came back vs everything failed.
-- Add per-market Refresh failure path: today errors render as raw text — switch to the same `StatusBadge` styling.
-- Verify the `/api/public/hooks/scrape-results` cron job is scheduled every 2–3 minutes. If not, schedule it.
-- Verify `HOOK_SECRET` env var exists on the worker; if not, prompt to add via `add_secret` (blocks scrape from running).
-
-## 5. Verification
-
-After the edits:
-1. Load `/admin` — confirm Demo toggle is gone, tile grid is 8 items, sidebar is shorter.
-2. Open `/admin/results/declare`, declare a test pana → single success toast, panels update without full-app refetch.
-3. Open `/admin/results/automation`, hit "Run scheduler now" → toast shows ran count.
-4. Open `/admin/results/scrape`, hit "Run scraper now" → toast shows attempt count + status breakdown.
-5. Check `cron.job` table to confirm scrape + auto-declare jobs are scheduled.
-
----
+### 4. Verify
+- After edit, hard-refresh `/admin/results/declare` while logged in as `lafxnga@gmail.com`; confirm page loads (no 403).
+- Trigger a manual declare on any pending market and confirm: declared row appears, settlement runs, toast success.
+- Sign out and visit `/admin/results/declare` → still correctly redirected to `/login` with toast (true negative still works).
 
 ## Out of scope
-- Auth flow further tuning (already done in previous pass).
-- Re-skinning admin pages.
-- Adding new features beyond what's listed.
+- Scraper / auto-declare cron (already addressed in previous turn, awaiting publish).
+- Hydration mismatch warning on `HomePage` ("15" vs "0") — separate issue.
+- Any restyle of the declare page.
 
-If you want even fewer sidebar items or a different set of "daily use" tiles, say the word and I'll trim further before building.
+## Files touched
+- `src/routes/admin.tsx` — relax fast-path, add bootstrap await, add fallback role re-check, respect `isRedirect`.
+- `src/lib/adminGuardSSR.functions.ts` — return reason flag (tiny additive change).
