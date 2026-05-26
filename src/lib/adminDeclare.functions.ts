@@ -3,8 +3,12 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-async function ensureAdmin(supabase: any, userId: string) {
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+async function ensureAdmin(_supabase: any, userId: string) {
+  // Use service-role lookup so RLS can't false-negative this.
+  const { data } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
   if (!(data ?? []).some((r: any) => r.role === "admin")) {
     throw new Response("Forbidden", { status: 403 });
   }
