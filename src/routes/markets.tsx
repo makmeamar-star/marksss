@@ -6,10 +6,11 @@ import { z } from "zod";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ResultCard } from "@/components/ResultCard";
-import { useLatestResultsPerMarket } from "@/hooks/useGameData";
+import { useLatestResultsPerMarket, useLiveTick } from "@/hooks/useGameData";
 import { useMarkets, useResultsForDate } from "@/hooks/useGameData";
 import { useEnsureFreshResults } from "@/hooks/useEnsureFreshResults";
-import { todayIST } from "@/lib/marketTime";
+import { isAcceptingBets, nextCutoffHHMM, todayIST } from "@/lib/marketTime";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
