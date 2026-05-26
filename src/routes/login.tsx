@@ -43,6 +43,8 @@ function LoginPage() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [emailOtp, setEmailOtp] = useState("");
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
   const [remember, setRemember] = useState(true);
@@ -100,7 +102,7 @@ function LoginPage() {
     if (!phone || phone.length < 8) return toast.error("Enter a valid phone number with country code (e.g. +91…)");
     setBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({ phone });
+      const { error } = await supabase.auth.signInWithOtp({ phone, options: { shouldCreateUser: true } });
       if (error) throw error;
       setOtpSent(true);
       toast.success("OTP sent to your phone");
@@ -121,6 +123,39 @@ function LoginPage() {
       navigate({ to: "/dashboard" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Invalid OTP");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sendEmailOtp = async () => {
+    if (!email || !email.includes("@")) return toast.error("Enter a valid email");
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/dashboard` },
+      });
+      if (error) throw error;
+      setEmailOtpSent(true);
+      toast.success("6-digit code sent to your email");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send code");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verifyEmailOtp = async () => {
+    if (!emailOtp) return toast.error("Enter the code from your email");
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token: emailOtp, type: "email" });
+      if (error) throw error;
+      toast.success("Signed in!");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Invalid code");
     } finally {
       setBusy(false);
     }
@@ -173,9 +208,10 @@ function LoginPage() {
           </div>
 
           <Tabs defaultValue="email" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="email"><Mail className="mr-2 h-3.5 w-3.5" />Email</TabsTrigger>
-              <TabsTrigger value="phone"><Phone className="mr-2 h-3.5 w-3.5" />Phone</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="email"><Mail className="mr-1.5 h-3.5 w-3.5" />Password</TabsTrigger>
+              <TabsTrigger value="email-otp"><Mail className="mr-1.5 h-3.5 w-3.5" />Email OTP</TabsTrigger>
+              <TabsTrigger value="phone"><Phone className="mr-1.5 h-3.5 w-3.5" />Phone</TabsTrigger>
             </TabsList>
 
             <TabsContent value="email" className="space-y-4 pt-4">
@@ -197,16 +233,38 @@ function LoginPage() {
                   <label className="flex items-center gap-2 text-muted-foreground cursor-pointer select-none">
                     <input type="checkbox" className="accent-[var(--primary)]" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me
                   </label>
-                  <button type="button" className="text-primary hover:underline" onClick={async () => {
-                    if (!email || !email.includes("@")) return toast.error("Enter your account email above first");
-                    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
-                    if (error) toast.error(error.message); else toast.success("Password reset email sent");
-                  }}>Forgot password?</button>
+                  <Link to="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
                 </div>
                 <Button type="submit" disabled={busy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
                   {busy ? "Signing in…" : "Sign In"}
                 </Button>
               </form>
+            </TabsContent>
+
+            <TabsContent value="email-otp" className="space-y-4 pt-4">
+              {!emailOtpSent ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="email-otp-input">Email</Label>
+                    <Input id="email-otp-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" />
+                    <p className="text-[10px] text-muted-foreground">We'll email you a 6-digit code. New here? An account is created automatically.</p>
+                  </div>
+                  <Button type="button" onClick={sendEmailOtp} disabled={busy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
+                    {busy ? "Sending…" : "Send code"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="email-code">Enter code</Label>
+                    <Input id="email-code" inputMode="numeric" value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} placeholder="123456" autoComplete="one-time-code" />
+                    <p className="text-[10px] text-muted-foreground">Sent to {email}. <button type="button" className="text-primary hover:underline" onClick={() => { setEmailOtpSent(false); setEmailOtp(""); }}>Change email</button></p>
+                  </div>
+                  <Button type="button" onClick={verifyEmailOtp} disabled={busy} className="w-full bg-gradient-gold text-background font-bold hover:opacity-90">
+                    {busy ? "Verifying…" : "Verify & Sign In"}
+                  </Button>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="phone" className="space-y-4 pt-4">

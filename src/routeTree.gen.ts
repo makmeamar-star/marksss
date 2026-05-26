@@ -20,6 +20,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JodiRouteImport } from './routes/jodi'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ChartsRouteImport } from './routes/charts'
 import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AdminForbiddenRouteImport } from './routes/admin-forbidden'
@@ -127,6 +128,11 @@ const LoginRoute = LoginRouteImport.update({
 const JodiRoute = JodiRouteImport.update({
   id: '/jodi',
   path: '/jodi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChartsRoute = ChartsRouteImport.update({
@@ -419,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/admin-forbidden': typeof AdminForbiddenRoute
   '/admin-login': typeof AdminLoginRoute
   '/charts': typeof ChartsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/jodi': typeof JodiRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
@@ -483,6 +490,7 @@ export interface FileRoutesByTo {
   '/admin-forbidden': typeof AdminForbiddenRoute
   '/admin-login': typeof AdminLoginRoute
   '/charts': typeof ChartsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/jodi': typeof JodiRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
@@ -550,6 +558,7 @@ export interface FileRoutesById {
   '/admin-forbidden': typeof AdminForbiddenRoute
   '/admin-login': typeof AdminLoginRoute
   '/charts': typeof ChartsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/jodi': typeof JodiRoute
   '/login': typeof LoginRoute
   '/markets': typeof MarketsRoute
@@ -617,6 +626,7 @@ export interface FileRouteTypes {
     | '/admin-forbidden'
     | '/admin-login'
     | '/charts'
+    | '/forgot-password'
     | '/jodi'
     | '/login'
     | '/markets'
@@ -681,6 +691,7 @@ export interface FileRouteTypes {
     | '/admin-forbidden'
     | '/admin-login'
     | '/charts'
+    | '/forgot-password'
     | '/jodi'
     | '/login'
     | '/markets'
@@ -747,6 +758,7 @@ export interface FileRouteTypes {
     | '/admin-forbidden'
     | '/admin-login'
     | '/charts'
+    | '/forgot-password'
     | '/jodi'
     | '/login'
     | '/markets'
@@ -814,6 +826,7 @@ export interface RootRouteChildren {
   AdminForbiddenRoute: typeof AdminForbiddenRoute
   AdminLoginRoute: typeof AdminLoginRoute
   ChartsRoute: typeof ChartsRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   JodiRoute: typeof JodiRoute
   LoginRoute: typeof LoginRoute
   MarketsRoute: typeof MarketsRoute
@@ -912,6 +925,13 @@ declare module '@tanstack/react-router' {
       path: '/jodi'
       fullPath: '/jodi'
       preLoaderRoute: typeof JodiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/charts': {
@@ -1390,6 +1410,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminForbiddenRoute: AdminForbiddenRoute,
   AdminLoginRoute: AdminLoginRoute,
   ChartsRoute: ChartsRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   JodiRoute: JodiRoute,
   LoginRoute: LoginRoute,
   MarketsRoute: MarketsRoute,
@@ -1414,13 +1435,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
