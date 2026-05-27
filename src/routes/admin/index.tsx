@@ -142,25 +142,28 @@ function AdminHome() {
           </div>
         </div>
 
-        <div className="rounded-2xl glass-gold p-4 sm:p-5">
-          <h2 className="font-display text-lg font-bold mb-3">Recent activity</h2>
-          <ul className="space-y-2 max-h-96 overflow-y-auto pr-1">
-            {(data?.activity ?? []).map((a) => (
-              <li key={a.id} className="text-xs border-b border-border/30 pb-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-primary">{a.action}</span>
-                  <span className="text-muted-foreground">{timeAgo(a.created_at)}</span>
-                </div>
-                <div className="text-muted-foreground truncate">
-                  {a.market_id ? `${a.market_id} · ` : ""}{a.session ?? ""} {a.pana ?? ""}
-                  {a.actor_email ? ` · ${a.actor_email}` : ""}
-                </div>
-              </li>
-            ))}
-            {(!data?.activity || data.activity.length === 0) && (
-              <li className="text-xs text-muted-foreground">No recent activity.</li>
-            )}
-          </ul>
+        <div className="space-y-4">
+          <QuickUserAction />
+          <div className="rounded-2xl glass-gold p-4 sm:p-5">
+            <h2 className="font-display text-lg font-bold mb-3">Recent activity</h2>
+            <ul className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {(data?.activity ?? []).map((a) => (
+                <li key={a.id} className="text-xs border-b border-border/30 pb-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-primary">{a.action}</span>
+                    <span className="text-muted-foreground">{timeAgo(a.created_at)}</span>
+                  </div>
+                  <div className="text-muted-foreground truncate">
+                    {a.market_id ? `${a.market_id} · ` : ""}{a.session ?? ""} {a.pana ?? ""}
+                    {a.actor_email ? ` · ${a.actor_email}` : ""}
+                  </div>
+                </li>
+              ))}
+              {(!data?.activity || data.activity.length === 0) && (
+                <li className="text-xs text-muted-foreground">No recent activity.</li>
+              )}
+            </ul>
+          </div>
         </div>
       </div>
 
