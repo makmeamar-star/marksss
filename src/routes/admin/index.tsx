@@ -9,6 +9,7 @@ import {
 import { getAdminOverview } from "@/lib/adminDashboard.functions";
 import { getMissingResults } from "@/lib/missingResults.functions";
 import { MissingResultsBanner } from "@/components/admin/MissingResultsBanner";
+import { QuickUserAction } from "@/components/admin/QuickUserAction";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/")({
