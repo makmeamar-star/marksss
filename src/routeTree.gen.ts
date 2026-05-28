@@ -55,6 +55,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
 import { Route as AdminResultsScrapeRouteImport } from './routes/admin/results.scrape'
 import { Route as AdminResultsObservationsRouteImport } from './routes/admin/results.observations'
+import { Route as AdminResultsManualRouteImport } from './routes/admin/results.manual'
 import { Route as AdminResultsHistoryRouteImport } from './routes/admin/results.history'
 import { Route as AdminResultsDeclareAuditRouteImport } from './routes/admin/results.declare-audit'
 import { Route as AdminResultsDeclareRouteImport } from './routes/admin/results.declare'
@@ -310,6 +311,11 @@ const AdminResultsObservationsRoute =
     path: '/results/observations',
     getParentRoute: () => AdminRoute,
   } as any)
+const AdminResultsManualRoute = AdminResultsManualRouteImport.update({
+  id: '/results/manual',
+  path: '/results/manual',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminResultsHistoryRoute = AdminResultsHistoryRouteImport.update({
   id: '/results/history',
   path: '/results/history',
@@ -481,6 +487,7 @@ export interface FileRoutesByFullPath {
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/declare-audit': typeof AdminResultsDeclareAuditRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/admin/results/manual': typeof AdminResultsManualRoute
   '/admin/results/observations': typeof AdminResultsObservationsRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/alert-missing-results': typeof ApiPublicHooksAlertMissingResultsRoute
@@ -547,6 +554,7 @@ export interface FileRoutesByTo {
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/declare-audit': typeof AdminResultsDeclareAuditRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/admin/results/manual': typeof AdminResultsManualRoute
   '/admin/results/observations': typeof AdminResultsObservationsRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/alert-missing-results': typeof ApiPublicHooksAlertMissingResultsRoute
@@ -616,6 +624,7 @@ export interface FileRoutesById {
   '/admin/results/declare': typeof AdminResultsDeclareRoute
   '/admin/results/declare-audit': typeof AdminResultsDeclareAuditRoute
   '/admin/results/history': typeof AdminResultsHistoryRoute
+  '/admin/results/manual': typeof AdminResultsManualRoute
   '/admin/results/observations': typeof AdminResultsObservationsRoute
   '/admin/results/scrape': typeof AdminResultsScrapeRoute
   '/api/public/hooks/alert-missing-results': typeof ApiPublicHooksAlertMissingResultsRoute
@@ -685,6 +694,7 @@ export interface FileRouteTypes {
     | '/admin/results/declare'
     | '/admin/results/declare-audit'
     | '/admin/results/history'
+    | '/admin/results/manual'
     | '/admin/results/observations'
     | '/admin/results/scrape'
     | '/api/public/hooks/alert-missing-results'
@@ -751,6 +761,7 @@ export interface FileRouteTypes {
     | '/admin/results/declare'
     | '/admin/results/declare-audit'
     | '/admin/results/history'
+    | '/admin/results/manual'
     | '/admin/results/observations'
     | '/admin/results/scrape'
     | '/api/public/hooks/alert-missing-results'
@@ -819,6 +830,7 @@ export interface FileRouteTypes {
     | '/admin/results/declare'
     | '/admin/results/declare-audit'
     | '/admin/results/history'
+    | '/admin/results/manual'
     | '/admin/results/observations'
     | '/admin/results/scrape'
     | '/api/public/hooks/alert-missing-results'
@@ -1185,6 +1197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResultsObservationsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/results/manual': {
+      id: '/admin/results/manual'
+      path: '/results/manual'
+      fullPath: '/admin/results/manual'
+      preLoaderRoute: typeof AdminResultsManualRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/results/history': {
       id: '/admin/results/history'
       path: '/results/history'
@@ -1393,6 +1412,7 @@ interface AdminRouteChildren {
   AdminResultsDeclareRoute: typeof AdminResultsDeclareRoute
   AdminResultsDeclareAuditRoute: typeof AdminResultsDeclareAuditRoute
   AdminResultsHistoryRoute: typeof AdminResultsHistoryRoute
+  AdminResultsManualRoute: typeof AdminResultsManualRoute
   AdminResultsObservationsRoute: typeof AdminResultsObservationsRoute
   AdminResultsScrapeRoute: typeof AdminResultsScrapeRoute
 }
@@ -1418,6 +1438,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminResultsDeclareRoute: AdminResultsDeclareRoute,
   AdminResultsDeclareAuditRoute: AdminResultsDeclareAuditRoute,
   AdminResultsHistoryRoute: AdminResultsHistoryRoute,
+  AdminResultsManualRoute: AdminResultsManualRoute,
   AdminResultsObservationsRoute: AdminResultsObservationsRoute,
   AdminResultsScrapeRoute: AdminResultsScrapeRoute,
 }

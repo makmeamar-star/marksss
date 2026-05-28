@@ -1724,6 +1724,16 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_override_result_jodi: {
+        Args: {
+          _confirm: string
+          _market_id: string
+          _new_jodi: string
+          _reason: string
+          _session_date: string
+        }
+        Returns: Json
+      }
       admin_risk_summary: { Args: never; Returns: Json }
       admin_set_user_status: {
         Args: { _reason: string; _status: string; _user_id: string }
@@ -1762,6 +1772,10 @@ export type Database = {
           _session: string
           _session_date: string
         }
+        Returns: Json
+      }
+      decline_withdrawal: {
+        Args: { _reason: string; _request_id: string }
         Returns: Json
       }
       enqueue_scrape_retry: {
@@ -1803,6 +1817,10 @@ export type Database = {
       log_consent: {
         Args: { _type: string; _ua?: string; _version: string }
         Returns: string
+      }
+      mark_withdrawal_paid: {
+        Args: { _note?: string; _request_id: string }
+        Returns: Json
       }
       place_bets: {
         Args: { _items: Json; _market_id: string; _session_date: string }
