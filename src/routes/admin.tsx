@@ -71,7 +71,7 @@ const NAV = [
   { to: "/admin/markets", label: "Markets", icon: Store },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/bets", label: "Bets Monitor", icon: Activity },
-  { to: "/admin/results/declare", label: "Declare Results", icon: Trophy },
+  { to: "/admin/results/manual", label: "Manual Results", icon: Trophy },
   { to: "/admin/results/history", label: "Result History", icon: History },
   { to: "/admin/results/automation", label: "Automation", icon: Zap },
   { to: "/admin/results/scrape", label: "Scraper", icon: Globe },
