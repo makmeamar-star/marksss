@@ -101,7 +101,7 @@ function AdminHome() {
         <div className="lg:col-span-2 rounded-2xl glass-gold p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-lg font-bold">Today's markets</h2>
-            <Link to="/admin/results/declare" className="text-xs text-primary hover:underline">Declare →</Link>
+            <Link to="/admin/results/manual" className="text-xs text-primary hover:underline">Manual Results →</Link>
           </div>
           <div className="overflow-x-auto -mx-2">
             <table className="w-full text-sm min-w-[560px]">
