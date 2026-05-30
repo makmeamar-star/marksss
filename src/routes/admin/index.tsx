@@ -171,7 +171,7 @@ function AdminHome() {
         <h2 className="font-display text-lg font-bold mb-3">Quick actions</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {tiles.map((t) => {
-            const showBadge = t.to === "/admin/results/declare" && missingCount > 0;
+            const showBadge = t.to === "/admin/results/manual" && missingCount > 0;
             return (
               <Link
                 key={t.to}
