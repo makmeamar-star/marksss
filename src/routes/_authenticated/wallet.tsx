@@ -461,8 +461,10 @@ function WalletHistory({ userId }: { userId: string }) {
 }
 
 function StatusBadge({ status, reason }: { status: string; reason?: string }) {
-  const tone = status === "APPROVED" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-    : status === "REJECTED" ? "bg-destructive/15 text-destructive border-destructive/30"
+  const tone =
+    status === "PAID" ? "bg-emerald-500/25 text-emerald-300 border-emerald-500/40"
+    : status === "APPROVED" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+    : status === "DECLINED" || status === "REJECTED" ? "bg-destructive/15 text-destructive border-destructive/30"
     : "bg-amber-500/15 text-amber-400 border-amber-500/30";
   return (
     <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider border ${tone}`} title={reason}>

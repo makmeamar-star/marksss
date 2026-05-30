@@ -18,7 +18,7 @@ export const Route = createFileRoute("/admin/")({
 
 const tiles = [
   { to: "/admin/markets" as const, icon: Store, title: "Markets" },
-  { to: "/admin/results/declare" as const, icon: Trophy, title: "Declare" },
+  { to: "/admin/results/manual" as const, icon: Trophy, title: "Manual Results" },
   { to: "/admin/results/automation" as const, icon: Zap, title: "Automation" },
   { to: "/admin/results/scrape" as const, icon: Globe, title: "Scraper" },
   { to: "/admin/results/history" as const, icon: History, title: "History" },
@@ -101,7 +101,7 @@ function AdminHome() {
         <div className="lg:col-span-2 rounded-2xl glass-gold p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-lg font-bold">Today's markets</h2>
-            <Link to="/admin/results/declare" className="text-xs text-primary hover:underline">Declare →</Link>
+            <Link to="/admin/results/manual" className="text-xs text-primary hover:underline">Manual Results →</Link>
           </div>
           <div className="overflow-x-auto -mx-2">
             <table className="w-full text-sm min-w-[560px]">
@@ -171,7 +171,7 @@ function AdminHome() {
         <h2 className="font-display text-lg font-bold mb-3">Quick actions</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {tiles.map((t) => {
-            const showBadge = t.to === "/admin/results/declare" && missingCount > 0;
+            const showBadge = t.to === "/admin/results/manual" && missingCount > 0;
             return (
               <Link
                 key={t.to}
