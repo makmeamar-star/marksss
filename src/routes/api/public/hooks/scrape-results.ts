@@ -101,6 +101,7 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
                 summary.push({ market: m.market_id, session: "JODI", error: rpcErr.message });
               } else {
                 const rpcStatus = ((rpc as any)?.status as string) ?? "OK";
+                const rpcReason = ((rpc as any)?.reason as string) ?? null;
                 const logStatus =
                   rpcStatus === "DECLARED"
                     ? "OK"
@@ -108,7 +109,9 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
                       ? "SKIPPED_DECLARED"
                       : rpcStatus === "MISMATCH"
                         ? "MISMATCH"
-                        : "AWAITING_CONFIRMATION";
+                        : rpcStatus === "INVALID"
+                          ? "JODI_REJECTED"
+                          : "AWAITING_CONFIRMATION";
                 await supabase.from("result_scrape_log").insert({
                   market_id: m.market_id,
                   session_date: today,
@@ -116,6 +119,9 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
                   source: m.source,
                   status: logStatus,
                   pana: jodi,
+                  error: rpcStatus === "INVALID"
+                    ? `Source returned invalid JODI "${jodi}" (${rpcReason ?? "non_2_digit_jodi"})`
+                    : null,
                 });
                 summary.push({ market: m.market_id, session: "JODI", jodi, status: logStatus });
               }
