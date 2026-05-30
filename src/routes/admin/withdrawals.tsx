@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Check, X } from "lucide-react";
+import { Loader2, Check, X, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/admin/withdrawals")({
   component: AdminWithdrawalsPage,
 });
 
-type Status = "PENDING" | "APPROVED" | "REJECTED";
+type Status = "PENDING" | "APPROVED" | "PAID" | "DECLINED";
 
 function AdminWithdrawalsPage() {
   const qc = useQueryClient();
@@ -34,7 +35,9 @@ function AdminWithdrawalsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-withdrawals", status],
     queryFn: async () => {
-      const r = await supabase.from("withdrawal_requests").select("*").eq("status", status).order("created_at", { ascending: false }).limit(100);
+      // DECLINED tab also shows legacy REJECTED rows
+      const statuses = status === "DECLINED" ? ["DECLINED", "REJECTED"] : [status];
+      const r = await supabase.from("withdrawal_requests").select("*").in("status", statuses).order("created_at", { ascending: false }).limit(100);
       if (r.error) throw r.error;
       return r.data ?? [];
     },
@@ -45,13 +48,14 @@ function AdminWithdrawalsPage() {
       <header className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="font-display text-3xl font-bold">Withdrawal Requests</h1>
-          <p className="text-sm text-muted-foreground">Review and approve user withdrawals.</p>
+          <p className="text-sm text-muted-foreground">Approve, decline, and mark paid.</p>
         </div>
         <Tabs value={status} onValueChange={(v) => setStatus(v as Status)}>
           <TabsList className="bg-surface border border-border/60">
             <TabsTrigger value="PENDING">Pending</TabsTrigger>
             <TabsTrigger value="APPROVED">Approved</TabsTrigger>
-            <TabsTrigger value="REJECTED">Rejected</TabsTrigger>
+            <TabsTrigger value="PAID">Paid</TabsTrigger>
+            <TabsTrigger value="DECLINED">Declined</TabsTrigger>
           </TabsList>
         </Tabs>
       </header>
@@ -84,13 +88,17 @@ function AdminWithdrawalsPage() {
 
 function Row({ req }: { req: any }) {
   const qc = useQueryClient();
-  const [busy, setBusy] = useState<"approve" | "reject" | null>(null);
-  const [rejectOpen, setRejectOpen] = useState(false);
+  const [busy, setBusy] = useState<"approve" | "decline" | "paid" | null>(null);
+  const [declineOpen, setDeclineOpen] = useState(false);
+  const [paidOpen, setPaidOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const [paidNote, setPaidNote] = useState("");
 
   const dest = req.bank_details?.upi
     ? `UPI · ${req.bank_details.upi}`
     : req.bank_details?.raw ?? JSON.stringify(req.bank_details ?? {}).slice(0, 60);
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-withdrawals"] });
 
   const approve = async () => {
     setBusy("approve");
@@ -98,19 +106,35 @@ function Row({ req }: { req: any }) {
     setBusy(null);
     if (error) { toast.error(error.message); return; }
     toast.success("Withdrawal approved");
-    qc.invalidateQueries({ queryKey: ["admin-withdrawals"] });
+    invalidate();
   };
 
-  const submitReject = async () => {
+  const submitDecline = async () => {
     if (reason.trim().length < 3) return toast.error("Reason required");
-    setBusy("reject");
-    const { error } = await supabase.rpc("reject_withdrawal", { _request_id: req.id, _reason: reason });
-    setBusy(null); setRejectOpen(false);
+    setBusy("decline");
+    const { error } = await supabase.rpc("decline_withdrawal", { _request_id: req.id, _reason: reason });
+    setBusy(null); setDeclineOpen(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Withdrawal rejected");
+    toast.success("Withdrawal declined");
     setReason("");
-    qc.invalidateQueries({ queryKey: ["admin-withdrawals"] });
+    invalidate();
   };
+
+  const submitPaid = async () => {
+    setBusy("paid");
+    const { error } = await supabase.rpc("mark_withdrawal_paid", { _request_id: req.id, _note: paidNote || undefined });
+    setBusy(null); setPaidOpen(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Marked as paid");
+    setPaidNote("");
+    invalidate();
+  };
+
+  const statusClass =
+    req.status === "PAID" ? "text-emerald-300"
+    : req.status === "APPROVED" ? "text-emerald-400"
+    : req.status === "DECLINED" || req.status === "REJECTED" ? "text-destructive"
+    : "text-amber-400";
 
   return (
     <>
@@ -122,29 +146,51 @@ function Row({ req }: { req: any }) {
         <td className="p-2"><span className="px-2 py-0.5 rounded border border-border/60 text-xs">{req.method}</span></td>
         <td className="p-2 text-xs max-w-xs truncate" title={dest}>{dest}</td>
         <td className="p-2 text-right whitespace-nowrap">
-          {req.status === "PENDING" ? (
+          {req.status === "PENDING" && (
             <div className="flex justify-end gap-1.5">
               <Button size="sm" className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30" disabled={!!busy} onClick={approve}>
                 {busy === "approve" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />} Approve
               </Button>
-              <Button size="sm" variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10" disabled={!!busy} onClick={() => setRejectOpen(true)}>
-                <X className="h-3.5 w-3.5 mr-1" /> Reject
+              <Button size="sm" variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10" disabled={!!busy} onClick={() => setDeclineOpen(true)}>
+                <X className="h-3.5 w-3.5 mr-1" /> Decline
               </Button>
             </div>
-          ) : (
-            <span className={`text-xs uppercase font-semibold ${req.status === "APPROVED" ? "text-emerald-400" : "text-destructive"}`}>{req.status}</span>
+          )}
+          {req.status === "APPROVED" && (
+            <div className="flex justify-end gap-1.5">
+              <Button size="sm" className="bg-emerald-500/30 text-emerald-200 hover:bg-emerald-500/40 border border-emerald-500/50" disabled={!!busy} onClick={() => setPaidOpen(true)}>
+                <BadgeCheck className="h-3.5 w-3.5 mr-1" /> Mark paid
+              </Button>
+            </div>
+          )}
+          {(req.status === "PAID" || req.status === "DECLINED" || req.status === "REJECTED") && (
+            <span className={`text-xs uppercase font-semibold ${statusClass}`}>{req.status}</span>
           )}
         </td>
       </tr>
 
-      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+      <Dialog open={declineOpen} onOpenChange={setDeclineOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Reject withdrawal ₹{Number(req.amount).toLocaleString("en-IN")}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Decline withdrawal ₹{Number(req.amount).toLocaleString("en-IN")}</DialogTitle></DialogHeader>
           <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (visible to user)" rows={3} />
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setRejectOpen(false)}>Cancel</Button>
-            <Button className="bg-destructive text-destructive-foreground" disabled={busy === "reject"} onClick={submitReject}>
-              {busy === "reject" && <Loader2 className="h-4 w-4 animate-spin mr-1" />} Reject
+            <Button variant="ghost" onClick={() => setDeclineOpen(false)}>Cancel</Button>
+            <Button className="bg-destructive text-destructive-foreground" disabled={busy === "decline"} onClick={submitDecline}>
+              {busy === "decline" && <Loader2 className="h-4 w-4 animate-spin mr-1" />} Decline
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={paidOpen} onOpenChange={setPaidOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Mark paid · ₹{Number(req.amount).toLocaleString("en-IN")}</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground">Confirm the payout was sent to the user. Optionally add a UTR/reference.</p>
+          <Input value={paidNote} onChange={(e) => setPaidNote(e.target.value)} placeholder="UTR / reference (optional)" />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPaidOpen(false)}>Cancel</Button>
+            <Button className="bg-emerald-500/30 text-emerald-100 hover:bg-emerald-500/40 border border-emerald-500/60" disabled={busy === "paid"} onClick={submitPaid}>
+              {busy === "paid" && <Loader2 className="h-4 w-4 animate-spin mr-1" />} Mark paid
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -172,4 +218,3 @@ function SlaBadge({ dueAt, status }: { dueAt: string | null; status: string }) {
       : `${Math.floor(mins / 60)}h ${mins % 60}m`;
   return <span className={`px-2 py-0.5 rounded border text-[10px] uppercase tracking-wider whitespace-nowrap ${cls}`}>{label}</span>;
 }
-
