@@ -187,7 +187,7 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
                 summary.push({ market: m.market_id, session, error: rpcErr.message });
               } else {
                 const rpcStatus = ((rpc as any)?.status as string) ?? "OK";
-                // Map RPC status -> log status (kept compatible with existing values)
+                const rpcReason = ((rpc as any)?.reason as string) ?? null;
                 const logStatus =
                   rpcStatus === "DECLARED"
                     ? "OK"
@@ -195,7 +195,9 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
                       ? "SKIPPED_DECLARED"
                       : rpcStatus === "MISMATCH"
                         ? "MISMATCH"
-                        : "AWAITING_CONFIRMATION";
+                        : rpcStatus === "INVALID"
+                          ? "PANA_REJECTED"
+                          : "AWAITING_CONFIRMATION";
                 await supabase.from("result_scrape_log").insert({
                   market_id: m.market_id,
                   session_date: today,
@@ -203,6 +205,9 @@ export const Route = createFileRoute("/api/public/hooks/scrape-results")({
                   source: m.source,
                   status: logStatus,
                   pana,
+                  error: rpcStatus === "INVALID"
+                    ? `Source returned invalid pana "${pana}" (${rpcReason ?? "non_3_digit_pana"})`
+                    : null,
                 });
                 summary.push({ market: m.market_id, session, pana, status: logStatus });
               }
